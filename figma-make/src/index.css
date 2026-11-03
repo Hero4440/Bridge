@@ -149,3 +149,4 @@ button:active{transform:scale(.97)}
   .bridge-app{padding-top:max(env(safe-area-inset-top),50px);padding-bottom:env(safe-area-inset-bottom)}
   .ios-status{display:none}
 }
+.no-streaks{display:block;margin-top:14px;font-size:14px;line-height:1.45}
