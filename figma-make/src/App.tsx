@@ -69,11 +69,58 @@ class Mo extends MoBase {
   }
 }
 
+const circleIconPaths = {
+  gaming: 'M7 8h10a5 5 0 0 1 4.5 7.2l-1 2A2.5 2.5 0 0 1 16 17l-1-2H9l-1 2a2.5 2.5 0 0 1-4.5.2l-1-2A5 5 0 0 1 7 8ZM7 11v4M5 13h4M16 12h.01M19 14h.01',
+  music: 'M9 18V6l10-2v12M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
+  anime: 'm12 2 1.6 5.2L19 9l-5.4 1.8L12 16l-1.6-5.2L5 9l5.4-1.8L12 2ZM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z',
+  cooking: 'M5 10h14v5a6 6 0 0 1-6 6h-2a6 6 0 0 1-6-6v-5ZM8 7c-1-1 1-2 0-4M12 7c-1-1 1-2 0-4M16 7c-1-1 1-2 0-4',
+  art: 'm5 19 3.5-1 9.8-9.8-2.5-2.5L6 15.5 5 19ZM14.5 7l2.5 2.5M4 21h16',
+  tech: 'M4 5h16v12H4zM8 21h8M12 17v4M8 10l2 2-2 2M13 14h3'
+};
+
+function StatusBar() {
+  return <div className="ios-status" aria-hidden="true"><span>9:41</span><span className="status-icons">
+    <svg width="18" height="12" viewBox="0 0 18 12" fill="var(--ink)"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+    <svg width="17" height="12" viewBox="0 0 17 12" fill="none" stroke="var(--ink)" strokeWidth="1.8" strokeLinecap="round"><path d="M1 4c4.5-4 10.5-4 15 0M4 7c2.8-2.4 6.2-2.4 9 0M7 10c1-.8 2-.8 3 0"/></svg>
+    <svg width="25" height="12" viewBox="0 0 25 12" fill="none" stroke="var(--ink)" strokeWidth="1.5"><rect x=".8" y=".8" width="20" height="10.4" rx="3"/><path d="M23 4v4"/><rect x="3" y="3" width="16" height="6" rx="1.5" fill="var(--ink)" stroke="none"/></svg>
+  </span></div>;
+}
+
+function PersonAvatar({ name, tint, size = 40, onClick }) {
+  var tag = onClick ? 'button' : 'span';
+  return React.createElement(tag, {
+    onClick: onClick,
+    className: 'person-avatar',
+    'aria-label': onClick ? 'Message ' + name : name,
+    style: { width: size + 'px', height: size + 'px', background: tint || 'var(--soft)' }
+  }, (name || '?')[0]);
+}
+
+function CircleGlyph({ kind, tint, size = 44 }) {
+  return <span className="circle-glyph" style={{width: size + 'px', height: size + 'px', background: tint || 'var(--soft)'}}>
+    <svg width={size > 40 ? 24 : 20} height={size > 40 ? 24 : 20} viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={circleIconPaths[kind] || circleIconPaths.gaming}/></svg>
+  </span>;
+}
+
+function DateTile({ day = 'SUN', date = '9' }) {
+  return <span className="date-tile"><small>{day}</small><strong>{date}</strong></span>;
+}
+
+function MapThumb() {
+  return <span className="map-thumb" aria-hidden="true"><svg viewBox="0 0 100 64" width="100%" height="100%"><path d="M-5 15 35 42 75 17l30 20M15-5l18 70M70-5l-8 70" fill="none" stroke="#C8C1D4" strokeWidth="5"/><circle cx="56" cy="31" r="7" fill="var(--ink)"/><circle cx="56" cy="31" r="2.5" fill="#fff"/></svg></span>;
+}
+
 class BridgeBase extends DCLogic {
   renderVals() {
     var s = this.state || {};
     var self = this;
-    var screen = s.screen || 'checkin';
+    var screen = s.screen || (s.onbDone ? 'checkin' : 'onboard');
+    var trusted = (s.trusted || '').trim() || 'Mom';
+    var trustedRel = s.trustedRel || 'Parent';
+    var interests = s.interests || ['gaming', 'music'];
+    var textLarge = !!s.textLarge;
+    var calmMode = !!s.calmMode;
+    var textFirst = s.textFirst === undefined ? true : s.textFirst;
     var draft = s.draft || '';
     var battery = (s.ciFeel === 'over') ? 'low' : (s.ciFeel === 'ready' ? 'full' : 'okay');
     var sent = s.sent || '';
@@ -150,7 +197,7 @@ class BridgeBase extends DCLogic {
     var ciHard = s.ciHard || 'start';
     var cFilter = s.cFilter || 'foryou';
     var readOnly = !!s.readOnly;
-    var helpTo = s.helpTo || 'Mom';
+    var helpTo = s.helpTo || trusted;
     var scripts = {
       joinin: { title: 'Join a chat that is already going', group: 'Starting chats', partner: 'Lee',
         scene: 'Lee and Maya are already mid-conversation.',
@@ -217,7 +264,8 @@ class BridgeBase extends DCLogic {
     var levelNames = ['Level 1 · hints on', 'Level 2 · no hints', 'Level 3 · realistic'];
     var scenItem = function (k) {
       var on = k === pScen;
-      return { title: scripts[k].title, group: scripts[k].group, bg: on ? 'var(--ink)' : 'rgba(255,255,255,0.85)', fg: on ? '#FFFFFF' : 'var(--ink)',
+      var iconMap = { joinin: 'M8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 21c.5-4 2.2-6 5-6M14 15c4 0 6.5 2 7 6', onread: 'M4 5h16v12H9l-5 4V5ZM8 10h8', cancel: 'M4 5h16v15H4zM8 3v4M16 3v4M7 13l10 0', leave: 'M10 4H5v16h5M15 8l4 4-4 4M19 12H9', repair: 'M4 5h16v12H9l-5 4V5Zm5 7 2 2 4-5', invite: 'M12 5v14M5 12h14', disagree: 'M5 7h14M5 12h10M5 17h7' };
+      return { title: scripts[k].title, group: scripts[k].group, icon: iconMap[k], bg: on ? 'var(--ink)' : 'rgba(255,255,255,0.85)', fg: on ? '#FFFFFF' : 'var(--ink)',
         pick: function () { self.setState({ pScen: k }); } };
     };
     var recScenarios = recKeys.map(scenItem);
@@ -271,13 +319,15 @@ class BridgeBase extends DCLogic {
     var evCard = function (e) {
       var c = e.circle ? circleData[e.circle] : null;
       var g = rsvp[e.id] === 'going';
+      var cardDates = { e0: ['YESTERDAY','8'], e1: ['FRI','7'], e2: ['SAT','8'], e3: ['SUN','9'], e4: ['THU','6'] };
+      var cardDate = e.dateDay ? [e.dateDay, e.dateNum] : (cardDates[e.id] || ['SUN','9']);
       return { title: e.title, when: e.when, where: e.where, tag: e.tag,
         hostLabel: c ? c.name + ' circle' : 'Outside circles · friends',
-        tint: c ? c.tint : '#E4F1F0',
+        tint: c ? c.tint : '#E4F1F0', icon: e.circle || 'gaming', day: cardDate[0], date: cardDate[1],
         goingText: (e.going + (g ? 1 : 0)) + ' going',
         isMine: !!e.mine, notMine: !e.mine,
         inLabel: g ? 'Going ✓' : "I'm in", inBg: g ? 'var(--ink)' : 'var(--soft)', inFg: g ? '#FFFFFF' : 'var(--ink)',
-        toggle: function () { var r = Object.assign({}, rsvp); r[e.id] = g ? '' : 'going'; self.setState({ rsvp: r }); },
+        toggle: function () { var r = Object.assign({}, rsvp); r[e.id] = g ? '' : 'going'; self.setState({ rsvp: r, uiToast: g ? 'Saved' : 'Going ✓' }); },
         sense: [e.size, e.sound, e.light].filter(Boolean),
         open: function () { self.setState({ screen: 'event', evId: e.id, evBackTo: screen, moOpen: false, evToast: '' }); } };
     };
@@ -286,21 +336,37 @@ class BridgeBase extends DCLogic {
     var evFrom = s.evFrom || 'home';
     var evHost = s.evHost || 'outside';
     var evIsOutside = evHost === 'outside';
+    var evStep = s.evStep || 1;
     var whatOpts = evIdeas[evHost];
     var evWhat = whatOpts.indexOf(s.evWhat) >= 0 ? s.evWhat : whatOpts[0];
-    var whenOpts = ['Tonight · 7 PM', 'Sat · 2 PM', 'Sun · 11 AM'];
-    var evWhen = whenOpts.indexOf(s.evWhen) >= 0 ? s.evWhen : whenOpts[1];
-    var whereOpts = evIsOutside ? ['In person · café', 'In person · park', 'Online · video call'] : ['Online · voice chat', 'Online · text only', 'In person · public place'];
-    var evWhere = whereOpts.indexOf(s.evWhere) >= 0 ? s.evWhere : whereOpts[0];
+    var weekDays = [['MON','3'],['TUE','4'],['WED','5'],['THU','6'],['FRI','7'],['SAT','8'],['SUN','9']];
+    var evDate = s.evDate || 'SUN 9';
+    var evTime = s.evTime || '11:00 AM';
+    var evDuration = s.evDuration || '1 hr';
+    var endTimes = { '10:00 AM': {'30 min':'10:30 AM','1 hr':'11:00 AM','2 hr':'12:00 PM'}, '11:00 AM': {'30 min':'11:30 AM','1 hr':'12:00 PM','2 hr':'1:00 PM'}, '2:00 PM': {'30 min':'2:30 PM','1 hr':'3:00 PM','2 hr':'4:00 PM'}, '6:00 PM': {'30 min':'6:30 PM','1 hr':'7:00 PM','2 hr':'8:00 PM'}, '7:00 PM': {'30 min':'7:30 PM','1 hr':'8:00 PM','2 hr':'9:00 PM'} };
+    var evEnd = endTimes[evTime][evDuration];
+    var evMode = s.evMode || 'In person';
+    var venues = [
+      { name: 'Cartel Coffee Lab', address: '225 W University Dr, Tempe', distance: '0.8 mi', quiet: 'Usually quiet' },
+      { name: 'Tempe Public Library', address: '3500 S Rural Rd', distance: '1.4 mi', quiet: 'Quiet zone' },
+      { name: 'Kiwanis Park', address: '5500 S Mill Ave', distance: '2.1 mi', quiet: 'Outdoors, open space' }
+    ];
+    var evVenueName = s.evVenue || venues[0].name;
+    var evVenue = venues.filter(function (x) { return x.name === evVenueName; })[0] || venues[0];
+    var evOnline = s.evOnline || 'Voice chat';
+    var evWhere = evMode === 'In person' ? 'In person · ' + evVenue.name : 'Online · ' + evOnline.toLowerCase();
+    var evWhen = evDate.split(' ')[0][0] + evDate.split(' ')[0].slice(1).toLowerCase() + ' · ' + evTime.replace(':00','');
     var sizeOpts = ['2–4 people', '5–8 people'];
     var evSize = s.evSize || sizeOpts[0];
+    var evGroupSize = s.evGroupSize || 4;
     var evInvite = s.evInvite || ['Jordan'];
     var evShare = s.evShare === undefined ? true : s.evShare;
-    var evInPerson = evWhere.indexOf('In person') === 0;
-    var soundOpts = evInPerson ? ['Quiet', 'Soft music', 'Loud music'] : ['Voice optional', 'Text only', 'Music on'];
+    var evInPerson = evMode === 'In person';
+    var soundOpts = ['Quiet', 'Soft music', 'Loud music'];
     var evSound = soundOpts.indexOf(s.evSound) >= 0 ? s.evSound : soundOpts[0];
-    var lightOpts = evInPerson ? ['Soft light', 'Bright', 'Dim'] : ['Camera off is fine', 'Cameras on'];
+    var lightOpts = ['Soft', 'Bright', 'Dim'];
     var evLight = lightOpts.indexOf(s.evLight) >= 0 ? s.evLight : lightOpts[0];
+    var evRemind = s.evRemind || '1 hour before';
     var pickList = function (list, cur, key) {
       return list.map(function (val) {
         var on = val === cur; var o = {}; o[key] = val;
@@ -320,12 +386,14 @@ class BridgeBase extends DCLogic {
         pick: function () { self.setState({ evInvite: on ? evInvite.filter(function (x) { return x !== n; }) : evInvite.concat([n]) }); } };
     });
     var startEvent = function (from, host) {
-      return function () { self.setState({ screen: 'newEvent', evFrom: from, evHost: host, evWhat: '', evWhen: '', evWhere: '', evSize: '', evSound: '', evLight: '', evInvite: ['Jordan'], evShare: true, moOpen: false, menuOpen: false, evToast: '' }); };
+      return function () { self.setState({ screen: 'newEvent', evFrom: from, evHost: host, evStep: 1, evWhat: '', evDate: 'SUN 9', evTime: '11:00 AM', evDuration: '1 hr', evMode: 'In person', evVenue: venues[0].name, evOnline: 'Voice chat', evGroupSize: 4, evRemind: '1 hour before', evSize: '', evSound: 'Quiet', evLight: 'Soft', evInvite: ['Jordan'], evShare: true, moOpen: false, menuOpen: false, evToast: '' }); };
     };
     var createEvent = function () {
       var ne = { id: 'n' + Date.now(), circle: evIsOutside ? null : evHost, title: evWhat, when: evWhen, where: evWhere,
         tag: evIsOutside ? 'With ' + evInvite.join(', ') : (evSize === sizeOpts[0] ? 'Small group' : 'Medium group'), going: 0, mine: true,
-        size: evIsOutside ? (evInvite.length + 1) + ' people' : evSize, sound: evSound, light: evLight,
+        size: evIsOutside ? (evInvite.length + 1) + ' people' : 'Up to ' + evGroupSize + ' people', sound: evSound, light: evLight,
+        dateDay: evDate.split(' ')[0], dateNum: evDate.split(' ')[1], start: evTime, end: evEnd, duration: evDuration,
+        venue: evInPerson ? evVenue.name : '', address: evInPerson ? evVenue.address : '', remind: evRemind, mode: evMode,
         exit: evInPerson ? 'Leave anytime' : 'Leave the chat anytime', people: evIsOutside ? evInvite.slice() : [],
         prep: evInPerson ? 'leave' : 'joinin' };
       var r = Object.assign({}, rsvp); r[ne.id] = 'going';
@@ -342,12 +410,29 @@ class BridgeBase extends DCLogic {
       newEventCircle: startEvent('circle', cKey),
       evBack: go(evFrom === 'circle' ? 'circle' : 'home'),
       evTitle: evIsOutside ? 'Plan something with friends' : 'Plan an event in ' + circleData[evHost].name,
-      hostOpts: hostOpts, whatOpts: pickList(whatOpts, evWhat, 'evWhat'), whenOpts: pickList(whenOpts, evWhen, 'evWhen'),
-      whereOpts: pickList(whereOpts, evWhere, 'evWhere'), sizeOpts: pickList(sizeOpts, evSize, 'evSize'),
+      evStep: evStep, evStepLabel: 'Step ' + evStep + ' of 3',
+      evNext: function () { self.setState({ evStep: Math.min(3, evStep + 1) }); },
+      evPrev: function () { if (evStep > 1) self.setState({ evStep: evStep - 1 }); else evVals.evBack(); },
+      setEvWhat: function (e) { self.setState({ evWhat: e.target.value }); },
+      showCalendar: !!s.showCalendar,
+      toggleCalendar: function () { self.setState({ showCalendar: !s.showCalendar }); },
+      hostOpts: hostOpts, whatOpts: pickList(whatOpts, evWhat, 'evWhat'), sizeOpts: pickList(sizeOpts, evSize, 'evSize'),
       inviteOpts: inviteOpts, evIsOutside: evIsOutside, evInCircle: !evIsOutside,
       evInPerson: evInPerson,
       soundOpts: pickList(soundOpts, evSound, 'evSound'), lightOpts: pickList(lightOpts, evLight, 'evLight'),
-      shareLabel: evShare ? 'Mom will know where I am ✓' : 'Tell Mom where I will be',
+      weekDays: weekDays.map(function (d) { var val = d[0] + ' ' + d[1]; return { day: d[0], date: d[1], on: evDate === val, pick: function () { self.setState({ evDate: val }); } }; }),
+      timeOpts: pickList(['10:00 AM','11:00 AM','2:00 PM','6:00 PM','7:00 PM'], evTime, 'evTime'),
+      durationOpts: pickList(['30 min','1 hr','2 hr'], evDuration, 'evDuration'),
+      evTimeRange: evTime + ' – ' + evEnd + ' · ' + evDuration,
+      modeOpts: pickList(['In person','Online'], evMode, 'evMode'),
+      venueOpts: venues.map(function (venue) { return Object.assign({}, venue, { on: venue.name === evVenue.name, pick: function () { self.setState({ evVenue: venue.name }); } }); }),
+      onlineOpts: pickList(['Voice chat','Video call','Text only'], evOnline, 'evOnline'),
+      evVenue: evVenue,
+      evGroupSize: evGroupSize,
+      groupDown: function () { self.setState({ evGroupSize: Math.max(2, evGroupSize - 1) }); },
+      groupUp: function () { self.setState({ evGroupSize: Math.min(8, evGroupSize + 1) }); },
+      remindOpts: pickList(['1 hour before','1 day before','Both'], evRemind, 'evRemind'),
+      shareLabel: evShare ? trusted + ' will know where I am ✓' : 'Tell ' + trusted + ' where I will be',
       shareBg: evShare ? 'var(--ink)' : 'rgba(255,255,255,0.85)', shareFg: evShare ? '#FFFFFF' : 'var(--ink)',
       toggleShare: function () { self.setState({ evShare: !evShare }); },
       evTip: evInPerson ? 'Meeting in person? Pick a public place and keep it short the first time. You can leave anytime.'
@@ -408,6 +493,9 @@ class BridgeBase extends DCLogic {
     var dmDraft = s.dmDraft || '';
     var harshWords = ['whatever', 'stupid', 'shut up', 'annoying', 'hate', 'overrated', 'dumb'];
     var dmHarsh = harshWords.some(function (w) { return dmDraft.toLowerCase().indexOf(w) >= 0; });
+    var harshWhy = { whatever: 'can sound like you do not care what they said', stupid: 'calls their idea bad, which can hurt', 'shut up': 'tells them to stop talking, which feels rude', annoying: 'can feel like you are criticizing them as a person', hate: 'is a very strong word, so it can feel like an attack', overrated: 'can sound like you are dismissing something they love', dumb: 'calls their idea bad, which can hurt' };
+    var harshHit = harshWords.filter(function (w) { return dmDraft.toLowerCase().indexOf(w) >= 0; })[0] || '';
+    var dmWhy = harshHit ? 'Why: "' + harshHit + '" ' + harshWhy[harshHit] + '.' : '';
     var openDm = function (k) {
       return function () { var r = Object.assign({}, dmRead); r[k] = true; self.setState({ screen: 'dm', dm: k, dmDraft: '', dmRead: r, moOpen: false, dmGentle: false }); };
     };
@@ -444,16 +532,17 @@ class BridgeBase extends DCLogic {
       reqDelete: function () { self.setState({ dmReq: 'deleted' }); },
       isDm: screen === 'dm',
       dmName: dmd.name, dmFrom: 'Met in the ' + dmd.from, dmTint: dmd.tint, dmInitial: dmd.name[0],
-      dmMessages: msgsFor(dmKey).map(function (m) {
+      dmMessages: msgsFor(dmKey).map(function (m, index, list) {
         var me = m[0] === 'me';
         return { text: m[1], align: me ? 'flex-end' : 'flex-start', bg: me ? 'var(--ink)' : 'rgba(255,255,255,0.85)', fg: me ? '#FFFFFF' : 'var(--ink)',
-          radius: me ? '24px 24px 8px 24px' : '24px 24px 24px 8px' };
+          radius: me ? '24px 24px 8px 24px' : '24px 24px 24px 8px', me: me, showAvatar: !me && (index === 0 || list[index - 1][0] !== 'them'), lastInGroup: index === list.length - 1 || list[index + 1][0] !== m[0],
+          time: index === list.length - 1 ? '7:42 PM' : '', seen: me && index === list.length - 1 };
       }),
       dmIdeas: dmd.ideas.map(function (t) { return { label: t, pick: function () { self.setState({ dmDraft: t, dmGentle: false }); } }; }),
       dmDraft: dmDraft,
       setDmDraft: function (e) { self.setState({ dmDraft: e.target.value, dmGentle: false }); },
       dmKey: function (e) { if (e.key === 'Enter' && !dmHarsh) sendDm(); },
-      dmHarsh: dmHarsh, dmNotHarsh: !dmHarsh,
+      dmHarsh: dmHarsh, dmNotHarsh: !dmHarsh, dmWhy: dmWhy,
       dmSayGently: function () { self.setState({ dmDraft: "Hmm, I'm not sure I agree. Can you tell me more?", dmGentle: true }); },
       dmSendAnyway: sendDm,
       sendDm: function () { if (!dmHarsh) sendDm(); },
@@ -503,15 +592,15 @@ class BridgeBase extends DCLogic {
 
     // ---------- Themes ----------
     var themes = {
-      dawn: { name: 'Dawn', desc: 'Soft peach and lilac', swatch: 'linear-gradient(135deg, #F7CFC6, #B9A6E3)', bg: 'linear-gradient(170deg, #FBE6DD 0%, #F1E4F3 45%, #DFE3FA 100%)', ink: '#3B3350', soft: '#EFE6F8', muted: '#6E6585' },
-      sage: { name: 'Sage', desc: 'Quiet greens', swatch: 'linear-gradient(135deg, #CFE5D2, #5E8B74)', bg: 'linear-gradient(170deg, #EAF2E6 0%, #E5EFE8 50%, #DDEBEC 100%)', ink: '#2F4A3F', soft: '#DCEBE0', muted: '#5F7068' },
-      mist: { name: 'Mist', desc: 'Cool blue-grey', swatch: 'linear-gradient(135deg, #D3E1F2, #5F7BA6)', bg: 'linear-gradient(170deg, #E6EEF8 0%, #E7ECF7 50%, #EEF0F6 100%)', ink: '#2F3F5A', soft: '#DFE7F4', muted: '#5F6B80' },
-      sand: { name: 'Sand', desc: 'Warm and low-contrast', swatch: 'linear-gradient(135deg, #F1E3CF, #A88A6E)', bg: 'linear-gradient(170deg, #F6EFE4 0%, #F2EAE1 50%, #ECE5EC 100%)', ink: '#4A3D34', soft: '#EFE5D8', muted: '#77695E' }
+      dawn: { name: 'Dawn', desc: 'Soft peach and lilac', swatch: 'linear-gradient(135deg, #F7CFC6, #B9A6E3)', bg: 'linear-gradient(170deg, #FBE6DD 0%, #F1E4F3 45%, #DFE3FA 100%)', bar: 'rgba(251,232,226,0.97)', ink: '#3B3350', soft: '#EFE6F8', muted: '#6E6585' },
+      sage: { name: 'Sage', desc: 'Quiet greens', swatch: 'linear-gradient(135deg, #CFE5D2, #5E8B74)', bg: 'linear-gradient(170deg, #EAF2E6 0%, #E5EFE8 50%, #DDEBEC 100%)', bar: 'rgba(234,242,231,0.97)', ink: '#2F4A3F', soft: '#DCEBE0', muted: '#5F7068' },
+      mist: { name: 'Mist', desc: 'Cool blue-grey', swatch: 'linear-gradient(135deg, #D3E1F2, #5F7BA6)', bg: 'linear-gradient(170deg, #E6EEF8 0%, #E7ECF7 50%, #EEF0F6 100%)', bar: 'rgba(230,238,248,0.97)', ink: '#2F3F5A', soft: '#DFE7F4', muted: '#5F6B80' },
+      sand: { name: 'Sand', desc: 'Warm and low-contrast', swatch: 'linear-gradient(135deg, #F1E3CF, #A88A6E)', bg: 'linear-gradient(170deg, #F6EFE4 0%, #F2EAE1 50%, #ECE5EC 100%)', bar: 'rgba(246,239,228,0.97)', ink: '#4A3D34', soft: '#EFE5D8', muted: '#77695E' }
     };
     var themeKey = themes[s.theme] ? s.theme : 'dawn';
     var th = themes[themeKey];
     var themeVals = {
-      themeVars: { '--bg': th.bg, '--ink': th.ink, '--soft': th.soft, '--muted': th.muted },
+      themeVars: { '--bg': th.bg, '--bar': th.bar, '--ink': th.ink, '--soft': th.soft, '--muted': th.muted },
       themeName: th.name,
       themeOpts: Object.keys(themes).map(function (k) {
         var t = themes[k]; var on = k === themeKey;
@@ -536,11 +625,27 @@ class BridgeBase extends DCLogic {
     var winsList = ['I said hi', 'I asked a question', 'I stayed as long as I wanted', 'I left kindly'];
     var feelList = [['hard', 'It was hard'], ['okay', 'It was okay'], ['good', 'It went well']];
     var hiSent = s.hiSent || {};
+    var fallbackDates = { e0: ['YESTERDAY','8'], e1: ['FRI','7'], e2: ['SAT','8'], e3: ['SUN','9'], e4: ['THU','6'] };
+    var detailDate = evD.dateDay ? [evD.dateDay, evD.dateNum] : (fallbackDates[evD.id] || ['SUN','9']);
+    var detailTimes = evD.start ? evD.start + ' – ' + evD.end + ' · ' + evD.duration : (evD.id === 'e3' ? '11:00 AM – 12:00 PM · 1 hr' : (evD.when || '').replace(' · ', ' · '));
+    var detailVenue = evD.venue || (inPersonD ? ((evD.where || '').indexOf('library') >= 0 ? 'Tempe Public Library' : 'Cartel Coffee Lab') : '');
+    var detailAddress = evD.address || (detailVenue === 'Tempe Public Library' ? '3500 S Rural Rd' : '225 W University Dr, Tempe');
+    var detailRsvp = rsvp[evD.id] || '';
+    var setDetailRsvp = function (value) { var r = Object.assign({}, rsvp); r[evD.id] = value; self.setState({ rsvp: r, uiToast: value === 'going' ? 'Going ✓' : (value === 'maybe' ? 'Saved as maybe' : 'RSVP updated') }); };
     var evDetailVals = {
       isEvent: screen === 'event',
       edBack: go(s.evBackTo === 'circle' ? 'circle' : 'home'),
       edTitle: evD.title, edWhen: evD.when, edWhere: evD.where,
       edHost: evDc ? evDc.name + ' circle' : 'Outside circles · friends', edTint: evDc ? evDc.tint : '#E4F1F0',
+      edIcon: evD.circle || 'gaming', edDateDay: detailDate[0], edDateNum: detailDate[1], edTimeRange: detailTimes,
+      edInPerson: inPersonD, edVenue: detailVenue, edAddress: detailAddress,
+      edHostedBy: evD.mine ? 'Hosted by you' : 'Hosted by ' + ((evD.people || [])[0] || 'Jordan'),
+      edSpots: (evD.going + (detailRsvp === 'going' ? 1 : 0)) + ' of ' + ((evD.size || '').match(/\d+/g) || [6]).slice(-1)[0] + ' spots',
+      edRsvp: ['Going','Maybe',"Can't go"].map(function (label) { var key = label === 'Going' ? 'going' : (label === 'Maybe' ? 'maybe' : 'cant'); return { label: label, on: detailRsvp === key, pick: function () { setDetailRsvp(key); } }; }),
+      edDirections: function () { self.setState({ uiToast: 'Directions opened' }); },
+      edCopyAddress: function () { self.setState({ uiToast: 'Address copied' }); },
+      edAddCalendar: function () { self.setState({ uiToast: 'Added to calendar' }); },
+      edShare: function () { self.setState({ uiToast: 'Share sheet opened' }); },
       edSense: [
         { label: 'People', value: evD.size || '-', path: 'M8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20c.5-3.5 2.5-5 5.5-5s5 1.5 5.5 5M13.5 15.3c.8-.2 1.6-.3 2.5-.3 3 0 5 1.5 5.5 5' },
         { label: 'Sound', value: evD.sound || '-', path: 'M4 10v4h4l5 4V6L8 10H4ZM16.5 9a4 4 0 0 1 0 6' },
@@ -577,7 +682,7 @@ class BridgeBase extends DCLogic {
           pick: function () { var cur = refl.wins || []; setRefl({ wins: on ? cur.filter(function (x) { return x !== w; }) : cur.concat([w]) }); } };
       }),
       edCanSave: !!refl.feel, edSaveBg: refl.feel ? 'var(--ink)' : '#CFC8DB',
-      edSaveRefl: function () { if (refl.feel) setRefl({ done: true }); },
+      edSaveRefl: function () { if (refl.feel) { setRefl({ done: true }); self.setState({ uiToast: 'Saved' }); } },
       edReflMo: refl.feel === 'hard' ? 'Thanks for telling me. Showing up when it is hard still counts. Next time I can suggest a smaller event.'
         : (refl.feel === 'good' ? 'Love that! I will suggest Level 2 practice next time.' : 'Okay is a real win. Every event makes the next one easier.'),
       edReflWins: (refl.wins || []).length ? 'You noted: ' + (refl.wins || []).join(', ') + '.' : '',
@@ -585,7 +690,7 @@ class BridgeBase extends DCLogic {
         var k = n.toLowerCase(); var canDm = !!dmData[k];
         return { name: n, initial: n[0], canDm: canDm, noDm: !canDm, sent: !!hiSent[k], notSent: !hiSent[k],
           msg: function () { self.setState({ screen: 'dm', dm: k, dmDraft: 'Thanks for last night! Want to build again sometime?', moOpen: false }); },
-          hi: function () { var h = Object.assign({}, hiSent); h[k] = true; self.setState({ hiSent: h }); } };
+          hi: function () { var h = Object.assign({}, hiSent); h[k] = true; self.setState({ hiSent: h, uiToast: 'Request sent' }); } };
       }),
       reflNudge: !(s.refl && s.refl.e0 && s.refl.e0.done),
       openPast: function () { self.setState({ screen: 'event', evId: 'e0', evBackTo: 'home', moOpen: false, evToast: '' }); }
@@ -593,11 +698,57 @@ class BridgeBase extends DCLogic {
     var wasKind = s.winType === 'kind';
     var circles = Object.keys(circleData).map(function (k) {
       var c = circleData[k];
-      return { name: c.name, initial: c.initial, tint: c.tint, here: c.here, topic: c.topic,
+      return { key: k, name: c.name, initial: c.initial, tint: c.tint, here: c.here, topic: c.topic, icon: circleIconPaths[k],
+        avatars: [c.m1[0], c.m2[0], c.m3 ? c.m3[0] : 'Sam'],
         open: function () { self.setState({ screen: 'circle', circle: k, draft: '', sent: '', menuOpen: false, safetyNote: '', unsafeHandled: false, moOpen: false }); } };
     });
-    return Object.assign(evVals, profVals, dmVals, notifVals, themeVals, evDetailVals, {
-      circles: circles,
+
+    // ---------- First-time setup, comfort, journey ----------
+    var onbStep = s.onbStep || 1;
+    var interestText = interests.map(function (k) { return circleData[k] ? circleData[k].name.toLowerCase() : k; }).slice(0, 2).join(' and ') || 'new things';
+    var segOpts = function (list, cur, key) {
+      return list.map(function (pair) {
+        var on = pair[0] === cur; var o = {}; o[key] = pair[0];
+        return { label: pair[1], on: on, cls: on ? 'on' : '', pick: function () { self.setState(o); } };
+      });
+    };
+    var onbOk = onbStep === 2 ? interests.length > 0 : (onbStep === 4 ? !!(s.trusted === undefined ? 'Mom' : s.trusted).trim() : true);
+    var onbVals = {
+      isOnboard: screen === 'onboard',
+      onbStep: onbStep, onbStepText: 'Step ' + (onbStep - 1) + ' of 5', onbShowProgress: onbStep > 1,
+      onbPct: Math.round(((onbStep - 1) / 5) * 100) + '%',
+      onb1: onbStep === 1, onb2: onbStep === 2, onb3: onbStep === 3, onb4: onbStep === 4, onb5: onbStep === 5, onb6: onbStep === 6,
+      onbBack: function () { self.setState({ onbStep: Math.max(1, onbStep - 1) }); },
+      onbNext: function () { if (!onbOk) return; if (onbStep >= 6) { self.setState({ onbDone: true, screen: 'checkin' }); } else { self.setState({ onbStep: onbStep + 1 }); } },
+      onbNextLabel: onbStep === 1 ? 'Get started' : (onbStep === 6 ? 'I understand' : 'Next'),
+      onbNextBg: onbOk ? 'var(--ink)' : '#CFC8DB',
+      interestOpts: Object.keys(circleData).map(function (k) {
+        var on = interests.indexOf(k) >= 0;
+        return { key: k, name: circleData[k].name, tint: circleData[k].tint, on: on,
+          ring: on ? '0 0 0 2px var(--ink)' : '0 0 0 1px rgba(0,0,0,0.06)',
+          pick: function () { self.setState({ interests: on ? interests.filter(function (x) { return x !== k; }) : interests.concat([k]) }); } };
+      }),
+      interestCount: interests.length ? interests.length + ' picked' : 'Pick at least one',
+      trustedInput: s.trusted === undefined ? 'Mom' : s.trusted, trusted: trusted, trustedRel: trustedRel,
+      setTrusted: function (e) { self.setState({ trusted: e.target.value, helpTo: '' }); },
+      relOpts: ['Parent', 'Sibling', 'Friend', 'Coach', 'Other'].map(function (r) {
+        var on = r === trustedRel;
+        return { label: r, on: on, bg: on ? 'var(--ink)' : 'rgba(255,255,255,0.85)', fg: on ? '#FFFFFF' : 'var(--ink)', pick: function () { self.setState({ trustedRel: r }); } };
+      }),
+      sizeSeg: segOpts([[false, 'Default'], [true, 'Large']], textLarge, 'textLarge'),
+      calmSeg: segOpts([[false, 'Off'], [true, 'On']], calmMode, 'calmMode'),
+      chatSeg: segOpts([[true, 'Text first'], [false, 'Voice is okay']], textFirst, 'textFirst'),
+      appClass: 'bridge-app' + (calmMode ? ' calm-mode' : '') + (textLarge ? ' text-large' : ''),
+      journey: [['Oct 13', 1], ['Oct 20', 2], ['Oct 27', 3], ['This week', steps]].map(function (w, i, all) {
+        var max = Math.max.apply(null, all.map(function (x) { return x[1]; })) || 1;
+        return { label: w[0], value: w[1], h: Math.max(10, Math.round((w[1] / max) * 84)) + 'px', bg: i === all.length - 1 ? 'var(--ink)' : 'var(--soft)' };
+      }),
+      journeyUp: steps > 3 ? 'Up from 3 last week' : 'Every step counts',
+      redoSetup: function () { self.setState({ screen: 'onboard', onbStep: 2, moOpen: false }); }
+    };
+    return Object.assign(evVals, profVals, dmVals, notifVals, themeVals, evDetailVals, onbVals, {
+      circles: circles, screenKey: screen, uiToast: s.uiToast || '', hasUiToast: !!s.uiToast,
+      clearToast: function () { self.setState({ uiToast: '' }); },
       isCircles: screen === 'circles',
       isGaming: cKey === 'gaming',
       cName: cd.name, cTopic: cd.topic,
@@ -609,7 +760,7 @@ class BridgeBase extends DCLogic {
       winText: wasKind ? "That's a real friendship skill. Jordan just invited you to play on Friday." : cd.m2[0] + " replied to you. That's how friendships start.",
       isHome: screen === 'home', isCircle: screen === 'circle', isPause: screen === 'pause', isReset: screen === 'reset',
       isPractice: screen === 'practice', isFeedback: screen === 'feedback', isWin: screen === 'win', isMe: screen === 'me',
-      showTabs: ['pause', 'reset', 'win', 'checkin', 'help', 'newEvent'].indexOf(screen) < 0,
+      showTabs: ['pause', 'reset', 'win', 'checkin', 'help', 'newEvent', 'onboard'].indexOf(screen) < 0,
       steps: steps,
       homeMood: ciFeel === 'over' ? 'calm' : 'happy',
       moLine: ciFeel === 'over' ? "Thanks for telling me. Let's keep today gentle. Just reading a circle counts." : (ciFeel === 'ready' ? "You're ready to connect! Let's practice, then go for it." : (ciUp === 'none' ? "Let's warm up with one small practice today." : "Let's warm up for your " + upLabels[ciUp].toLowerCase().replace('a ', '') + '.')),
@@ -631,7 +782,7 @@ class BridgeBase extends DCLogic {
       jordanReply: replies[sent] || '',
       resultMood: sentKind ? 'happy' : 'calm',
       resultLine: sentKind ? cd.m2[0] + ' replied! That was a brave step.' : "Sent. If it didn't land well, I can help you follow up.",
-      resultButton: sentKind ? 'Collect it' : 'Help me follow up',
+      resultButton: sentKind ? 'Get my badge' : 'Help me follow up',
       resultAction: sentKind ? go('win', { won: true, winType: sent === 'kind' ? 'kind' : 'hello' }) : go('practice', { pChoice: '', pStarted: false }),
       showSuggest: !sent && !draft && !readOnly,
       showComposer: !sent && !readOnly,
@@ -645,6 +796,7 @@ class BridgeBase extends DCLogic {
       toneBg: isAngry ? '#FBE1DC' : '#DDF1E6',
       toneDot: isAngry ? '#E07A6B' : '#5DBB8E',
       toneLabel: isAngry ? 'Mo: this might sound harsh' : 'Mo: sounds friendly',
+      toneWhy: isAngry ? 'Why: "Seriously" and "overrated" can sound like you are making fun of what ' + cd.m2[0] + ' loves.' : '', hasToneWhy: isAngry,
       sendBg: draft ? 'var(--ink)' : 'rgba(255,255,255,0.7)',
       sendIcon: draft ? '#FFFFFF' : '#8C83A0',
       send: function () {
@@ -674,7 +826,7 @@ class BridgeBase extends DCLogic {
       startPractice: function () { self.setState({ pStarted: true, pChoice: '' }); },
       pickGood: function () { self.setState({ pChoice: 'good' }); },
       pickVague: function () { self.setState({ pChoice: 'vague' }); },
-      fbTitle: choiceGood ? 'Nailed it' : 'Good start',
+      fbTitle: choiceGood ? 'You did it well' : 'Good start',
       fbStar: choiceGood ? ps.starGood : ps.starVague,
       fbSpark: choiceGood ? ps.sparkGood : ps.sparkVague,
       hasUnsafe: !!cd.m3,
@@ -706,27 +858,27 @@ class BridgeBase extends DCLogic {
       feelOpts: chip(feelLabels, ciFeel, 'ciFeel'), upOpts: chip(upLabels, ciUp, 'ciUp'),
       hardOpts: chip({ start: 'Starting a chat', keep: 'Keeping it going', tone: 'Reading tone', disagree: 'Disagreeing', leave: 'Leaving or saying no' }, ciHard, 'ciHard'),
       finishCheckin: go('home'), goCheckin: go('checkin'),
-      ciSummary: 'Feeling ' + feelLabels[ciFeel].toLowerCase() + (ciUp === 'none' ? '' : ' · ' + upLabels[ciUp].toLowerCase().replace('a ', '') + ' coming up'),
+      ciSummary: feelLabels[ciFeel] + (ciUp === 'none' ? '' : ' · ' + (ciUp === 'group' ? 'hangout' : upLabels[ciUp].toLowerCase().replace('a ', '')) + ' coming up'),
       recList: recList,
       joinLabel: ciFeel === 'over' ? 'Just read tonight' : 'Join the chat',
       homeJoin: go('circle', { circle: 'gaming', draft: '', sent: '', readOnly: ciFeel === 'over', unsafeHandled: false }),
-      circlesMoLine: ciFeel === 'over' ? 'Feeling overwhelmed? Try "Just read". No one expects you to post.' : 'You like gaming and music. Start there?',
-      filterOpts: chip({ foryou: 'For you', all: 'All', quiet: 'Quiet ones' }, cFilter, 'cFilter'),
+      circlesMoLine: ciFeel === 'over' ? 'Feeling overwhelmed? Try "Just read". No one expects you to post.' : 'You like ' + interestText + '. Start there?',
+      filterOpts: chip({ foryou: 'For you', all: 'All' }, cFilter, 'cFilter'),
       circleCards: Object.keys(circleData).filter(function (k) {
-        if (cFilter === 'foryou') return k === 'gaming' || k === 'music';
+        if (cFilter === 'foryou') return interests.indexOf(k) >= 0;
         if (cFilter === 'quiet') return circleData[k].here <= 3;
         return true;
       }).map(function (k) {
         var c = circleData[k];
         var grads = { gaming: 'linear-gradient(120deg, #F9DCE4, #E3E0F8)', music: 'linear-gradient(120deg, #E3E0F8, #DCE4FA)', anime: 'linear-gradient(120deg, #FBE1D8, #F9DCE4)', cooking: 'linear-gradient(120deg, #DDF1E6, #F6E5C9)', art: 'linear-gradient(120deg, #F6E5C9, #FBE1D8)', tech: 'linear-gradient(120deg, #DCE4FA, #DDF1E6)' };
-        return { name: c.name, here: c.here, topic: c.topic, grad: grads[k],
+        return { key: k, name: c.name, here: c.here, topic: c.topic, grad: grads[k], tint: c.tint, icon: circleIconPaths[k], avatars: [c.m1[0], c.m2[0], c.m3 ? c.m3[0] : 'Sam'],
           open: function () { self.setState({ screen: 'circle', circle: k, draft: '', sent: '', readOnly: false, unsafeHandled: false, moOpen: false, safetyNote: '' }); },
           read: function () { self.setState({ screen: 'circle', circle: k, draft: '', sent: '', readOnly: true, unsafeHandled: false, moOpen: false, safetyNote: '' }); } };
       }),
       isReadOnly: readOnly,
       stopReading: function () { self.setState({ readOnly: false }); },
       helpTo: helpTo, helpSent: !!s.helpSent, helpNotSent: !s.helpSent,
-      helpPeople: (reqState === 'connected' ? ['Mom', 'Coach Maria'] : ['Mom']).map(function (n) {
+      helpPeople: (reqState === 'connected' ? [trusted, 'Coach Maria'] : [trusted]).map(function (n) {
         var on = n === helpTo;
         return { name: n, on: on, bg: on ? 'var(--ink)' : 'var(--soft)', fg: on ? '#FFFFFF' : 'var(--ink)', pick: function () { self.setState({ helpTo: n, helpSent: false }); } };
       }),
@@ -755,15 +907,128 @@ class Bridge extends BridgeBase {
     if (prevState.screen !== this.state.screen) {
       var el = document.querySelector('.bridge-scroll');
       if (el) el.scrollTop = 0;
+      var order = { onboard: -1, checkin: 0, home: 1, circles: 2, circle: 3, dm: 3, notifs: 2, newEvent: 3, event: 3, practice: 3, feedback: 4, pause: 4, reset: 5, help: 4, me: 1, win: 5 };
+      var panel = document.querySelector('.screen-transition');
+      if (panel && (order[this.state.screen] || 0) < (order[prevState.screen] || 0)) {
+        panel.classList.add('screen-back');
+      }
     }
   }
   renderView(v) {
     return (<>
-<div className="bridge-app" style={{...v.themeVars, width: "100%", height: "100%", boxSizing: "border-box", background: "var(--bg)", fontFamily: "Outfit, system-ui, sans-serif", color: "var(--ink)", display: "flex", flexDirection: "column", overflow: "hidden", position: "relative"}}>
+<div className={v.appClass} style={{...v.themeVars, width: "100%", height: "100%", boxSizing: "border-box", background: "var(--bg)", fontFamily: "Outfit, system-ui, sans-serif", color: "var(--ink)", display: "flex", flexDirection: "column", overflow: "hidden", position: "relative"}}>
+<StatusBar />
 <div className="bridge-scroll" style={{flex: "1", minHeight: "0", overflowY: "auto", overflowX: "hidden", width: "100%"}}>
+<div key={v.screenKey} className="screen-transition">
+
+{v.isOnboard && (<>
+<div className="onb">
+<div className="onb-top">
+{v.onbShowProgress && (<>
+<button onClick={v.onbBack} aria-label="Back" className="onb-back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"></path></svg></button>
+<div className="event-progress" style={{flex: "1"}}><div><i style={{width: v.onbPct}}></i></div><span>{v.onbStepText}</span></div>
+</>)}
+</div>
+
+{v.onb1 && (<>
+<div className="onb-body onb-center">
+<div className="floaty"><Mo mood="happy" size={136} /></div>
+<span className="onb-brand">Bridge</span>
+<h1 className="onb-title">Make friends at your own pace</h1>
+<div className="onb-list">
+<div><span className="onb-dot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="9" r="3"></circle><circle cx="16" cy="9" r="3"></circle><path d="M2.5 20c.5-3.5 2.5-5 5.5-5s5 1.5 5.5 5M13.5 15.3c.8-.2 1.6-.3 2.5-.3 3 0 5 1.5 5.5 5"></path></svg></span>Join small circles about things you love</div>
+<div><span className="onb-dot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5.5h16v11H9l-5 4v-15Z"></path></svg></span>Practice with Mo before the real thing</div>
+<div><span className="onb-dot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 5 6v5c0 4.6 2.8 8.2 7 10 4.2-1.8 7-5.4 7-10V6l-7-3Z"></path></svg></span>You decide what to share, always</div>
+</div>
+<span style={{fontSize: "14px", color: "var(--muted)"}}>Setup takes about 2 minutes.</span>
+</div>
+</>)}
+
+{v.onb2 && (<>
+<div className="onb-body">
+<h1 className="onb-title">What are you into?</h1>
+<span className="onb-sub">Pick at least one. Mo will suggest circles that match.</span>
+<div className="interest-grid">
+{v.interestOpts.map((o, $i) => (<React.Fragment key={$i}>
+<button onClick={o.pick} aria-pressed={o.on} className="interest-tile" style={{boxShadow: o.ring}}>
+<CircleGlyph kind={o.key} tint={o.tint} size={44} />
+<span style={{flex: "1", fontSize: "16px", fontWeight: "600"}}>{o.name}</span>
+{o.on && (<><span aria-hidden="true" className="tick">✓</span></>)}
+</button>
+</React.Fragment>))}
+</div>
+<span className="onb-sub">{v.interestCount}</span>
+</div>
+</>)}
+
+{v.onb3 && (<>
+<div className="onb-body">
+<div style={{display: "flex", alignItems: "center", gap: "14px"}}><Mo mood="happy" size={88} /><div style={{display: "flex", flexDirection: "column", gap: "4px"}}><h1 className="onb-title" style={{textAlign: "left"}}>Meet Mo</h1><span className="onb-sub" style={{textAlign: "left"}}>Your AI buddy. Mo is here to help, not to judge.</span></div></div>
+<div className="onb-card">
+<strong>Mo can</strong>
+<span>✓ Help you practice conversations</span>
+<span>✓ Suggest replies and check your tone</span>
+<span>✓ Explain why something might sound harsh</span>
+<span>✓ Help you calm down when it's a lot</span>
+</div>
+<div className="onb-card soft">
+<strong>Mo won't</strong>
+<span>✕ Send messages for you</span>
+<span>✕ Share your chats with anyone</span>
+<span>✕ Replace a doctor or therapist</span>
+</div>
+</div>
+</>)}
+
+{v.onb4 && (<>
+<div className="onb-body">
+<h1 className="onb-title">Who can you count on?</h1>
+<span className="onb-sub">When you tap "I need help", Mo texts this person. They never see your chats.</span>
+<label className="onb-field">Their name<input type="text" value={v.trustedInput} onChange={v.setTrusted} placeholder="For example, Mom or Alex" /></label>
+<span style={{fontSize: "15px", fontWeight: "600"}}>They are my</span>
+<div style={{display: "flex", flexWrap: "wrap", gap: "8px"}}>
+{v.relOpts.map((o, $i) => (<React.Fragment key={$i}>
+<button onClick={o.pick} aria-pressed={o.on} style={{minHeight: "44px", borderRadius: "999px", border: "none", background: o.bg, color: o.fg, padding: "8px 16px", fontSize: "15px", fontWeight: "500"}}>{o.label}</button>
+</React.Fragment>))}
+</div>
+<span className="onb-sub" style={{textAlign: "left"}}>You can change this anytime in Me.</span>
+</div>
+</>)}
+
+{v.onb5 && (<>
+<div className="onb-body">
+<h1 className="onb-title">Make it comfortable</h1>
+<span className="onb-sub">Changes show right away. You can change them later in Me.</span>
+<div className="comfort-card">
+<div className="segmented-row"><span>Text size</span><div className="segments">{v.sizeSeg.map((o, $i) => (<React.Fragment key={$i}><button className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button></React.Fragment>))}</div></div>
+<div className="segmented-row"><span>Calm mode</span><div className="segments">{v.calmSeg.map((o, $i) => (<React.Fragment key={$i}><button className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button></React.Fragment>))}</div></div>
+<div className="segmented-row"><span>Chatting</span><div className="segments">{v.chatSeg.map((o, $i) => (<React.Fragment key={$i}><button className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button></React.Fragment>))}</div></div>
+</div>
+<div style={{display: "flex", gap: "12px", alignItems: "center", background: "rgba(255,255,255,0.6)", borderRadius: "20px", padding: "12px 14px"}}><span style={{flex: "0 0 auto"}}><Mo mood="calm" size={40} /></span><span style={{fontSize: "14px", lineHeight: "1.4"}}>Calm mode turns off moving animations. Text first means circles and events start in text, and voice is always optional.</span></div>
+</div>
+</>)}
+
+{v.onb6 && (<>
+<div className="onb-body">
+<h1 className="onb-title">A few safety rules</h1>
+<span className="onb-sub">Short and simple. Mo will remind you if something looks wrong.</span>
+<div className="onb-card">
+<span className="safety-row"><b>1</b>Never share your address, passwords or money.</span>
+<span className="safety-row"><b>2</b>If someone asks for secrets or money, Mo warns you privately.</span>
+<span className="safety-row"><b>3</b>You can leave, mute or block anyone, anytime. They are not told why.</span>
+<span className="safety-row"><b>4</b>Need help now? Tap Mo, then "I need help", or call or text 988.</span>
+</div>
+</div>
+</>)}
+
+<div className="onb-foot">
+<button onClick={v.onbNext} style={{width: "100%", height: "56px", borderRadius: "20px", border: "none", background: v.onbNextBg, color: "#FFFFFF", fontSize: "17px", fontWeight: "600"}}>{v.onbNextLabel}</button>
+</div>
+</div>
+</>)}
 
 {v.isCheckin && (<>
-<div style={{padding: "32px 22px 28px", display: "flex", flexDirection: "column", gap: "22px"}}>
+<div style={{padding: "32px 20px 28px", display: "flex", flexDirection: "column", gap: "20px"}}>
 <div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", textAlign: "center"}}>
 <div className="floaty"><Mo mood="happy" size={96} /></div>
 <h1 style={{margin: "0", fontSize: "28px", fontWeight: "600"}}>Hi {v.firstName}! Quick check-in</h1>
@@ -798,9 +1063,8 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.isHome && (<>
-<div style={{padding: "28px 22px 28px", display: "flex", flexDirection: "column", gap: "18px"}}>
-<div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
-<div style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px"}}>
+<div className="tab-screen">
+<div className="tab-sticky-header" style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px"}}>
 <h1 style={{margin: "0", fontSize: "34px", fontWeight: "600", letterSpacing: "-0.5px"}}>Hi {v.firstName}</h1>
 <div style={{display: "flex", alignItems: "center", gap: "8px"}}>
 <span style={{background: "rgba(255,255,255,0.75)", borderRadius: "999px", padding: "7px 14px", fontSize: "14px", fontWeight: "500", whiteSpace: "nowrap"}}>{v.steps} brave steps</span>
@@ -810,30 +1074,30 @@ class Bridge extends BridgeBase {
 </button>
 </div>
 </div>
+<div className="tab-screen-content">
 <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", background: "rgba(255,255,255,0.55)", borderRadius: "18px", padding: "10px 14px"}}>
 <span style={{fontSize: "15px", lineHeight: "1.35", color: "var(--muted)"}}>{v.ciSummary}</span>
-<button onClick={v.goCheckin} style={{flex: "0 0 auto", border: "none", background: "transparent", padding: "4px 0", color: "var(--ink)", fontSize: "15px", fontWeight: "500", textDecoration: "underline"}}>Change</button>
-</div>
+<button onClick={v.goCheckin} style={{flex: "0 0 auto", border: "none", background: "transparent", padding: "8px", color: "var(--ink)", fontSize: "15px", fontWeight: "600"}}>Change</button>
 </div>
 <div style={{borderRadius: "32px", padding: "4px 0", display: "flex", gap: "14px", alignItems: "center"}}>
 <div className="floaty" style={{flex: "0 0 auto"}}><Mo mood={v.homeMood} size={84} /></div>
 <p style={{margin: "0", fontSize: "18px", lineHeight: "1.4", fontWeight: "500"}}>{v.moLine}</p>
 </div>
-<div style={{background: "rgba(255,255,255,0.82)", borderRadius: "32px", padding: "20px", display: "flex", flexDirection: "column", gap: "10px", boxShadow: "0 20px 50px rgba(120,100,170,0.12)"}}>
+<div style={{background: "rgba(255,255,255,0.82)", borderRadius: "24px", padding: "20px", display: "flex", flexDirection: "column", gap: "10px", boxShadow: "0 20px 50px rgba(120,100,170,0.12)"}}>
 <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
 <span style={{fontSize: "15px", fontWeight: "500", color: "var(--muted)"}}>Tonight in Gaming</span>
 <span style={{display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", color: "#3E6B57"}}><span style={{width: "8px", height: "8px", borderRadius: "50%", background: "#5DBB8E", display: "inline-block"}}></span>3 here now</span>
 </div>
 <h2 style={{margin: "0", fontSize: "23px", fontWeight: "600", lineHeight: "1.2"}}>What game got you hooked?</h2>
 <button onClick={v.homeJoin} style={{height: "52px", borderRadius: "20px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "17px", fontWeight: "500", marginTop: "4px"}}>{v.joinLabel}</button>
-<button onClick={v.goCircles} style={{height: "44px", border: "none", background: "transparent", color: "var(--ink)", fontSize: "16px", textDecoration: "underline"}}>See all circles</button>
+<button onClick={v.goCircles} style={{height: "44px", border: "none", background: "transparent", color: "var(--ink)", fontSize: "16px", fontWeight:"600"}}>See all circles ›</button>
 </div>
 {v.reflNudge && (<>
 <button onClick={v.openPast} style={{textAlign: "left", border: "none", display: "flex", gap: "12px", alignItems: "center", background: "rgba(255,255,255,0.7)", borderRadius: "24px", padding: "12px 14px", color: "var(--ink)"}}>
 <Mo mood="happy" size={44} />
 <span style={{flex: "1", display: "flex", flexDirection: "column", gap: "2px"}}>
 <span style={{fontSize: "16px", fontWeight: "600"}}>How was Minecraft build night?</span>
-<span style={{fontSize: "14px", color: "var(--muted)"}}>Reflect with Mo and stay in touch · 1 min</span>
+<span style={{fontSize: "14px", color: "var(--muted)"}}>Reflect with Mo and stay in touch · 1&nbsp;min</span>
 </span>
 <span aria-hidden="true" style={{fontSize: "20px"}}>›</span>
 </button>
@@ -857,26 +1121,7 @@ class Bridge extends BridgeBase {
 </>)}
 <div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
 {v.homeEvents.map((ev, $index) => (<React.Fragment key={$index}>
-<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "26px", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 12px 30px rgba(120,100,170,0.10)"}}>
-<div style={{background: ev.tint, padding: "10px 16px", fontSize: "13px", fontWeight: "500", color: "var(--muted)"}}>{ev.hostLabel}</div>
-<div style={{padding: "12px 16px 16px", display: "flex", flexDirection: "column", gap: "6px", flex: "1"}}>
-<button onClick={ev.open} style={{textAlign: "left", border: "none", background: "transparent", padding: "0", color: "var(--ink)", display: "flex", flexDirection: "column", gap: "4px"}}>
-<span style={{display: "flex", justifyContent: "space-between", width: "100%", gap: "8px"}}><span style={{fontSize: "17px", fontWeight: "600", lineHeight: "1.25"}}>{ev.title}</span><span style={{flex: "0 0 auto", fontSize: "14px", textDecoration: "underline"}}>Details</span></span>
-<span style={{fontSize: "14px", color: "var(--muted)"}}>{ev.when} · {ev.where}</span>
-</button>
-<div style={{display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap", marginTop: "2px"}}>
-{ev.sense.map((t, $i) => (<React.Fragment key={$i}><span style={{background: "var(--soft)", borderRadius: "999px", padding: "4px 10px", fontSize: "12px"}}>{t}</span></React.Fragment>))}
-<span style={{fontSize: "13px", color: "#3E6B57"}}>{ev.goingText}</span>
-</div>
-<div style={{marginTop: "auto", paddingTop: "8px"}}>
-{ev.notMine && (<>
-<button onClick={ev.toggle} style={{width: "100%", height: "44px", borderRadius: "16px", border: "none", background: ev.inBg, color: ev.inFg, fontSize: "15px", fontWeight: "500"}}>{ev.inLabel}</button>
-</>)}
-{ev.isMine && (<>
-<div style={{height: "44px", borderRadius: "16px", background: "#E4F1F0", color: "#3E6B57", fontSize: "15px", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center"}}>You're hosting</div>
-</>)}
-</div>
-</div>
+<div className="event-row-card"><DateTile day={ev.day} date={ev.date}/><button onClick={ev.open} className="event-copy" style={{border:0,background:"transparent",textAlign:"left",padding:0,color:"var(--ink)"}}><strong>{ev.title}</strong><span>{ev.when}</span><span>{ev.where}</span></button>{ev.notMine ? <button onClick={ev.toggle} style={{height:"40px",border:0,borderRadius:"14px",background:ev.inBg,color:ev.inFg,padding:"0 10px",fontWeight:"600"}}>{ev.inLabel}</button> : <span style={{fontSize:"12px",color:"var(--muted)"}}>Hosting</span>}
 </div>
 </React.Fragment>))}
 </div>
@@ -884,7 +1129,7 @@ class Bridge extends BridgeBase {
 <div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
 <span style={{fontSize: "18px", fontWeight: "600"}}>Practice made for you</span>
 {v.recList.map((r, $index) => (<React.Fragment key={$index}>
-<button onClick={r.start} style={{textAlign: "left", background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "26px", padding: "16px 18px", display: "flex", alignItems: "center", gap: "12px", color: "var(--ink)", boxShadow: "0 12px 30px rgba(120,100,170,0.10)"}}>
+<button onClick={r.start} style={{textAlign: "left", background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "24px", padding: "16px 18px", display: "flex", alignItems: "center", gap: "12px", color: "var(--ink)", boxShadow: "0 12px 30px rgba(120,100,170,0.10)"}}>
 <span style={{flex: "1", display: "flex", flexDirection: "column", gap: "4px"}}>
 <span style={{fontSize: "17px", fontWeight: "600"}}>{r.title}</span>
 <span style={{fontSize: "14px", lineHeight: "1.35", color: "var(--muted)"}}>{r.why}</span>
@@ -894,10 +1139,11 @@ class Bridge extends BridgeBase {
 </React.Fragment>))}
 </div>
 </div>
+</div>
 </>)}
 
 {v.isHelp && (<>
-<div style={{width: "100%", minHeight: "100%", boxSizing: "border-box", padding: "26px 22px 30px", display: "flex", flexDirection: "column", gap: "16px", background: "var(--bg)"}}>
+<div style={{width: "100%", minHeight: "100%", boxSizing: "border-box", padding: "26px 20px 30px", display: "flex", flexDirection: "column", gap: "16px", background: "var(--bg)"}}>
 <button onClick={v.goHome} aria-label="Back" style={{width: "44px", height: "44px", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center"}}>
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"></path></svg>
 </button>
@@ -906,7 +1152,7 @@ class Bridge extends BridgeBase {
 <h1 style={{margin: "0", fontSize: "30px", fontWeight: "600"}}>You're not alone</h1>
 <span style={{fontSize: "16px", color: "var(--muted)"}}>Pick what feels right. Real people are here for you.</span>
 </div>
-<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "28px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px"}}>
+<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px"}}>
 <span style={{fontSize: "18px", fontWeight: "600"}}>Text someone I trust</span>
 <div style={{display: "flex", gap: "8px", flexWrap: "wrap"}}>
 {v.helpPeople.map((p, $index) => (<React.Fragment key={$index}>
@@ -921,24 +1167,28 @@ class Bridge extends BridgeBase {
 <span className="rise" style={{fontSize: "15px", color: "#3E6B57", textAlign: "center"}}>Sent to {v.helpTo}. Mo will stay with you until they reply.</span>
 </>)}
 </div>
-<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "28px", padding: "18px", display: "flex", flexDirection: "column", gap: "10px"}}>
+<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "18px", display: "flex", flexDirection: "column", gap: "10px"}}>
 <span style={{fontSize: "18px", fontWeight: "600"}}>Talk to someone right now</span>
 <span style={{fontSize: "15px", color: "var(--muted)"}}>Free, any time of day or night.</span>
 <button style={{height: "50px", borderRadius: "18px", border: "none", background: "#FBE1DC", color: "var(--ink)", fontSize: "16px", fontWeight: "500"}}>Call or text 988</button>
 </div>
-<button onClick={v.goReset} style={{height: "44px", border: "none", background: "transparent", color: "var(--ink)", fontSize: "16px", textDecoration: "underline"}}>Breathe with Mo first</button>
+<button onClick={v.goReset} style={{height: "44px", border: "none", background: "transparent", color: "var(--ink)", fontSize: "16px", fontWeight:"600"}}>Breathe with Mo first ›</button>
 </div>
 </>)}
 
 {v.isCircles && (<>
-<div style={{padding: "28px 20px 24px", display: "flex", flexDirection: "column", gap: "14px"}}>
+<div className="tab-screen">
+<div className="tab-sticky-header">
+<h1 className="tab-page-title">Circles</h1>
 <div style={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px", background: "rgba(255,255,255,0.6)", borderRadius: "999px", padding: "4px"}}>
 {v.cTabs.map((t, $index) => (<React.Fragment key={$index}>
 <button onClick={t.pick} style={{height: "42px", borderRadius: "999px", border: "none", background: t.bg, color: t.fg, fontSize: "15px", fontWeight: "600"}}>{t.label}</button>
 </React.Fragment>))}
 </div>
+</div>
+<div className="tab-screen-content circles-content">
 {v.showCircleList && (<>
-<div style={{display: "flex", gap: "12px", alignItems: "center", background: "rgba(255,255,255,0.7)", borderRadius: "26px", padding: "12px 14px"}}>
+<div style={{display: "flex", gap: "12px", alignItems: "center", background: "rgba(255,255,255,0.7)", borderRadius: "24px", padding: "12px 14px"}}>
 <Mo mood="happy" size={52} />
 <span style={{fontSize: "16px", lineHeight: "1.4"}}>{v.circlesMoLine}</span>
 </div>
@@ -948,10 +1198,10 @@ class Bridge extends BridgeBase {
 </React.Fragment>))}
 </div>
 {v.circleCards.map((c, $index) => (<React.Fragment key={$index}>
-<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "28px", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 14px 34px rgba(120,100,170,0.12)"}}>
-<div style={{height: "88px", background: c.grad, padding: "16px", boxSizing: "border-box", display: "flex", justifyContent: "space-between", alignItems: "flex-start"}}>
-<span style={{fontSize: "22px", fontWeight: "600"}}>{c.name}</span>
-<span style={{background: "#FFFFFF", borderRadius: "999px", padding: "5px 12px", fontSize: "13px", color: "#3E6B57"}}>{c.here} here now</span>
+<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 10px 28px rgba(120,100,170,0.10)"}}>
+<div style={{background: c.tint, padding: "14px 16px", boxSizing: "border-box", display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+<div style={{display: "flex", alignItems: "center", gap: "10px"}}><CircleGlyph kind={c.key} tint="rgba(255,255,255,.65)" /><span style={{fontSize: "20px", fontWeight: "600"}}>{c.name}</span></div>
+<div style={{display: "flex", alignItems: "center", gap: "8px"}}><div className="avatar-stack">{c.avatars.slice(0,3).map((name, i) => <PersonAvatar key={name} name={name} size={28} tint={i === 0 ? "#F9DCE4" : i === 1 ? "#E3E0F8" : "#DDF1E6"} />)}</div><span style={{fontSize: "13px", color: "var(--muted)"}}>+{c.here} here now</span></div>
 </div>
 <div style={{padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: "10px"}}>
 <span style={{fontSize: "13px", color: "var(--muted)", letterSpacing: "1px"}}>TONIGHT'S TOPIC</span>
@@ -998,12 +1248,13 @@ class Bridge extends BridgeBase {
 </>)}
 </>)}
 </div>
+</div>
 </>)}
 
 {v.isCircle && (<>
 <div style={{display: "flex", flexDirection: "column", minHeight: "100%"}}>
-<div style={{padding: "22px 22px 8px", display: "flex", flexDirection: "column", gap: "10px"}}>
-<div style={{display: "flex", alignItems: "center", gap: "12px"}}>
+<div style={{padding: "20px 20px 8px", display: "flex", flexDirection: "column", gap: "10px"}}>
+<div className="sticky-header inner-header" style={{display: "flex", alignItems: "center", gap: "12px"}}>
 <button onClick={v.goCircles} aria-label="Back to circles" style={{width: "44px", height: "44px", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center"}}>
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"></path></svg>
 </button>
@@ -1032,41 +1283,28 @@ class Bridge extends BridgeBase {
 </div>
 </>)}
 {v.circleEvents.map((ev, $index) => (<React.Fragment key={$index}>
-<div style={{display: "flex", alignItems: "center", gap: "10px", background: "rgba(255,255,255,0.75)", borderRadius: "20px", padding: "10px 12px 10px 14px"}}>
-<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6E6585" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"></rect><path d="M8 3v4M16 3v4M3.5 10h17"></path></svg>
-<button onClick={ev.open} style={{flex: "1", display: "flex", flexDirection: "column", minWidth: "0", textAlign: "left", border: "none", background: "transparent", padding: "0", color: "var(--ink)"}}>
-<span style={{fontSize: "15px", fontWeight: "600"}}>{ev.title} <span style={{fontWeight: "400", fontSize: "13px", textDecoration: "underline"}}>Details</span></span>
-<span style={{fontSize: "13px", color: "var(--muted)"}}>{ev.when} · {ev.goingText}</span>
-</button>
-{ev.notMine && (<>
-<button onClick={ev.toggle} style={{flex: "0 0 auto", height: "38px", borderRadius: "14px", border: "none", background: ev.inBg, color: ev.inFg, padding: "0 12px", fontSize: "14px", fontWeight: "500"}}>{ev.inLabel}</button>
-</>)}
-{ev.isMine && (<>
-<span style={{flex: "0 0 auto", fontSize: "13px", color: "#3E6B57", fontWeight: "500"}}>Hosting</span>
-</>)}
-</div>
+<div className="event-row-card"><DateTile day={ev.day} date={ev.date}/><button onClick={ev.open} className="event-copy" style={{border:0,background:"transparent",textAlign:"left",padding:0,color:"var(--ink)"}}><strong>{ev.title}</strong><span>{ev.when}</span><span>{ev.where}</span></button>{ev.notMine ? <button onClick={ev.toggle} style={{height:"38px",border:0,borderRadius:"13px",background:ev.inBg,color:ev.inFg,padding:"0 9px",fontWeight:"600"}}>{ev.inLabel}</button> : <span style={{fontSize:"12px",color:"var(--muted)"}}>Hosting</span>}</div>
 </React.Fragment>))}
 <button onClick={v.newEventCircle} style={{alignSelf: "flex-start", height: "38px", borderRadius: "999px", border: "1.5px dashed #B9B1C8", background: "transparent", color: "var(--ink)", padding: "0 14px", fontSize: "14px", fontWeight: "500"}}>+ Plan an event in {v.cName}</button>
 </div>
 </div>
 
-<div style={{flex: "1", padding: "12px 22px 16px", display: "flex", flexDirection: "column", gap: "14px"}}>
-<div style={{display: "flex", flexDirection: "column", gap: "6px"}}>
-<span style={{display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m1Name}{v.m1CanDm && (<><button onClick={v.m1Dm} style={{border: "none", background: "transparent", padding: "0", color: "var(--ink)", fontSize: "13px", textDecoration: "underline"}}>Message</button></>)}</span>
-<div style={{alignSelf: "flex-start", background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "80%", fontSize: "17px", lineHeight: "1.45"}}>{v.m1Text}</div>
+<div style={{flex: "1", padding: "12px 20px 16px", display: "flex", flexDirection: "column", gap: "14px"}}>
+<div className="today-divider">Today</div>
+<div className="chat-group">
+<PersonAvatar name={v.m1Name} size={28} tint="#F9DCE4" onClick={v.m1CanDm ? v.m1Dm : null} />
+<div><span style={{fontSize: "13px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m1Name}</span><div style={{background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "82%", fontSize: "17px", lineHeight: "1.45"}}>{v.m1Text}</div><div className="chat-meta">7:38 PM</div></div>
 </div>
-<div style={{display: "flex", flexDirection: "column", gap: "6px"}}>
-<span style={{display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m2Name}{v.m2CanDm && (<><button onClick={v.m2Dm} style={{border: "none", background: "transparent", padding: "0", color: "var(--ink)", fontSize: "13px", textDecoration: "underline"}}>Message</button></>)}</span>
-<div style={{alignSelf: "flex-start", background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "80%", fontSize: "17px", lineHeight: "1.45"}}>{v.m2Text}</div>
+<div className="chat-group">
+<PersonAvatar name={v.m2Name} size={28} tint="#E3E0F8" onClick={v.m2CanDm ? v.m2Dm : null} />
+<div><span style={{fontSize: "13px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m2Name}</span><div style={{background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "82%", fontSize: "17px", lineHeight: "1.45"}}>{v.m2Text}</div><div className="chat-meta">7:42 PM</div></div>
 </div>
 {v.hasUnsafe && (<>
 <div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
-<div style={{display: "flex", flexDirection: "column", gap: "6px"}}>
-<span style={{fontSize: "14px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m3Name} · new member</span>
-<div style={{alignSelf: "flex-start", background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "80%", fontSize: "17px", lineHeight: "1.45"}}>{v.m3Text}</div>
+<div className="chat-group"><PersonAvatar name={v.m3Name} size={28} tint="#FBE1D8" /><div><span style={{fontSize: "13px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m3Name} · new member</span><div style={{background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "82%", fontSize: "17px", lineHeight: "1.45"}}>{v.m3Text}</div><div className="chat-meta">7:43 PM</div></div>
 </div>
 {v.showUnsafeCard && (<>
-<div className="rise" style={{background: "#FBEDEA", borderRadius: "26px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px"}}>
+<div className="rise" style={{background: "#FBEDEA", borderRadius: "24px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px"}}>
 <div style={{display: "flex", gap: "12px", alignItems: "center"}}>
 <Mo mood="worried" size={52} />
 <span style={{fontSize: "16px", lineHeight: "1.4"}}>Only you can see this. {v.m3Name} is asking for money and to keep it secret. That's not safe.</span>
@@ -1074,7 +1312,7 @@ class Bridge extends BridgeBase {
 <div style={{display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px"}}>
 <button onClick={v.unsafeReport} style={{height: "46px", borderRadius: "16px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "15px", fontWeight: "500"}}>Report</button>
 <button onClick={v.unsafeBlock} style={{height: "46px", borderRadius: "16px", border: "none", background: "#FFFFFF", color: "var(--ink)", fontSize: "15px", fontWeight: "500"}}>Block</button>
-<button onClick={v.unsafeIgnore} style={{height: "46px", borderRadius: "16px", border: "none", background: "transparent", color: "var(--ink)", fontSize: "15px", textDecoration: "underline"}}>Not now</button>
+<button onClick={v.unsafeIgnore} style={{height: "46px", borderRadius: "16px", border: "none", background: "transparent", color: "var(--ink)", fontSize: "15px", fontWeight: "600"}}>Not now</button>
 </div>
 </div>
 </>)}
@@ -1083,12 +1321,11 @@ class Bridge extends BridgeBase {
 
 {v.isSent && (<>
 <div style={{display: "flex", flexDirection: "column", gap: "14px"}}>
-<div style={{alignSelf: "flex-end", background: "var(--ink)", color: "#FFFFFF", borderRadius: "24px 24px 8px 24px", padding: "13px 17px", maxWidth: "80%", fontSize: "17px", lineHeight: "1.45"}}>{v.sentText}</div>
+<div className="chat-group me"><div><div style={{alignSelf: "flex-end", background: "var(--ink)", color: "#FFFFFF", borderRadius: "24px 24px 8px 24px", padding: "13px 17px", maxWidth: "100%", fontSize: "17px", lineHeight: "1.45"}}>{v.sentText}</div><div className="chat-meta">Seen · 7:44 PM</div></div></div>
 <div style={{display: "flex", flexDirection: "column", gap: "6px"}}>
-<span style={{fontSize: "14px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m2Name}</span>
-<div style={{alignSelf: "flex-start", background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "80%", fontSize: "17px", lineHeight: "1.45"}}>{v.jordanReply}</div>
+<div className="chat-group"><PersonAvatar name={v.m2Name} size={28} tint="#E3E0F8" /><div><span style={{fontSize: "14px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m2Name}</span><div style={{background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "82%", fontSize: "17px", lineHeight: "1.45"}}>{v.jordanReply}</div><div className="chat-meta">7:45 PM</div></div></div>
 </div>
-<div className="rise" style={{background: "rgba(255,255,255,0.9)", borderRadius: "28px", padding: "16px", display: "flex", gap: "12px", alignItems: "center", boxShadow: "0 16px 40px rgba(120,100,170,0.18)"}}>
+<div className="rise" style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "16px", display: "flex", gap: "12px", alignItems: "center", boxShadow: "0 16px 40px rgba(120,100,170,0.18)"}}>
 <div style={{flex: "0 0 auto"}}><Mo mood={v.resultMood} size={64} /></div>
 <div style={{display: "flex", flexDirection: "column", gap: "10px", flex: "1"}}>
 <p style={{margin: "0", fontSize: "16px", lineHeight: "1.4"}}>{v.resultLine}</p>
@@ -1099,7 +1336,7 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.isReadOnly && (<>
-<div style={{marginTop: "auto", background: "rgba(255,255,255,0.6)", borderRadius: "26px", padding: "14px", display: "flex", alignItems: "center", gap: "12px"}}>
+<div style={{marginTop: "auto", background: "rgba(255,255,255,0.6)", borderRadius: "24px", padding: "14px", display: "flex", alignItems: "center", gap: "12px"}}>
 <Mo mood="calm" size={44} />
 <span style={{flex: "1", fontSize: "15px", lineHeight: "1.4"}}>Reading quietly counts. Say hi only if you want to.</span>
 <button onClick={v.stopReading} style={{height: "44px", borderRadius: "16px", border: "none", background: "var(--ink)", color: "#FFFFFF", padding: "0 14px", fontSize: "15px", fontWeight: "500"}}>Say hi</button>
@@ -1107,7 +1344,7 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.showSuggest && (<>
-<div style={{marginTop: "auto", background: "rgba(255,255,255,0.6)", borderRadius: "26px", padding: "14px", display: "flex", flexDirection: "column", gap: "10px"}}>
+<div style={{marginTop: "auto", background: "rgba(255,255,255,0.6)", borderRadius: "24px", padding: "14px", display: "flex", flexDirection: "column", gap: "10px"}}>
 <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
 <Mo mood="happy" size={40} />
 <span style={{fontSize: "16px", fontWeight: "500"}}>Want a reply idea?</span>
@@ -1124,9 +1361,10 @@ class Bridge extends BridgeBase {
 </div>
 
 {v.showComposer && (<>
-<div style={{padding: "10px 22px 18px", display: "flex", flexDirection: "column", gap: "8px"}}>
+<div style={{padding: "10px 20px 18px", display: "flex", flexDirection: "column", gap: "8px"}}>
 {v.hasDraft && (<>
 <span style={{alignSelf: "flex-start", display: "flex", alignItems: "center", gap: "8px", background: v.toneBg, borderRadius: "999px", padding: "6px 14px", fontSize: "14px", color: "var(--ink)"}}><span style={{width: "8px", height: "8px", borderRadius: "50%", background: v.toneDot, display: "inline-block"}}></span>{v.toneLabel}</span>
+{v.hasToneWhy && (<><span className="why-line">{v.toneWhy}</span></>)}
 </>)}
 <div style={{display: "flex", gap: "10px", alignItems: "center"}}>
 <div style={{flex: "1", minHeight: "52px", borderRadius: "24px", background: "rgba(255,255,255,0.85)", boxShadow: v.draftRing, padding: "12px 18px", display: "flex", alignItems: "center", fontSize: "16px", color: v.draftColor, lineHeight: "1.35"}}>{v.draftShown}</div>
@@ -1140,99 +1378,84 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.isNewEvent && (<>
-<div style={{padding: "22px 22px 28px", display: "flex", flexDirection: "column", gap: "16px"}}>
-<div style={{display: "flex", alignItems: "center", gap: "12px"}}>
-<button onClick={v.evBack} aria-label="Back" style={{width: "44px", height: "44px", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center"}}>
+<div className="sticky-header inner-header">
+<button onClick={v.evPrev} aria-label="Back" style={{width: "44px", height: "44px", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center"}}>
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"></path></svg>
 </button>
-<h1 style={{margin: "0", fontSize: "22px", fontWeight: "600", lineHeight: "1.25"}}>{v.evTitle}</h1>
+<span className="header-title">Create event</span><span></span>
 </div>
-<span style={{fontSize: "16px", fontWeight: "600"}}>Host it in</span>
-<div style={{display: "flex", gap: "8px", flexWrap: "wrap"}}>
+<div className="event-step-shell">
+<div className="event-progress"><span>{v.evStepLabel}</span><div><i style={{width: (v.evStep / 3 * 100) + '%'}}></i></div></div>
+{v.evStep === 1 && <>
+<span className="field-label">What & when</span>
+<span style={{fontSize:"14px",fontWeight:"600"}}>Host it in</span>
+<div className="horizontal-scroll">
 {v.hostOpts.map((o, $index) => (<React.Fragment key={$index}>
-<button onClick={o.pick} aria-pressed={o.on} style={{minHeight: "42px", borderRadius: "999px", border: "none", padding: "8px 16px", fontSize: "15px", background: o.bg, color: o.fg}}>{o.label}</button>
+<button className={"choice-pill " + (o.on ? "on" : "")} onClick={o.pick} aria-pressed={o.on}>{o.label}</button>
 </React.Fragment>))}
 </div>
-<span style={{fontSize: "16px", fontWeight: "600"}}>What</span>
-<div style={{display: "flex", gap: "8px", flexWrap: "wrap"}}>
+<label style={{display:"flex",flexDirection:"column",gap:"7px"}}><span style={{fontSize:"14px",fontWeight:"600"}}>Event name</span><input className="event-input" value={v.evPreview.split(' · ')[0]} onChange={v.setEvWhat} /></label>
+<div className="horizontal-scroll">
 {v.whatOpts.map((o, $index) => (<React.Fragment key={$index}>
-<button onClick={o.pick} aria-pressed={o.on} style={{minHeight: "42px", borderRadius: "999px", border: "none", padding: "8px 16px", fontSize: "15px", background: o.bg, color: o.fg}}>{o.label}</button>
+<button className={"choice-pill " + (o.on ? "on" : "")} onClick={o.pick}>{o.label}</button>
 </React.Fragment>))}
 </div>
-<span style={{fontSize: "16px", fontWeight: "600"}}>When</span>
-<div style={{display: "flex", gap: "8px", flexWrap: "wrap"}}>
-{v.whenOpts.map((o, $index) => (<React.Fragment key={$index}>
-<button onClick={o.pick} aria-pressed={o.on} style={{minHeight: "42px", borderRadius: "999px", border: "none", padding: "8px 16px", fontSize: "15px", background: o.bg, color: o.fg}}>{o.label}</button>
-</React.Fragment>))}
+<span style={{fontSize:"14px",fontWeight:"600"}}>Date</span>
+<div className="week-strip">{v.weekDays.map((d,i)=><button className={"day-button "+(d.on?"on":"")} onClick={d.pick} key={i}><small>{d.day}</small><strong>{d.date}</strong></button>)}</div>
+<button onClick={v.toggleCalendar} style={{alignSelf:"flex-start",border:0,background:"transparent",fontWeight:"600",padding:"2px"}}>Pick another date ›</button>
+{v.showCalendar && <div style={{background:"rgba(255,255,255,.82)",borderRadius:"20px",padding:"14px"}}><strong>June 2025</strong><div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"5px",marginTop:"10px"}}>{[1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(n=><button key={n} onClick={v.toggleCalendar} style={{height:"34px",border:0,borderRadius:"10px",background:n===9?"var(--ink)":"transparent",color:n===9?"#fff":"var(--ink)"}}>{n}</button>)}</div></div>}
+<span style={{fontSize:"14px",fontWeight:"600"}}>Start time</span>
+<div className="horizontal-scroll">{v.timeOpts.map((o,i)=><button key={i} className={"choice-pill "+(o.on?"on":"")} onClick={o.pick}>{o.label}</button>)}</div>
+<div className="segmented-row"><span>Duration</span><div className="segments">{v.durationOpts.map((o,i)=><button key={i} className={o.on?"on":""} onClick={o.pick}>{o.label}</button>)}</div></div>
+<div style={{background:"rgba(255,255,255,.65)",borderRadius:"16px",padding:"12px",fontWeight:"600"}}>{v.evTimeRange}</div>
+<div style={{display:"flex",gap:"10px",alignItems:"center",background:"var(--soft)",borderRadius:"18px",padding:"12px"}}><Mo mood="happy" size={38}/><span>Shorter is easier the first time.</span></div>
+</>}
+{v.evStep === 2 && <>
+<span className="field-label">Where & vibe</span>
+<div className="segments">{v.modeOpts.map((o,i)=><button key={i} className={o.on?"on":""} onClick={o.pick}>{o.label}</button>)}</div>
+{v.evInPerson ? <>
+<input className="event-input" placeholder="Search a place" aria-label="Search a place" />
+{v.venueOpts.map((venue,i)=><button key={i} className={"venue-card "+(venue.on?"on":"")} onClick={venue.pick}><MapThumb/><span><strong>{venue.name}</strong><small>{venue.address} · {venue.distance}</small><small className="quiet-tag">{venue.quiet}</small></span></button>)}
+</> : <>
+<div className="horizontal-scroll">{v.onlineOpts.map((o,i)=><button key={i} className={"choice-pill "+(o.on?"on":"")} onClick={o.pick}>{o.label}</button>)}</div>
+<div style={{background:"var(--soft)",borderRadius:"16px",padding:"12px"}}>Bridge creates the link.</div>
+</>}
+<div className="segmented-row"><span>Sound</span><div className="segments">{v.soundOpts.map((o,i)=><button key={i} className={o.on?"on":""} onClick={o.pick}>{o.label.replace(' music','')}</button>)}</div></div>
+<div className="segmented-row"><span>Lighting</span><div className="segments">{v.lightOpts.map((o,i)=><button key={i} className={o.on?"on":""} onClick={o.pick}>{o.label}</button>)}</div></div>
+{v.evInCircle && <div className="segmented-row"><span>Group size</span><div className="stepper"><button onClick={v.groupDown}>−</button><strong>{v.evGroupSize}</strong><button onClick={v.groupUp}>+</button></div></div>}
+</>}
+{v.evStep === 3 && <>
+<span className="field-label">Who & review</span>
+{v.evIsOutside ? <>{v.inviteOpts.map((o,i)=><div className="invite-row" key={i}><PersonAvatar name={o.label} size={40} tint={i%2?"#E3E0F8":"#F9DCE4"}/><span>{o.label}</span><button className={"check-box "+(o.on?"on":"")} onClick={o.pick}>{o.on?"✓":""}</button></div>)}</> : <div style={{background:"var(--soft)",borderRadius:"18px",padding:"14px"}}>Everyone in the circle can see this event.</div>}
+<span style={{fontSize:"14px",fontWeight:"600"}}>Remind me</span>
+<div className="segments">{v.remindOpts.map((o,i)=><button key={i} className={o.on?"on":""} onClick={o.pick}>{o.label}</button>)}</div>
+{v.evInPerson && <button className={"choice-pill "+(v.shareLabel.indexOf('✓')>=0?"on":"")} onClick={v.toggleShare}>{v.shareLabel}</button>}
+<span style={{fontSize:"13px",color:"var(--muted)",letterSpacing:"1px"}}>PREVIEW</span>
+<div className="event-row-card"><DateTile day={v.weekDays.filter(d=>d.on)[0].day} date={v.weekDays.filter(d=>d.on)[0].date}/><div className="event-copy"><strong>{v.evPreview.split(' · ')[0]}</strong><span>{v.evTimeRange}</span><span>{v.evPreviewWhere}</span></div></div>
+</>}
 </div>
-<span style={{fontSize: "16px", fontWeight: "600"}}>Where</span>
-<div style={{display: "flex", gap: "8px", flexWrap: "wrap"}}>
-{v.whereOpts.map((o, $index) => (<React.Fragment key={$index}>
-<button onClick={o.pick} aria-pressed={o.on} style={{minHeight: "42px", borderRadius: "999px", border: "none", padding: "8px 16px", fontSize: "15px", background: o.bg, color: o.fg}}>{o.label}</button>
-</React.Fragment>))}
-</div>
-<span style={{fontSize: "16px", fontWeight: "600"}}>Sound</span>
-<div style={{display: "flex", gap: "8px", flexWrap: "wrap"}}>
-{v.soundOpts.map((o, $index) => (<React.Fragment key={$index}>
-<button onClick={o.pick} aria-pressed={o.on} style={{minHeight: "42px", borderRadius: "999px", border: "none", padding: "8px 16px", fontSize: "15px", background: o.bg, color: o.fg}}>{o.label}</button>
-</React.Fragment>))}
-</div>
-<span style={{fontSize: "16px", fontWeight: "600"}}>Lighting</span>
-<div style={{display: "flex", gap: "8px", flexWrap: "wrap"}}>
-{v.lightOpts.map((o, $index) => (<React.Fragment key={$index}>
-<button onClick={o.pick} aria-pressed={o.on} style={{minHeight: "42px", borderRadius: "999px", border: "none", padding: "8px 16px", fontSize: "15px", background: o.bg, color: o.fg}}>{o.label}</button>
-</React.Fragment>))}
-</div>
-{v.evInCircle && (<>
-<span style={{fontSize: "16px", fontWeight: "600"}}>How many people</span>
-<div style={{display: "flex", gap: "8px", flexWrap: "wrap"}}>
-{v.sizeOpts.map((o, $index) => (<React.Fragment key={$index}>
-<button onClick={o.pick} aria-pressed={o.on} style={{minHeight: "42px", borderRadius: "999px", border: "none", padding: "8px 16px", fontSize: "15px", background: o.bg, color: o.fg}}>{o.label}</button>
-</React.Fragment>))}
-</div>
-</>)}
-{v.evIsOutside && (<>
-<span style={{fontSize: "16px", fontWeight: "600"}}>Invite friends you met</span>
-<div style={{display: "flex", gap: "8px", flexWrap: "wrap"}}>
-{v.inviteOpts.map((o, $index) => (<React.Fragment key={$index}>
-<button onClick={o.pick} aria-pressed={o.on} style={{minHeight: "42px", borderRadius: "999px", border: "none", padding: "8px 16px", fontSize: "15px", background: o.bg, color: o.fg}}>{o.label}</button>
-</React.Fragment>))}
-</div>
-</>)}
-<div style={{display: "flex", gap: "12px", alignItems: "flex-start", background: "rgba(255,255,255,0.7)", borderRadius: "24px", padding: "14px"}}>
-<Mo mood="happy" size={44} />
-<div style={{flex: "1", display: "flex", flexDirection: "column", gap: "10px"}}>
-<span style={{fontSize: "15px", lineHeight: "1.4"}}>{v.evTip}</span>
-{v.evInPerson && (<>
-<button onClick={v.toggleShare} style={{alignSelf: "flex-start", minHeight: "42px", borderRadius: "999px", border: "none", padding: "8px 16px", fontSize: "15px", background: v.shareBg, color: v.shareFg}}>{v.shareLabel}</button>
-</>)}
-</div>
-</div>
-<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "22px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px"}}>
-<span style={{fontSize: "13px", color: "var(--muted)", letterSpacing: "1px"}}>PREVIEW</span>
-<span style={{fontSize: "17px", fontWeight: "600"}}>{v.evPreview}</span>
-<span style={{fontSize: "14px", color: "var(--muted)"}}>{v.evPreviewWhere}</span>
-<span style={{fontSize: "14px", color: "var(--muted)"}}>{v.evPreviewSense}</span>
-</div>
-<button onClick={v.createEvent} style={{height: "56px", borderRadius: "22px", border: "none", background: v.createBg, color: "#FFFFFF", fontSize: "17px", fontWeight: "500"}}>Create event</button>
-</div>
+<div className="sticky-cta"><button onClick={v.evStep === 3 ? v.createEvent : v.evNext}>{v.evStep === 3 ? 'Create event' : 'Next'}</button></div>
 </>)}
 
 {v.isDm && (<>
 <div style={{display: "flex", flexDirection: "column", minHeight: "100%"}}>
-<div style={{padding: "22px 22px 8px", display: "flex", alignItems: "center", gap: "12px"}}>
+<div className="sticky-header inner-header" style={{padding: "20px 20px 8px", display: "flex", alignItems: "center", gap: "12px"}}>
 <button onClick={v.dmBack} aria-label="Back to messages" style={{width: "44px", height: "44px", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center"}}>
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"></path></svg>
 </button>
-<span style={{flex: "0 0 auto", width: "44px", height: "44px", borderRadius: "50%", background: v.dmTint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: "600"}}>{v.dmInitial}</span>
-<div style={{display: "flex", flexDirection: "column", flex: "1"}}>
+<div style={{display: "flex", flexDirection: "column", textAlign:"center"}}>
 <span style={{fontSize: "18px", fontWeight: "600"}}>{v.dmName}</span>
 <span style={{fontSize: "13px", color: "var(--muted)"}}>{v.dmFrom}</span>
 </div>
+<PersonAvatar name={v.dmName} tint={v.dmTint} size={40} />
 </div>
-<div style={{flex: "1", padding: "12px 22px 12px", display: "flex", flexDirection: "column", gap: "10px"}}>
+<div style={{flex: "1", padding: "12px 20px 12px", display: "flex", flexDirection: "column", gap: "10px"}}>
+<div className="today-divider">Today</div>
 {v.dmMessages.map((m, $index) => (<React.Fragment key={$index}>
-<div style={{alignSelf: m.align, background: m.bg, color: m.fg, borderRadius: m.radius, padding: "12px 16px", maxWidth: "80%", fontSize: "16px", lineHeight: "1.45"}}>{m.text}</div>
+<div className={"chat-group " + (m.me ? "me" : "")} style={{alignSelf: m.align}}>
+{m.showAvatar && <PersonAvatar name={v.dmName} tint={v.dmTint} size={28} />}
+<div><div style={{background: m.bg, color: m.fg, borderRadius: m.radius, padding: "12px 16px", maxWidth: "100%", fontSize: "16px", lineHeight: "1.45"}}>{m.text}</div>{m.lastInGroup && <div className="chat-meta">{m.seen ? 'Seen · ' : ''}{m.time || '7:40 PM'}</div>}</div>
+</div>
 </React.Fragment>))}
 <div style={{marginTop: "auto", background: "rgba(255,255,255,0.6)", borderRadius: "24px", padding: "12px", display: "flex", flexDirection: "column", gap: "8px"}}>
 <div style={{display: "flex", alignItems: "center", gap: "8px"}}><Mo mood="happy" size={34} /><span style={{fontSize: "15px", fontWeight: "500"}}>Reply ideas</span></div>
@@ -1243,10 +1466,11 @@ class Bridge extends BridgeBase {
 </div>
 </div>
 </div>
-<div style={{padding: "6px 22px 16px", display: "flex", flexDirection: "column", gap: "8px"}}>
+<div style={{padding: "6px 20px 16px", display: "flex", flexDirection: "column", gap: "8px"}}>
 {v.dmHarsh && (<>
 <div className="rise" style={{background: "#FBEDEA", borderRadius: "20px", padding: "10px 12px", display: "flex", flexDirection: "column", gap: "8px"}}>
 <div style={{display: "flex", gap: "8px", alignItems: "center"}}><Mo mood="worried" size={32} /><span style={{fontSize: "14px", lineHeight: "1.35"}}>This might sound harsh to {v.dmName}.</span></div>
+<span className="why-line">{v.dmWhy}</span>
 <div style={{display: "flex", gap: "8px"}}>
 <button onClick={v.dmSayGently} style={{flex: "1", height: "40px", borderRadius: "14px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "14px", fontWeight: "500"}}>Say it gently</button>
 <button onClick={v.dmSendAnyway} style={{flex: "1", height: "40px", borderRadius: "14px", border: "none", background: "#FFFFFF", color: "var(--ink)", fontSize: "14px"}}>Send anyway</button>
@@ -1264,21 +1488,21 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.isNotifs && (<>
-<div style={{padding: "22px 22px 28px", display: "flex", flexDirection: "column", gap: "12px"}}>
-<div style={{display: "flex", alignItems: "center", gap: "12px"}}>
+<div style={{padding: "20px 20px 28px", display: "flex", flexDirection: "column", gap: "12px"}}>
+<div className="sticky-header inner-header" style={{display: "flex", alignItems: "center", gap: "12px"}}>
 <button onClick={v.notifBack} aria-label="Back" style={{width: "44px", height: "44px", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center"}}>
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"></path></svg>
 </button>
 <h1 style={{margin: "0", fontSize: "24px", fontWeight: "600"}}>Notifications</h1>
 </div>
-<div style={{display: "flex", gap: "12px", alignItems: "center", background: "rgba(255,255,255,0.6)", borderRadius: "22px", padding: "12px 14px"}}>
+<div style={{display: "flex", gap: "12px", alignItems: "center", background: "rgba(255,255,255,0.6)", borderRadius: "20px", padding: "12px 14px"}}>
 <Mo mood="calm" size={40} />
 <span style={{flex: "1", fontSize: "14px", lineHeight: "1.4"}}>{v.notifMoLine}</span>
 </div>
 <button onClick={v.togglePause} style={{alignSelf: "flex-start", minHeight: "42px", borderRadius: "999px", border: "none", background: v.pauseBg, color: v.pauseFg, padding: "8px 16px", fontSize: "15px"}}>{v.pauseLabel}</button>
 <span style={{fontSize: "16px", fontWeight: "600", marginTop: "4px"}}>New</span>
 {v.notifNew.map((n, $index) => (<React.Fragment key={$index}>
-<button onClick={n.open} style={{textAlign: "left", display: "flex", gap: "12px", alignItems: "flex-start", background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "22px", padding: "14px", color: "var(--ink)", boxShadow: "0 10px 26px rgba(120,100,170,0.08)"}}>
+<button onClick={n.open} style={{textAlign: "left", display: "flex", gap: "12px", alignItems: "flex-start", background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "20px", padding: "14px", color: "var(--ink)", boxShadow: "0 10px 26px rgba(120,100,170,0.08)"}}>
 <span style={{flex: "0 0 auto", width: "40px", height: "40px", borderRadius: "14px", background: "var(--soft)", display: "flex", alignItems: "center", justifyContent: "center"}}>
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={n.path}></path></svg>
 </span>
@@ -1291,7 +1515,7 @@ class Bridge extends BridgeBase {
 </React.Fragment>))}
 <span style={{fontSize: "16px", fontWeight: "600", marginTop: "4px"}}>Earlier</span>
 {v.notifEarlier.map((n, $index) => (<React.Fragment key={$index}>
-<button onClick={n.open} style={{textAlign: "left", display: "flex", gap: "12px", alignItems: "flex-start", background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "22px", padding: "14px", color: "var(--ink)", boxShadow: "0 10px 26px rgba(120,100,170,0.08)"}}>
+<button onClick={n.open} style={{textAlign: "left", display: "flex", gap: "12px", alignItems: "flex-start", background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "20px", padding: "14px", color: "var(--ink)", boxShadow: "0 10px 26px rgba(120,100,170,0.08)"}}>
 <span style={{flex: "0 0 auto", width: "40px", height: "40px", borderRadius: "14px", background: "var(--soft)", display: "flex", alignItems: "center", justifyContent: "center"}}>
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={n.path}></path></svg>
 </span>
@@ -1306,19 +1530,24 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.isEvent && (<>
-<div style={{padding: "22px 22px 28px", display: "flex", flexDirection: "column", gap: "14px"}}>
-<div style={{display: "flex", alignItems: "center", gap: "12px"}}>
+<div style={{padding: "20px 20px 28px", display: "flex", flexDirection: "column", gap: "14px"}}>
+<div className="sticky-header inner-header" style={{display: "flex", alignItems: "center", gap: "12px"}}>
 <button onClick={v.edBack} aria-label="Back" style={{width: "44px", height: "44px", flex: "0 0 auto", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center"}}>
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"></path></svg>
 </button>
-<span style={{background: v.edTint, borderRadius: "999px", padding: "6px 12px", fontSize: "13px", fontWeight: "500"}}>{v.edHost}</span>
+<span className="header-title">Event details</span><span></span>
 </div>
-<div style={{display: "flex", flexDirection: "column", gap: "4px"}}>
-<h1 style={{margin: "0", fontSize: "26px", fontWeight: "600", lineHeight: "1.2"}}>{v.edTitle}</h1>
-<span style={{fontSize: "15px", color: "var(--muted)"}}>{v.edWhen} · {v.edWhere}</span>
+<div className="event-cover" style={{background:v.edTint}}><CircleGlyph kind={v.edIcon} tint="rgba(255,255,255,.65)" size={52}/><span><strong style={{display:"block",fontSize:"18px"}}>{v.edHost}</strong><small style={{color:"var(--muted)"}}>Bridge event</small></span></div>
+<div className="event-hero-card">
+<h1 style={{margin: "0", fontSize: "27px", fontWeight: "600", lineHeight: "1.2"}}>{v.edTitle}</h1>
+<div className="event-fact"><DateTile day={v.edDateDay} date={v.edDateNum}/><div><strong>{v.edTimeRange}</strong><small>{v.edWhen}</small></div></div>
+{v.edInPerson ? <div className="venue-detail"><div><strong>{v.edVenue}</strong><span style={{fontSize:"13px",color:"var(--muted)"}}>{v.edAddress}</span></div><MapThumb/><div className="venue-actions"><button onClick={v.edDirections}>Directions</button><button onClick={v.edCopyAddress}>Copy address</button></div></div> : <div style={{background:"var(--soft)",borderRadius:"18px",padding:"14px"}}>Join link available 10 min before.</div>}
+<div style={{display:"flex",justifyContent:"space-between",gap:"8px",fontSize:"14px"}}><span>{v.edHostedBy}</span><span>{v.edSpots}</span></div>
+{v.edUpcoming && <div className="rsvp-control">{v.edRsvp.map((o,i)=><button key={i} className={o.on?"on":""} onClick={o.pick}>{o.label}</button>)}</div>}
+<div className="utility-buttons"><button onClick={v.edAddCalendar}>Add to calendar</button><button onClick={v.edShare}>Share</button></div>
 </div>
 
-<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "26px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 12px 30px rgba(120,100,170,0.10)"}}>
+<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 12px 30px rgba(120,100,170,0.10)"}}>
 <span style={{fontSize: "17px", fontWeight: "600"}}>What to expect</span>
 <div style={{display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px"}}>
 {v.edSense.map((x, $index) => (<React.Fragment key={$index}>
@@ -1339,12 +1568,6 @@ class Bridge extends BridgeBase {
 <span style={{fontSize: "14px", color: "var(--muted)"}}>{v.edGoingText}</span>
 </div>
 </>)}
-{v.edCanRsvp && (<>
-<button onClick={v.edToggle} style={{height: "50px", borderRadius: "18px", border: "none", background: v.edInBg, color: v.edInFg, fontSize: "16px", fontWeight: "500"}}>{v.edInLabel}</button>
-</>)}
-{v.edIsMine && (<>
-<div style={{height: "46px", borderRadius: "16px", background: "#E4F1F0", color: "#3E6B57", fontSize: "15px", fontWeight: "500", display: "flex", alignItems: "center", justifyContent: "center"}}>You're hosting</div>
-</>)}
 </div>
 
 {v.edShowPrepHint && (<>
@@ -1352,7 +1575,7 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.edShowPrep && (<>
-<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "26px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 12px 30px rgba(120,100,170,0.10)"}}>
+<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 12px 30px rgba(120,100,170,0.10)"}}>
 <div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline"}}><span style={{fontSize: "17px", fontWeight: "600"}}>Get ready with Mo</span><span style={{fontSize: "13px", color: "var(--muted)"}}>{v.edPrepCount}</span></div>
 <button onClick={v.edPractice} style={{textAlign: "left", border: "none", display: "flex", gap: "12px", alignItems: "center", background: "var(--soft)", borderRadius: "20px", padding: "12px", color: "var(--ink)"}}>
 <Mo mood="happy" size={44} />
@@ -1373,7 +1596,7 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.edReflOpen && (<>
-<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "26px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 12px 30px rgba(120,100,170,0.10)"}}>
+<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 12px 30px rgba(120,100,170,0.10)"}}>
 <div style={{display: "flex", gap: "10px", alignItems: "center"}}><Mo mood="happy" size={44} /><span style={{fontSize: "17px", fontWeight: "600"}}>How did it go?</span></div>
 <div style={{display: "flex", gap: "8px", flexWrap: "wrap"}}>
 {v.edFeel.map((f, $index) => (<React.Fragment key={$index}>
@@ -1403,7 +1626,7 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.edPast && (<>
-<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "26px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 12px 30px rgba(120,100,170,0.10)"}}>
+<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 12px 30px rgba(120,100,170,0.10)"}}>
 <span style={{fontSize: "17px", fontWeight: "600"}}>Stay in touch</span>
 <span style={{fontSize: "14px", color: "var(--muted)", marginTop: "-6px"}}>People you met at this event</span>
 {v.edConnect.map((c, $index) => (<React.Fragment key={$index}>
@@ -1424,20 +1647,21 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.isPause && (<>
-<div style={{width: "100%", minHeight: "100%", boxSizing: "border-box", padding: "26px 22px 30px", display: "flex", flexDirection: "column", background: "var(--bg)"}}>
+<div style={{width: "100%", minHeight: "100%", boxSizing: "border-box", padding: "26px 20px 30px", display: "flex", flexDirection: "column", background: "var(--bg)"}}>
 <button onClick={v.goCircle} aria-label="Back to chat" style={{width: "44px", height: "44px", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center"}}>
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"></path></svg>
 </button>
 <div style={{flex: "1", display: "flex", flexDirection: "column", justifyContent: "center", gap: "18px"}}>
-<div className="rise" style={{background: "rgba(255,255,255,0.85)", borderRadius: "34px", padding: "26px 22px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px", textAlign: "center", boxShadow: "0 24px 60px rgba(120,100,170,0.2)"}}>
+<div className="rise" style={{background: "rgba(255,255,255,0.85)", borderRadius: "24px", padding: "26px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px", textAlign: "center", boxShadow: "0 24px 60px rgba(120,100,170,0.2)"}}>
 <div className="floaty"><Mo mood="worried" size={120} /></div>
 <span style={{fontSize: "27px", fontWeight: "600", lineHeight: "1.2"}}>Let's take a breath together</span>
 <span style={{fontSize: "17px", lineHeight: "1.45", color: "var(--muted)"}}>This might hurt Jordan's feelings. You can still send it. You decide.</span>
 <div style={{width: "100%", background: "#FBEDEA", borderRadius: "20px", padding: "14px 16px", textAlign: "left", fontSize: "16px", lineHeight: "1.4"}}>"Zelda?? Seriously, that's the most overrated answer ever."</div>
+<div className="why-box"><strong>Why Mo noticed</strong><span>"Seriously" and "overrated" can sound like you are making fun of something Jordan loves. Other people in the circle can see it too, so Jordan might feel embarrassed.</span></div>
 <div style={{display: "flex", flexDirection: "column", gap: "10px", width: "100%", marginTop: "4px"}}>
 <button onClick={v.sayKindly} style={{height: "54px", borderRadius: "20px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "17px", fontWeight: "500"}}>Say it gently</button>
 <button onClick={v.goReset} style={{height: "54px", borderRadius: "20px", border: "none", background: "var(--soft)", color: "var(--ink)", fontSize: "17px", fontWeight: "500"}}>Breathe with Mo</button>
-<button onClick={v.sendAnyway} style={{height: "44px", border: "none", background: "transparent", color: "var(--muted)", fontSize: "16px", textDecoration: "underline"}}>Send anyway</button>
+<button onClick={v.sendAnyway} style={{height: "44px", border: "none", background: "transparent", color: "var(--muted)", fontSize: "16px", fontWeight:"600"}}>Send anyway</button>
 </div>
 </div>
 </div>
@@ -1464,36 +1688,37 @@ class Bridge extends BridgeBase {
 <button onClick={v.readyAfterReset} style={{height: "54px", borderRadius: "20px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "17px", fontWeight: "500"}}>I'm ready</button>
 <button onClick={v.textTrusted} style={{height: "54px", borderRadius: "20px", border: "none", background: "rgba(255,255,255,0.8)", color: "var(--ink)", fontSize: "17px", fontWeight: "500"}}>Text someone I trust</button>
 {v.trustSent && (<>
-<span className="rise" style={{fontSize: "15px", color: "#3E6B57"}}>Sent to Mom: "Can you call me when you're free?"</span>
+<span className="rise" style={{fontSize: "15px", color: "#3E6B57"}}>Sent to {v.trusted}: "Can you call me when you're free?"</span>
 </>)}
 </div>
 </div>
 </>)}
 
 {v.isPractice && (<>
-<div style={{padding: "28px 22px", display: "flex", flexDirection: "column", gap: "16px"}}>
-<div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-<h1 style={{margin: "0", fontSize: "32px", fontWeight: "600"}}>Practice</h1>
-<span style={{background: "rgba(255,255,255,0.75)", borderRadius: "999px", padding: "7px 14px", fontSize: "14px"}}>{v.levelLabel}</span>
+<div style={{padding: "28px 20px", display: "flex", flexDirection: "column", gap: "16px"}}>
+<div className="sticky-header inner-header">
+<button onClick={v.goHome} aria-label="Back to Home" style={{width:"44px",height:"44px",border:0,borderRadius:"16px",background:"rgba(255,255,255,.7)",display:"grid",placeItems:"center"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke:"var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m14 6-6 6 6 6"/></svg></button>
+<h1 className="header-title">Practice</h1>
+<span style={{background: "rgba(255,255,255,0.75)", borderRadius: "999px", padding: "6px 8px", fontSize: "11px",textAlign:"center"}}>{v.levelLabel.split(' · ')[0]}</span>
 </div>
 {v.pPicking && (<>
 <div style={{display: "flex", flexDirection: "column", gap: "14px"}}>
-<div style={{background: "rgba(255,255,255,0.82)", borderRadius: "28px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px"}}>
+<div style={{background: "rgba(255,255,255,0.82)", borderRadius: "24px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px"}}>
 <Mo mood="happy" size={56} />
 <span style={{fontSize: "17px", lineHeight: "1.4"}}>Pick something to practice. It's just between us.</span>
 </div>
 <span style={{fontSize: "16px", fontWeight: "600"}}>Made for you today</span>
 {v.recScenarios.map((sc, $index) => (<React.Fragment key={$index}>
-<button onClick={sc.pick} style={{textAlign: "left", minHeight: "60px", borderRadius: "20px", border: "none", background: sc.bg, color: sc.fg, padding: "12px 16px", display: "flex", flexDirection: "column", gap: "2px"}}>
-<span style={{fontSize: "16px", fontWeight: "600"}}>{sc.title}</span>
-<span style={{fontSize: "14px"}}>{sc.group}</span>
+<button onClick={sc.pick} style={{textAlign: "left", minHeight: "64px", borderRadius: "20px", border: "none", background: sc.bg, color: sc.fg, padding: "10px 12px", display: "grid", gridTemplateColumns:"38px 1fr auto", alignItems:"center", gap: "10px"}}>
+<span style={{width:"38px",height:"38px",borderRadius:"12px",background:sc.fg==="#FFFFFF"?"rgba(255,255,255,.15)":"var(--soft)",display:"grid",placeItems:"center"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: sc.fg}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={sc.icon}/></svg></span>
+<span style={{display:"flex",flexDirection:"column"}}><span style={{fontSize: "16px", fontWeight: "600"}}>{sc.title}</span><span style={{fontSize: "14px"}}>{sc.group}</span></span><span style={{fontSize:"12px",fontWeight:"600"}}>2 min</span>
 </button>
 </React.Fragment>))}
 <span style={{fontSize: "16px", fontWeight: "600"}}>More to practice</span>
 {v.moreScenarios.map((sc, $index) => (<React.Fragment key={$index}>
-<button onClick={sc.pick} style={{textAlign: "left", minHeight: "60px", borderRadius: "20px", border: "none", background: sc.bg, color: sc.fg, padding: "12px 16px", display: "flex", flexDirection: "column", gap: "2px"}}>
-<span style={{fontSize: "16px", fontWeight: "600"}}>{sc.title}</span>
-<span style={{fontSize: "14px"}}>{sc.group}</span>
+<button onClick={sc.pick} style={{textAlign: "left", minHeight: "64px", borderRadius: "20px", border: "none", background: sc.bg, color: sc.fg, padding: "10px 12px", display: "grid", gridTemplateColumns:"38px 1fr auto", alignItems:"center", gap: "10px"}}>
+<span style={{width:"38px",height:"38px",borderRadius:"12px",background:sc.fg==="#FFFFFF"?"rgba(255,255,255,.15)":"var(--soft)",display:"grid",placeItems:"center"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: sc.fg}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={sc.icon}/></svg></span>
+<span style={{display:"flex",flexDirection:"column"}}><span style={{fontSize: "16px", fontWeight: "600"}}>{sc.title}</span><span style={{fontSize: "14px"}}>{sc.group}</span></span><span style={{fontSize:"12px",fontWeight:"600"}}>2 min</span>
 </button>
 </React.Fragment>))}
 <span style={{fontSize: "16px", fontWeight: "500"}}>Pick a level</span>
@@ -1510,7 +1735,7 @@ class Bridge extends BridgeBase {
 </>)}
 {v.pStarted && (<>
 <div style={{display: "flex", flexDirection: "column", gap: "16px"}}>
-<div style={{background: "rgba(255,255,255,0.82)", borderRadius: "28px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px"}}>
+<div style={{background: "rgba(255,255,255,0.82)", borderRadius: "24px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px"}}>
 <Mo mood="happy" size={56} />
 <div style={{display: "flex", flexDirection: "column"}}>
 <span style={{fontSize: "18px", fontWeight: "600"}}>{v.pTitle}</span>
@@ -1550,14 +1775,14 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.isFeedback && (<>
-<div style={{padding: "34px 22px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center", textAlign: "center"}}>
+<div style={{padding: "34px 20px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center", textAlign: "center"}}>
 <div className="floaty"><Mo mood="happy" size={120} /></div>
 <h1 style={{margin: "0", fontSize: "32px", fontWeight: "600"}}>{v.fbTitle}</h1>
-<div style={{width: "100%", background: "rgba(255,255,255,0.85)", borderRadius: "26px", padding: "18px", textAlign: "left", display: "flex", flexDirection: "column", gap: "4px"}}>
+<div style={{width: "100%", background: "rgba(255,255,255,0.85)", borderRadius: "24px", padding: "18px", textAlign: "left", display: "flex", flexDirection: "column", gap: "4px"}}>
 <span style={{fontSize: "14px", color: "var(--muted)", letterSpacing: "1px"}}>WHAT WENT WELL</span>
 <span style={{fontSize: "17px", lineHeight: "1.45"}}>{v.fbStar}</span>
 </div>
-<div style={{width: "100%", background: "var(--soft)", borderRadius: "26px", padding: "18px", textAlign: "left", display: "flex", flexDirection: "column", gap: "4px"}}>
+<div style={{width: "100%", background: "var(--soft)", borderRadius: "24px", padding: "18px", textAlign: "left", display: "flex", flexDirection: "column", gap: "4px"}}>
 <span style={{fontSize: "14px", color: "var(--muted)", letterSpacing: "1px"}}>ONE THING TO TRY</span>
 <span style={{fontSize: "17px", lineHeight: "1.45"}}>{v.fbSpark}</span>
 </div>
@@ -1569,7 +1794,7 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.isWin && (<>
-<div style={{width: "100%", minHeight: "100%", boxSizing: "border-box", padding: "50px 22px 30px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", textAlign: "center", background: "var(--bg)"}}>
+<div style={{width: "100%", minHeight: "100%", boxSizing: "border-box", padding: "50px 20px 30px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", textAlign: "center", background: "var(--bg)"}}>
 <span style={{fontSize: "15px", color: "var(--muted)", letterSpacing: "1px"}}>BRAVE STEP UNLOCKED</span>
 <div className="rise" style={{width: "190px", height: "190px", borderRadius: "50%", background: "rgba(255,255,255,0.9)", boxShadow: "0 24px 60px rgba(120,100,170,0.22)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px"}}>
 <Mo mood="happy" size={110} />
@@ -1590,8 +1815,8 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.isMe && (<>
-<div style={{padding: "28px 22px", display: "flex", flexDirection: "column", gap: "18px"}}>
-<div style={{display: "flex", alignItems: "center", gap: "16px"}}>
+<div className="tab-screen">
+<div className="tab-sticky-header" style={{display: "flex", alignItems: "center", gap: "16px"}}>
 <div style={{position: "relative", flex: "0 0 auto"}}>
 {v.hasPhoto && (<><img src={v.pPhoto} alt="Your profile photo" style={{width: "72px", height: "72px", borderRadius: "50%", objectFit: "cover", display: "block"}} /></>)}
 {v.noPhoto && (<><span style={{width: "72px", height: "72px", borderRadius: "50%", background: "linear-gradient(140deg, #F7C9D4, #C9B6F0)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px", fontWeight: "600", color: "var(--ink)"}}>{v.initials}</span></>)}
@@ -1605,8 +1830,9 @@ class Bridge extends BridgeBase {
 <span style={{fontSize: "15px", color: "var(--muted)"}}>{v.steps} brave steps this week</span>
 </div>
 </div>
+<div className="tab-screen-content me-content">
 {v.reqPending && (<>
-<div className="rise" style={{background: "rgba(255,255,255,0.9)", borderRadius: "28px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 16px 40px rgba(120,100,170,0.16)"}}>
+<div className="rise" style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 16px 40px rgba(120,100,170,0.16)"}}>
 <div style={{display: "flex", gap: "12px", alignItems: "center"}}>
 <Mo mood="happy" size={52} />
 <span style={{fontSize: "18px", fontWeight: "600"}}>Coach Maria wants to connect</span>
@@ -1619,7 +1845,7 @@ class Bridge extends BridgeBase {
 </div>
 </>)}
 {v.reqChoose && (<>
-<div className="rise" style={{background: "rgba(255,255,255,0.9)", borderRadius: "28px", padding: "18px", display: "flex", flexDirection: "column", gap: "8px", boxShadow: "0 16px 40px rgba(120,100,170,0.16)"}}>
+<div className="rise" style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "18px", display: "flex", flexDirection: "column", gap: "8px", boxShadow: "0 16px 40px rgba(120,100,170,0.16)"}}>
 <span style={{fontSize: "18px", fontWeight: "600"}}>What can Maria see?</span>
 <span style={{fontSize: "14px", color: "var(--muted)"}}>Tap to choose. You can change this later.</span>
 <div style={{display: "flex", flexWrap: "wrap", gap: "8px"}}>
@@ -1638,7 +1864,7 @@ class Bridge extends BridgeBase {
 <span style={{fontSize: "18px", fontWeight: "600"}}>My profile</span>
 {v.profView && (<><button onClick={v.editProfile} style={{height: "38px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.85)", color: "var(--ink)", padding: "0 14px", fontSize: "15px", fontWeight: "500"}}>Edit</button></>)}
 </div>
-<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "26px", padding: "6px 18px", display: "flex", flexDirection: "column"}}>
+<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "6px 18px", display: "flex", flexDirection: "column"}}>
 {v.profView && (<>
 <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "12px 0", borderBottom: "1px solid #EEE8F5"}}><span style={{fontSize: "14px", color: "var(--muted)"}}>First name</span><span style={{fontSize: "16px", fontWeight: "500", textAlign: "right", wordBreak: "break-all"}}>{v.pFirst}</span></div>
 <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "12px 0", borderBottom: "1px solid #EEE8F5"}}><span style={{fontSize: "14px", color: "var(--muted)"}}>Last name</span><span style={{fontSize: "16px", fontWeight: "500", textAlign: "right", wordBreak: "break-all"}}>{v.pLast}</span></div>
@@ -1658,7 +1884,7 @@ class Bridge extends BridgeBase {
 </div>
 </div>
 <label style={{display: "flex", flexDirection: "column", gap: "6px", fontSize: "14px", color: "var(--muted)"}}>Email<input type="email" value={v.pEmail} onChange={v.setEmail} autoComplete="email" style={{height: "48px", borderRadius: "16px", border: "1.5px solid #DCD3EA", background: "#FFFFFF", padding: "0 14px", fontSize: "16px", fontFamily: "inherit", color: "var(--ink)", width: "100%", boxSizing: "border-box"}} /></label>
-{v.hasPhoto && (<><button onClick={v.removePhoto} style={{alignSelf: "flex-start", height: "40px", border: "none", background: "transparent", color: "var(--ink)", fontSize: "15px", textDecoration: "underline", padding: "0"}}>Remove photo</button></>)}
+{v.hasPhoto && (<><button onClick={v.removePhoto} style={{alignSelf: "flex-start", height: "40px", border: "none", background: "var(--soft)", borderRadius:"14px", color: "var(--ink)", fontSize: "15px", fontWeight:"600", padding: "0 14px"}}>Remove photo</button></>)}
 <button onClick={v.saveProfile} style={{height: "50px", borderRadius: "18px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "16px", fontWeight: "500"}}>Save</button>
 </div>
 </>)}
@@ -1668,7 +1894,6 @@ class Bridge extends BridgeBase {
 <div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
 <div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline"}}>
 <span style={{fontSize: "18px", fontWeight: "600"}}>Theme</span>
-<span style={{fontSize: "14px", color: "var(--muted)"}}>All calm, low-glare colors</span>
 </div>
 <div style={{display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px"}}>
 {v.themeOpts.map((t, $index) => (<React.Fragment key={$index}>
@@ -1681,11 +1906,40 @@ class Bridge extends BridgeBase {
 </div>
 </div>
 <div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
+<span style={{fontSize: "18px", fontWeight: "600"}}>Comfort</span>
+<div className="comfort-card">
+<div className="segmented-row"><span>Text size</span><div className="segments">{v.sizeSeg.map((o, $i) => (<React.Fragment key={$i}><button className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button></React.Fragment>))}</div></div>
+<div className="segmented-row"><span>Calm mode</span><div className="segments">{v.calmSeg.map((o, $i) => (<React.Fragment key={$i}><button className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button></React.Fragment>))}</div></div>
+<div className="segmented-row"><span>Chatting</span><div className="segments">{v.chatSeg.map((o, $i) => (<React.Fragment key={$i}><button className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button></React.Fragment>))}</div></div>
+<span style={{fontSize: "13px", color: "var(--muted)", lineHeight: "1.4"}}>Calm mode turns off moving animations. Changes apply right away.</span>
+</div>
+<button className="row-link" onClick={v.redoSetup}><span>Change my interests and trusted person</span><span aria-hidden="true">›</span></button>
+</div>
+<div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
+<div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline"}}>
+<span style={{fontSize: "18px", fontWeight: "600"}}>My journey</span>
+<span style={{fontSize: "14px", color: "var(--muted)"}}>{v.journeyUp}</span>
+</div>
+<div className="journey-card">
+<div className="journey-bars">
+{v.journey.map((w, $i) => (<React.Fragment key={$i}>
+<div className="journey-col"><strong>{w.value}</strong><i style={{height: w.h, background: w.bg}}></i><small>{w.label}</small></div>
+</React.Fragment>))}
+</div>
+<span style={{fontSize: "13px", color: "var(--muted)"}}>Brave steps per week</span>
+<div className="journey-stats">
+<div><strong>6</strong><small>practices</small></div>
+<div><strong>2</strong><small>events joined</small></div>
+<div><strong>Level 2</strong><small>reached</small></div>
+</div>
+</div>
+</div>
+<div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
 <div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline"}}>
 <span style={{fontSize: "20px", fontWeight: "600"}}>My badges</span>
 <span style={{fontSize: "14px", color: "var(--muted)"}}>3 of 12 earned</span>
 </div>
-<div style={{background: "rgba(255,255,255,0.7)", borderRadius: "26px", padding: "16px 10px", display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "6px"}}>
+<div style={{background: "rgba(255,255,255,0.7)", borderRadius: "24px", padding: "16px 10px", display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "6px"}}>
 <div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", textAlign: "center"}}>
 <span style={{width: "68px", height: "68px", borderRadius: "50%", background: "linear-gradient(140deg, #FFFFFF, #E3E0F8)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 20px rgba(120,100,170,0.18)"}}><svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5.5h16v11H9l-5 4v-15Z"></path></svg></span>
 <span style={{fontSize: "14px", fontWeight: "600", lineHeight: "1.2"}}>First Hello</span>
@@ -1710,9 +1964,9 @@ class Bridge extends BridgeBase {
 </div>
 <div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
 <span style={{fontSize: "20px", fontWeight: "600"}}>My support circle</span>
-<div style={{background: "rgba(255,255,255,0.85)", borderRadius: "26px", padding: "4px 16px"}}>
+<div style={{background: "rgba(255,255,255,0.85)", borderRadius: "24px", padding: "4px 16px"}}>
 <div style={{minHeight: "68px", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid #EAE3F3"}}>
-<div style={{flex: "1", display: "flex", flexDirection: "column"}}><span style={{fontSize: "17px", fontWeight: "500"}}>Mom</span><span style={{fontSize: "14px", color: "var(--muted)"}}>Gets my "I need help" texts</span></div></div>
+<div style={{flex: "1", display: "flex", flexDirection: "column"}}><span style={{fontSize: "17px", fontWeight: "500"}}>{v.trusted} · {v.trustedRel}</span><span style={{fontSize: "14px", color: "var(--muted)"}}>Gets my "I need help" texts</span></div></div>
 {v.mariaConnected && (<>
 <div style={{minHeight: "68px", display: "flex", alignItems: "center", gap: "12px"}}>
 <div style={{flex: "1", display: "flex", flexDirection: "column"}}><span style={{fontSize: "17px", fontWeight: "500"}}>Coach Maria</span><span style={{fontSize: "14px", color: "var(--muted)"}}>{v.mariaSees}</span></div></div>
@@ -1722,13 +1976,16 @@ class Bridge extends BridgeBase {
 </div>
 <div style={{background: "rgba(255,255,255,0.55)", borderRadius: "20px", padding: "14px 16px", fontSize: "15px", textAlign: "center"}}>Mo isn't a therapist. Need help now? Call or text 988.</div>
 </div>
+</div>
 </>)}
 
+{v.hasUiToast && <button className="ui-toast" onClick={v.clearToast}>{v.uiToast}</button>}
+</div>
 </div>
 
 {v.showTabs && (<>
 {v.showMoMenu && (<>
-<div className="rise" style={{position: "absolute", right: "16px", bottom: "96px", width: "260px", background: "rgba(255,255,255,0.97)", borderRadius: "26px", padding: "10px", boxSizing: "border-box", boxShadow: "0 20px 50px rgba(120,100,170,0.28)", display: "flex", flexDirection: "column", gap: "6px", zIndex: "5"}}>
+<div className="rise" style={{position: "absolute", right: "16px", bottom: "96px", width: "260px", background: "rgba(255,255,255,0.97)", borderRadius: "24px", padding: "10px", boxSizing: "border-box", boxShadow: "0 20px 50px rgba(120,100,170,0.28)", display: "flex", flexDirection: "column", gap: "6px", zIndex: "5"}}>
 <button onClick={v.moPractice} style={{textAlign: "left", minHeight: "56px", borderRadius: "18px", border: "none", background: "var(--soft)", padding: "10px 14px", color: "var(--ink)", display: "flex", flexDirection: "column", gap: "2px"}}>
 <span style={{fontSize: "16px", fontWeight: "600"}}>Practice with me</span>
 <span style={{fontSize: "14px", color: "var(--muted)"}}>{v.moPracticeHint}</span>
@@ -1745,15 +2002,15 @@ class Bridge extends BridgeBase {
 </>)}
 <div style={{flex: "0 0 auto", padding: "10px 0 18px", display: "flex", justifyContent: "center"}}>
 <nav style={{height: "64px", background: "var(--ink)", borderRadius: "32px", display: "flex", alignItems: "center", gap: "6px", padding: "6px", boxSizing: "border-box", boxShadow: "0 12px 30px rgba(59,51,80,0.3)"}}>
-<button onClick={v.goHome} aria-label="Home" style={{height: "52px", width: "96px", padding: "0", borderRadius: "26px", border: "none", background: v.homeBg, color: v.homeFg, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "15px", fontWeight: "600"}}>
+<button onClick={v.goHome} aria-label="Home" style={{height: "52px", width: "96px", padding: "0", borderRadius: "24px", border: "none", background: v.homeBg, color: v.homeFg, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "15px", fontWeight: "600"}}>
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{stroke: v.homeFg}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 10.8 12 3l9 7.8"></path><path d="M5.5 9.5V21h13V9.5"></path></svg>
 {v.tabIsHome && (<><span>Home</span></>)}
 </button>
-<button onClick={v.goCircles} aria-label="Circles" style={{height: "52px", width: "96px", padding: "0", borderRadius: "26px", border: "none", background: v.circlesBg, color: v.circlesFg, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "15px", fontWeight: "600"}}>
+<button onClick={v.goCircles} aria-label="Circles" style={{height: "52px", width: "96px", padding: "0", borderRadius: "24px", border: "none", background: v.circlesBg, color: v.circlesFg, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "15px", fontWeight: "600"}}>
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{stroke: v.circlesFg}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="3"></circle><circle cx="16" cy="9" r="3"></circle><path d="M2.5 20c.5-3.5 2.5-5 5.5-5s5 1.5 5.5 5M13.5 15.3c.8-.2 1.6-.3 2.5-.3 3 0 5 1.5 5.5 5"></path></svg>
 {v.tabIsCircles && (<><span>Circles</span></>)}
 </button>
-<button onClick={v.goMe} aria-label="Me" style={{height: "52px", width: "96px", padding: "0", borderRadius: "26px", border: "none", background: v.meBg, color: v.meFg, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "15px", fontWeight: "600"}}>
+<button onClick={v.goMe} aria-label="Me" style={{height: "52px", width: "96px", padding: "0", borderRadius: "24px", border: "none", background: v.meBg, color: v.meFg, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "15px", fontWeight: "600"}}>
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{stroke: v.meFg}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21c.8-4 3.3-6 7.5-6s6.7 2 7.5 6"></path></svg>
 {v.tabIsMe && (<><span>Me</span></>)}
 </button>
@@ -1762,6 +2019,7 @@ class Bridge extends BridgeBase {
 </button>
 </nav>
 </div>
+<div className="home-indicator" aria-hidden="true"></div>
 </>)}
 </div>
 </>);

@@ -4,7 +4,7 @@ This folder holds the code for the live Bridge prototype in Figma Make. Give thi
 
 - **Figma Make file:** https://www.figma.com/make/CmV9IOc2bubFxzcPJzz4Q7 ("Bridge Independence App")
 - **User flows (Figma design file):** https://www.figma.com/design/tipYMvE4FisuZCNeKZD8ZK, on the "User flows" page
-- **Last updated:** Nov 2, 2026
+- **Last updated:** Nov 3, 2026
 
 ## What Bridge is
 Bridge is an AI social coach for neurodivergent young adults, built for First Place AZ in the North American AI Challenge for Neurodiverse Learning. It helps users make and keep friends through interest-based Circles. **Mo**, a soft blob AI buddy, helps in three ways:
@@ -48,6 +48,15 @@ Figma Make's automatic code import is blocked from Claude's cloud environment, s
 - **Screen fitting:** on screens 500px wide or narrower, the app fills the screen and keeps 50px clear at the top for the notch. On wider screens it shows as a centered 390×844 phone.
 - **Scroll reset:** `componentDidUpdate` scrolls `.bridge-scroll` back to the top when the screen changes.
 
+## First-time setup (new, Nov 3)
+Shown before the check-in on first open (`screen: 'onboard'`, `onbStep` 1–6):
+1. Welcome (Bridge, Mo, 3 promises)
+2. Interests: picks circles and sets the "For you" filter
+3. Meet Mo: what Mo can and won't do
+4. Trusted person: name and relationship, used for "I need help" and "Tell ___ where I'll be"
+5. Comfort: text size, calm mode (no animations), text first or voice is okay
+6. Safety rules, then the check-in
+
 ## Features by tab
 **Check-in (first screen).**
 - Questions: how you're feeling (Overwhelmed / Okay / Ready to connect), what's coming up, and what feels hardest.
@@ -82,10 +91,14 @@ Figma Make's automatic code import is blocked from Claude's cloud environment, s
 - Grouped into New and Earlier. Tapping one goes to its screen.
 - "Pause notifications for 1 hour".
 
+**Mo explains why (new).** The tone check in circle chat, the pause screen and DMs now say which word caused the warning and why.
+
 **Me.**
 - **Profile:** photo upload, plus first name, last name, gender and email with Edit/Save. In circles, people see only the first name and photo.
 - **Coach Maria connect request:** the user accepts and chooses what she sees, or declines.
 - **Theme picker:** small gradient circles in tiles (Dawn, Sage, Mist, Sand).
+- **Comfort:** text size, calm mode and chatting preference, plus "Change my interests and trusted person".
+- **My journey:** brave steps per week (bar chart) and stats (demo numbers).
 - Also: badges, a support circle list (no toggles), and a 988 note.
 
 **Mo button in the nav.** Practice with me, Breathe with me (one-minute breather), I need help (text a trusted person, or 988).
@@ -110,4 +123,5 @@ Figma Make's automatic code import is blocked from Claude's cloud environment, s
 - State (theme, RSVPs, messages) resets when the page reloads.
 - Safe message requests (accept/decline) aren't built. "Say hi" only shows "Request sent".
 - Notifications are fixed demo items.
-- The Home user flow in Figma still shows the older Home order.
+- The Home user flow in Figma still shows the older Home order. The setup flow isn't in Figma yet.
+- Mo's responses are scripted. The team plans to connect a real AI API later.
