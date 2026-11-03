@@ -934,7 +934,7 @@ class BridgeBase extends DCLogic {
       send: function () {
         if (!draft) return;
         if (draft === 'angry') self.setState({ screen: 'pause' });
-        else changeWithUndo({ sent: draft, draft: '' }, 'Sent to ' + cd.name + ' chat', { sent: sent, draft: draft });
+        else changeWithUndo({ sent: draft, draft: '' }, '', { sent: sent, draft: draft }); // Undo lives on the result card, so no toast covers it
       },
       sayKindly: go('circle', { draft: 'kind' }),
       sendAnyway: go('circle', { sent: 'angry', draft: '' }),
@@ -1525,6 +1525,7 @@ class Bridge extends BridgeBase {
 <div style={{display: "flex", flexDirection: "column", gap: "10px", flex: "1"}}>
 <p style={{margin: "0", fontSize: "16px", lineHeight: "1.4"}}>{v.resultLine}</p>
 <button onClick={v.resultAction} style={{height: "46px", borderRadius: "16px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "16px", fontWeight: "500"}}>{v.resultButton}</button>
+{v.hasUndo && <button onClick={v.undoToast} className="quiet-action" style={{minHeight: "32px"}}>Undo send</button>}
 </div>
 </div>
 </div>
