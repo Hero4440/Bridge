@@ -860,7 +860,7 @@ class BridgeBase extends DCLogic {
       isHome: screen === 'home', isCircle: screen === 'circle', isPause: screen === 'pause', isReset: screen === 'reset',
       isPractice: screen === 'practice', isFeedback: screen === 'feedback', isWin: screen === 'win', isMe: screen === 'me',
       showTabs: ['pause', 'reset', 'win', 'checkin', 'help', 'newEvent', 'onboard'].indexOf(screen) < 0,
-      steps: steps,
+      steps: steps, stepBump: !!s.stepBump,
       homeMood: ciFeel === 'over' ? 'calm' : 'happy',
       moLine: ciFeel === 'over' ? "Thanks for telling me. Let's keep today gentle. Just reading a circle counts." : (ciFeel === 'ready' ? "You're ready to connect! Let's practice, then go for it." : (ciUp === 'none' ? "Let's warm up with one small practice today." : "Let's warm up for your " + upLabels[ciUp].toLowerCase().replace('a ', '') + '.')),
       isLow: battery === 'low', isOkay: battery === 'okay', isFull: battery === 'full',
@@ -1018,6 +1018,13 @@ class BridgeBase extends DCLogic {
 
 class Bridge extends BridgeBase {
   componentDidUpdate(prevProps, prevState) {
+    // Celebrate a new brave step: Mo hops once in the nav
+    var countSteps = function (st) { return (st.won ? 1 : 0) + ((st.refl && st.refl.e0 && st.refl.e0.done) ? 1 : 0); };
+    if (countSteps(this.state) > countSteps(prevState)) {
+      var self = this;
+      this.setState({ stepBump: Date.now() });
+      setTimeout(function () { self.setState({ stepBump: 0 }); }, 1600);
+    }
     if (prevState.screen !== this.state.screen) {
       // A toast from an earlier screen shouldn't follow you to the next one
       if (this.state.uiToast && prevState.undoToken === this.state.undoToken && prevState.uiToast === this.state.uiToast) {
@@ -2065,7 +2072,7 @@ class Bridge extends BridgeBase {
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{stroke: v.meFg}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21c.8-4 3.3-6 7.5-6s6.7 2 7.5 6"></path></svg>
 {v.tabIsMe && (<><span>Me</span></>)}
 </button>
-<button onClick={v.toggleMo} aria-label="Open Mo" aria-expanded={v.moOpen} style={{width: "52px", height: "52px", borderRadius: "50%", border: "none", background: v.moBtnBg, display: "flex", alignItems: "center", justifyContent: "center", padding: "0"}}>
+<button onClick={v.toggleMo} aria-label="Open Mo" aria-expanded={v.moOpen} className={v.stepBump ? "mo-cheer" : ""} style={{width: "52px", height: "52px", borderRadius: "50%", border: "none", background: v.moBtnBg, display: "flex", alignItems: "center", justifyContent: "center", padding: "0"}}>
 <Mo mood={v.floatMood} size={42} />
 </button>
 </nav>
