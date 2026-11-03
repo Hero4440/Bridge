@@ -878,7 +878,7 @@ class BridgeBase extends DCLogic {
       setOkay: function () { self.setState({ battery: 'okay' }); },
       setFull: function () { self.setState({ battery: 'full' }); },
       goHome: go('home'), goCircle: go('circle'), goPractice: go('practice', { pChoice: '', pStarted: false, pTyped: '', pOwn: '', pHintUsed: false }), goMe: go('me'),
-      goReset: go('reset', { trustSent: false }), goFeedback: go('feedback'),
+      goReset: go('reset', { trustSent: false, resetFrom: screen }), goFeedback: go('feedback'),
       menuOpen: !!s.menuOpen,
       toggleMenu: function () { self.setState({ menuOpen: !s.menuOpen }); },
       doReport: function () { changeWithUndo({ menuOpen: false, safetyNote: 'Thanks. A moderator will check this chat.' }, 'Report sent', { menuOpen: !!s.menuOpen, safetyNote: s.safetyNote || '' }); },
@@ -918,7 +918,8 @@ class BridgeBase extends DCLogic {
       planWalk: function () { self.setState({ plan: 'walk' }); },
       planMusic: function () { self.setState({ plan: 'music' }); },
       planWater: function () { self.setState({ plan: 'water' }); },
-      readyAfterReset: go('circle', { draft: 'kind' }),
+      // After the breather, go back to where the user came from (from the pause screen, return to the chat with a gentler draft)
+      readyAfterReset: s.resetFrom === 'pause' ? go('circle', { draft: 'kind' }) : go(s.resetFrom && s.resetFrom !== 'reset' ? s.resetFrom : 'home'),
       textTrusted: function () { saveQuietly({ trustSent: true }, 'Text sent to ' + trusted); },
       trustSent: !!s.trustSent,
       pChosen: !!pChoice, pNotChosen: !pChoice,
@@ -1018,7 +1019,7 @@ class BridgeBase extends DCLogic {
       floatMood: (screen === 'circle' && isAngry) ? 'worried' : (battery === 'low' && screen === 'home' ? 'calm' : 'happy'),
       moPracticeHint: screen === 'circle' ? 'Practice replying to ' + cd.m2[0] : (screen === 'home' ? 'Practice inviting someone' : 'Practice a conversation'),
       moPractice: go('practice', { pChoice: '', pStarted: false }),
-      moBreathe: go('reset', { trustSent: false }),
+      moBreathe: go('reset', { trustSent: false, resetFrom: screen }),
       moHelp: go('help', { helpSent: false })
     });
   }
