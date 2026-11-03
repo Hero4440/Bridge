@@ -1838,7 +1838,7 @@ class Bridge extends BridgeBase {
 <div className="sticky-header inner-header">
 <button onClick={v.goHome} aria-label="Back to Home" style={{width:"44px",height:"44px",border:0,borderRadius:"16px",background:"rgba(255,255,255,.7)",display:"grid",placeItems:"center"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke:"var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m14 6-6 6 6 6"/></svg></button>
 <h1 className="header-title">Practice</h1>
-<span style={{background: "rgba(255,255,255,0.75)", borderRadius: "999px", padding: "6px 8px", fontSize: "14px",textAlign:"center"}}>{v.levelLabel.split(' · ')[0]}</span>
+<span style={{background: "rgba(255,255,255,0.75)", borderRadius: "999px", padding: "6px 10px", fontSize: "14px", textAlign: "center", whiteSpace: "nowrap", justifySelf: "end"}}>{v.levelLabel.split(' · ')[0]}</span>
 </div>
 {v.pPicking && (<>
 <div style={{display: "flex", flexDirection: "column", gap: "14px"}}>
