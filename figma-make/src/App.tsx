@@ -689,6 +689,16 @@ class BridgeBase extends DCLogic {
     var winsList = ['I said hi', 'I asked a question', 'I stayed as long as I wanted', 'I left kindly'];
     var feelList = [['hard', 'It was hard'], ['okay', 'It was okay'], ['good', 'It went well']];
     var hiSent = s.hiSent || {};
+    // Sensory meter: 1 = calm, 2 = medium, 3 = intense, from the event's own wording
+    var senseLevel = function (kind, text) {
+      var t = (text || '').toLowerCase();
+      if (kind === 'sound') return /loud|music on/.test(t) ? 3 : (/text only|quiet/.test(t) ? 1 : (/soft|voice|background|music/.test(t) ? 2 : 1));
+      if (kind === 'light') return /bright|cameras on/.test(t) ? 3 : (/dim|soft|camera off|no camera/.test(t) ? 1 : 2);
+      var nums = (t.match(/\d+/g) || []).map(Number); var n = nums.length ? Math.max.apply(null, nums) : 0;
+      return n <= 3 ? 1 : (n <= 6 ? 2 : 3);
+    };
+    var senseWords = { people: ['Small group', 'Medium group', 'Big group'], sound: ['Quiet', 'Some sound', 'Loud'], light: ['Soft', 'Medium', 'Bright'] };
+    var sense = function (kind, text) { var l = senseLevel(kind, text); return { level: l, levelWord: senseWords[kind][l - 1] }; };
     var fallbackDates = { e0: ['SUN','2'], e1: ['FRI','7'], e2: ['SAT','8'], e3: ['SUN','9'], e4: ['THU','6'] };
     var detailDate = evD.dateDay ? [evD.dateDay, evD.dateNum] : (fallbackDates[evD.id] || ['SUN','9']);
     var detailTimes = evD.start ? evD.start + ' – ' + evD.end + ' · ' + evD.duration : (evD.id === 'e3' ? '11:00 AM – 12:00 PM · 1 hr' : (evD.id === 'e0' ? '7:00 PM – 8:00 PM · 1 hr' : (evD.when || '').replace(' · ', ' · ')));
@@ -711,9 +721,9 @@ class BridgeBase extends DCLogic {
       edAddCalendar: function () { notify('Added to calendar'); },
       edShare: function () { notify('Share sheet opened'); },
       edSense: [
-        { label: 'People', value: evD.size || '-', path: 'M8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20c.5-3.5 2.5-5 5.5-5s5 1.5 5.5 5M13.5 15.3c.8-.2 1.6-.3 2.5-.3 3 0 5 1.5 5.5 5' },
-        { label: 'Sound', value: evD.sound || '-', path: 'M4 10v4h4l5 4V6L8 10H4ZM16.5 9a4 4 0 0 1 0 6' },
-        { label: 'Lighting', value: evD.light || '-', path: 'M12 3v2M12 19v2M5 12H3M21 12h-2M6.3 6.3 4.9 4.9M19.1 19.1l-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z' },
+        Object.assign({ label: 'People', value: evD.size || '-', path: 'M8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20c.5-3.5 2.5-5 5.5-5s5 1.5 5.5 5M13.5 15.3c.8-.2 1.6-.3 2.5-.3 3 0 5 1.5 5.5 5' }, sense('people', evD.size)),
+        Object.assign({ label: 'Sound', value: evD.sound || '-', path: 'M4 10v4h4l5 4V6L8 10H4ZM16.5 9a4 4 0 0 1 0 6' }, sense('sound', evD.sound)),
+        Object.assign({ label: 'Lighting', value: evD.light || '-', path: 'M12 3v2M12 19v2M5 12H3M21 12h-2M6.3 6.3 4.9 4.9M19.1 19.1l-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z' }, sense('light', evD.light)),
         { label: 'Need a break?', value: evD.exit || 'Leave anytime', path: 'M10 4H5v16h5M15 8l4 4-4 4M19 12H9' }
       ],
       edPeople: (evD.people || []).map(function (n) { return { initial: n[0], name: n }; }),
@@ -1716,6 +1726,7 @@ class Bridge extends BridgeBase {
 <div style={{background: "var(--soft)", borderRadius: "18px", padding: "12px", display: "flex", flexDirection: "column", gap: "6px"}}>
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={x.path}></path></svg>
 <span style={{fontSize: "14px", color: "var(--muted)"}}>{x.label}</span>
+{x.level > 0 && <span className="sense-meter" aria-label={x.label + ": " + x.levelWord}>{[1, 2, 3].map(n => <i key={n} className={n <= x.level ? "on" : ""}></i>)}<em>{x.levelWord}</em></span>}
 <span style={{fontSize: "15px", fontWeight: "500", lineHeight: "1.3"}}>{x.value}</span>
 </div>
 </React.Fragment>))}
