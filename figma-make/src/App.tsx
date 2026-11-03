@@ -992,7 +992,9 @@ class BridgeBase extends DCLogic {
       isCheckin: screen === 'checkin', isHelp: screen === 'help',
       feelOpts: chip(feelLabels, ciFeel, 'ciFeel'), upOpts: chip(upLabels, ciUp, 'ciUp'),
       hardOpts: chip({ start: 'Starting a chat', keep: 'Keeping it going', tone: 'Reading tone', disagree: 'Disagreeing', leave: 'Leaving or saying no' }, ciHard, 'ciHard'),
-      finishCheckin: go('home'), goCheckin: go('checkin'),
+      finishCheckin: go('home', { homeFull: false }), goCheckin: go('checkin'),
+      showDay: ciFeel !== 'over' || !!s.homeFull, calmDay: ciFeel === 'over' && !s.homeFull,
+      showMyDay: function () { self.setState({ homeFull: true }); setTimeout(function () { var el = document.getElementById('home-day'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 60); },
       ciSummary: feelLabels[ciFeel] + (ciUp === 'none' ? '' : ' · ' + (ciUp === 'group' ? 'hangout' : upLabels[ciUp].toLowerCase().replace('a ', '')) + ' coming up'),
       recList: recList, upNextText: upNextText,
       joinLabel: ciFeel === 'over' ? 'Read Gaming chat' : 'Join Gaming chat',
@@ -1247,9 +1249,17 @@ class Bridge extends BridgeBase {
 </div>
 </div>
 <button className="primary-action" onClick={v.recList[0].start}>Start 2-minute practice</button>
-<button className="quiet-action" onClick={() => document.getElementById('home-day')?.scrollIntoView({behavior: 'smooth'})}>Not now, just show me my day</button>
+{v.showDay && <button className="quiet-action" onClick={v.showMyDay}>Not now, just show me my day</button>}
 <div className="checkin-line"><span>{v.ciSummary}</span><button onClick={v.goCheckin}>Change</button></div>
 </div>
+{v.calmDay && <div className="calm-card calm-day" style={{display: "flex", gap: "12px", alignItems: "center"}}>
+<Mo mood="calm" size={44} />
+<span style={{flex: "1", display: "flex", flexDirection: "column", gap: "8px"}}>
+<span style={{fontSize: "16px", lineHeight: "1.4"}}>Today is just one small thing. Everything else can wait.</span>
+<button className="quiet-action" style={{alignSelf: "flex-start"}} onClick={v.showMyDay}>Show my full day</button>
+</span>
+</div>}
+{v.showDay && <>
 <div id="home-day" className="calm-card" style={{display: "flex", flexDirection: "column", gap: "10px"}}>
 <div style={{display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "6px"}}>
 <span className="section-title">Tonight in Gaming</span>
@@ -1293,7 +1303,7 @@ class Bridge extends BridgeBase {
 </div>
 {v.homeEvents.length > 2 && <button onClick={v.goCircles} className="quiet-action">See all ›</button>}
 </div>
-<div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
+{v.recList.length > 1 && <div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
 <span className="section-title">More practice</span>
 {v.recList.slice(1,3).map((r, $index) => (<React.Fragment key={$index}>
 <button onClick={r.start} className="calm-card" style={{textAlign: "left", border: "none", display: "flex", alignItems: "center", gap: "12px", color: "var(--ink)"}}>
@@ -1305,7 +1315,8 @@ class Bridge extends BridgeBase {
 </button>
 </React.Fragment>))}
 {v.recList.length > 3 && <button onClick={v.goPractice} className="quiet-action">See all ›</button>}
-</div>
+</div>}
+</>}
 </div>
 </div>
 </>)}
