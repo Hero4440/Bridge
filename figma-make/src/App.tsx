@@ -999,6 +999,16 @@ class Bridge extends BridgeBase {
 <div className="onb-body">
 <h1 className="onb-title">Make it comfortable</h1>
 <span className="onb-sub">Changes show right away. You can change them later in Me.</span>
+<span style={{fontSize: "15px", fontWeight: "600"}}>Colors</span>
+<div style={{display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px"}}>
+{v.themeOpts.map((t, $index) => (<React.Fragment key={$index}>
+<button onClick={t.pick} aria-pressed={t.on} aria-label={"Theme: " + t.name} style={{display: "flex", alignItems: "center", gap: "12px", border: "none", borderRadius: "16px", padding: "10px 12px", background: "rgba(255,255,255,0.85)", boxShadow: t.ring, color: "var(--ink)", textAlign: "left"}}>
+<span style={{flex: "0 0 auto", width: "32px", height: "32px", borderRadius: "50%", background: t.swatch, boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.08)"}}></span>
+<span style={{flex: "1", fontSize: "16px", fontWeight: "500"}}>{t.name}</span>
+{t.on && (<><span aria-hidden="true" style={{fontSize: "15px"}}>✓</span></>)}
+</button>
+</React.Fragment>))}
+</div>
 <div className="comfort-card">
 <div className="segmented-row"><span>Text size</span><div className="segments">{v.sizeSeg.map((o, $i) => (<React.Fragment key={$i}><button className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button></React.Fragment>))}</div></div>
 <div className="segmented-row"><span>Calm mode</span><div className="segments">{v.calmSeg.map((o, $i) => (<React.Fragment key={$i}><button className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button></React.Fragment>))}</div></div>
