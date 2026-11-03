@@ -1218,7 +1218,7 @@ class Bridge extends BridgeBase {
 <div className="checkin-line"><span>{v.ciSummary}</span><button onClick={v.goCheckin}>Change</button></div>
 </div>
 <div id="home-day" className="calm-card" style={{display: "flex", flexDirection: "column", gap: "10px"}}>
-<div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+<div style={{display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "6px"}}>
 <span className="section-title">Tonight in Gaming</span>
 <span className="meta-pill">3 here now · usually quiet</span>
 </div>
@@ -1334,9 +1334,12 @@ class Bridge extends BridgeBase {
 </div>
 {v.circleCards.map((c, $index) => (<React.Fragment key={$index}>
 <div style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 10px 28px rgba(120,100,170,0.10)"}}>
-<div style={{background: c.tint, padding: "14px 16px", boxSizing: "border-box", display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-<div style={{display: "flex", alignItems: "center", gap: "10px"}}><CircleGlyph kind={c.key} tint="rgba(255,255,255,.65)" /><span style={{fontSize: "20px", fontWeight: "600"}}>{c.name}</span></div>
-<div style={{display: "flex", alignItems: "center", gap: "8px"}}><div className="avatar-stack">{c.avatars.slice(0,3).map((name, i) => <PersonAvatar key={name} name={name} size={28} tint={i === 0 ? "#F9DCE4" : i === 1 ? "#E3E0F8" : "#DDF1E6"} />)}</div><span className="meta-pill">{c.here} here now · usually quiet</span></div>
+<div style={{background: c.tint, padding: "14px 16px", boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "10px"}}>
+<div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", width: "100%"}}>
+<div style={{display: "flex", alignItems: "center", gap: "10px", minWidth: "0"}}><CircleGlyph kind={c.key} tint="rgba(255,255,255,.65)" /><span style={{fontSize: "20px", fontWeight: "600"}}>{c.name}</span></div>
+<div className="avatar-stack">{c.avatars.slice(0,3).map((name, i) => <PersonAvatar key={name} name={name} size={28} tint={i === 0 ? "#F9DCE4" : i === 1 ? "#E3E0F8" : "#DDF1E6"} />)}</div>
+</div>
+<span className="meta-pill">{c.here} here now · usually quiet</span>
 </div>
 <div style={{padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: "10px"}}>
 <span style={{fontSize: "14px", color: "var(--muted)", letterSpacing: "1px"}}>TONIGHT'S TOPIC</span>
