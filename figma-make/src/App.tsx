@@ -398,8 +398,8 @@ class BridgeBase extends DCLogic {
     var whatOpts = evIdeas[evHost];
     var evWhat = whatOpts.indexOf(s.evWhat) >= 0 ? s.evWhat : whatOpts[0];
     var weekDays = [['MON','3'],['TUE','4'],['WED','5'],['THU','6'],['FRI','7'],['SAT','8'],['SUN','9']];
-    var evDate = s.evDate || 'SUN 9';
-    var evTime = s.evTime || '11:00 AM';
+    var evDate = s.evDate || 'SAT 8';
+    var evTime = s.evTime || '2:00 PM';
     var evDuration = s.evDuration || '1 hr';
     var endTimes = { '10:00 AM': {'30 min':'10:30 AM','1 hr':'11:00 AM','2 hr':'12:00 PM'}, '11:00 AM': {'30 min':'11:30 AM','1 hr':'12:00 PM','2 hr':'1:00 PM'}, '2:00 PM': {'30 min':'2:30 PM','1 hr':'3:00 PM','2 hr':'4:00 PM'}, '6:00 PM': {'30 min':'6:30 PM','1 hr':'7:00 PM','2 hr':'8:00 PM'}, '7:00 PM': {'30 min':'7:30 PM','1 hr':'8:00 PM','2 hr':'9:00 PM'} };
     var evEnd = endTimes[evTime][evDuration];
@@ -414,6 +414,14 @@ class BridgeBase extends DCLogic {
     var evOnline = s.evOnline || 'Voice chat';
     var evWhere = evMode === 'In person' ? 'In person · ' + evVenue.name : 'Online · ' + evOnline.toLowerCase();
     var evWhen = evDate.split(' ')[0][0] + evDate.split(' ')[0].slice(1).toLowerCase() + ' · ' + evTime.replace(':00','');
+    // Same day and start time as a plan you already have?
+    var planDates = { e0: 'SUN 2', e1: 'FRI 7', e2: 'SAT 8', e3: 'SUN 9', e4: 'THU 6' };
+    var evClash = events.filter(function (e) {
+      if (!(e.mine || rsvp[e.id] === 'going')) return false;
+      var d = e.dateDay ? e.dateDay + ' ' + e.dateNum : planDates[e.id];
+      var st = (e.start || (e.when || '').split(' · ')[1] || '').replace(':00', '');
+      return d === evDate && st === evTime.replace(':00', '');
+    })[0];
     var sizeOpts = ['2–4 people', '5–8 people'];
     var evSize = s.evSize || sizeOpts[0];
     var evGroupSize = s.evGroupSize || 4;
@@ -444,7 +452,7 @@ class BridgeBase extends DCLogic {
         pick: function () { self.setState({ evInvite: on ? evInvite.filter(function (x) { return x !== n; }) : evInvite.concat([n]) }); } };
     });
     var startEvent = function (from, host) {
-      return function () { self.setState({ screen: 'newEvent', evFrom: from, evHost: host, evStep: 1, evWhat: '', evDate: 'SUN 9', evTime: '11:00 AM', evDuration: '1 hr', evMode: 'In person', evVenue: venues[0].name, evOnline: 'Voice chat', evGroupSize: 4, evRemind: '1 hour before', evSize: '', evSound: 'Quiet', evLight: 'Soft', evInvite: ['Jordan'], evShare: true, moOpen: false, menuOpen: false, evToast: '' }); };
+      return function () { self.setState({ screen: 'newEvent', evFrom: from, evHost: host, evStep: 1, evWhat: '', evDate: 'SAT 8', evTime: '2:00 PM', evDuration: '1 hr', evMode: 'In person', evVenue: venues[0].name, evOnline: 'Voice chat', evGroupSize: 4, evRemind: '1 hour before', evSize: '', evSound: 'Quiet', evLight: 'Soft', evInvite: ['Jordan'], evShare: true, moOpen: false, menuOpen: false, evToast: '' }); };
     };
     var createEvent = function () {
       var ne = { id: 'n' + Date.now(), circle: evIsOutside ? null : evHost, title: evWhat, when: evWhen, where: evWhere,
@@ -482,6 +490,7 @@ class BridgeBase extends DCLogic {
       weekDays: weekDays.map(function (d) { var val = d[0] + ' ' + d[1]; return { day: d[0], date: d[1], on: evDate === val, pick: function () { self.setState({ evDate: val }); } }; }),
       timeOpts: pickList(['10:00 AM','11:00 AM','2:00 PM','6:00 PM','7:00 PM'], evTime, 'evTime'),
       durationOpts: pickList(['30 min','1 hr','2 hr'], evDuration, 'evDuration'),
+      evClash: evClash ? 'You already have “' + evClash.title + '” then. Pick another time?' : '', hasClash: !!evClash,
       evTimeRange: evTime + ' – ' + evEnd + ' · ' + evDuration,
       modeOpts: pickList(['In person','Online'], evMode, 'evMode'),
       venueOpts: venues.map(function (venue) { return Object.assign({}, venue, { on: venue.name === evVenue.name, pick: function () { self.setState({ evVenue: venue.name }); } }); }),
@@ -1594,7 +1603,7 @@ class Bridge extends BridgeBase {
 <div className="horizontal-scroll">{v.timeOpts.map((o,i)=><button key={i} className={"choice-pill "+(o.on?"on":"")} onClick={o.pick}>{o.label}</button>)}</div>
 <div className="segmented-row"><span>Duration</span><div className="segments">{v.durationOpts.map((o,i)=><button key={i} className={o.on?"on":""} onClick={o.pick}>{o.label}</button>)}</div></div>
 <div style={{background:"rgba(255,255,255,.65)",borderRadius:"16px",padding:"12px",fontWeight:"600"}}>{v.evTimeRange}</div>
-<div style={{display:"flex",gap:"10px",alignItems:"center",background:"var(--soft)",borderRadius:"18px",padding:"12px"}}><Mo mood="happy" size={38}/><span>Shorter is easier the first time.</span></div>
+{v.hasClash ? <div role="status" style={{display:"flex",gap:"10px",alignItems:"center",background:"#FBEDEA",borderRadius:"18px",padding:"12px"}}><Mo mood="calm" size={38}/><span>{v.evClash}</span></div> : <div style={{display:"flex",gap:"10px",alignItems:"center",background:"var(--soft)",borderRadius:"18px",padding:"12px"}}><Mo mood="happy" size={38}/><span>Shorter is easier the first time.</span></div>}
 </>}
 {v.evStep === 2 && <>
 <span className="field-label">Where & vibe</span>
