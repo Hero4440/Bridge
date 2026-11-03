@@ -55,6 +55,11 @@ button:active{transform:scale(.97)}
 .venue-detail{display:grid;grid-template-columns:1fr 84px;gap:10px;background:var(--soft);border-radius:18px;padding:12px}.venue-detail>div{display:flex;flex-direction:column}.venue-actions{grid-column:1/3;display:grid;grid-template-columns:1fr 1fr;gap:8px}.venue-actions button,.utility-buttons button{height:42px;border:0;border-radius:14px;background:#fff;color:var(--ink);font-weight:600}
 .rsvp-control{display:grid;grid-template-columns:repeat(3,1fr);background:var(--soft);padding:3px;border-radius:15px}.rsvp-control button{border:0;background:transparent;border-radius:12px;padding:9px 4px}.rsvp-control button.on{background:#fff;font-weight:600}.utility-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .sticky-cta.rsvp-footer .rsvp-control{width:100%}.sticky-cta.rsvp-footer .rsvp-control button{height:50px;background:transparent;color:var(--ink);font-size:15px}.sticky-cta.rsvp-footer .rsvp-control button.on{background:#fff}
+/* Typing indicator */
+.typing-dots{background:rgba(255,255,255,.85);border-radius:20px 20px 20px 6px;padding:14px 16px;display:flex;gap:5px;align-items:center}
+.typing-dots i{width:8px;height:8px;border-radius:50%;background:var(--muted);opacity:.4;animation:typingDot 1.2s ease-in-out infinite}
+.typing-dots i:nth-child(2){animation-delay:.15s}.typing-dots i:nth-child(3){animation-delay:.3s}
+@keyframes typingDot{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-4px);opacity:.9}}
 /* Mo explains why */
 .why-line{font-size:15px;line-height:1.45;color:var(--ink);opacity:.8;padding:0 4px}
 .why-box{width:100%;box-sizing:border-box;background:rgba(255,255,255,.88);border-radius:24px;padding:16px;text-align:left;display:flex;flex-direction:column;gap:4px;box-shadow:0 10px 28px rgba(120,100,170,.10)}.why-box strong{font-size:14px}.why-box span{font-size:15px;line-height:1.45;color:var(--ink);opacity:.8}

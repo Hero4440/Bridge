@@ -555,12 +555,16 @@ class BridgeBase extends DCLogic {
       var list = msgsFor(dmKey).concat([['me', dmDraft]]);
       var m = Object.assign({}, dmMsgs); m[dmKey] = list;
       var sendToken = Date.now();
-      changeWithUndo({ dmMsgs: m, dmDraft: '', dmGentle: false, dmSendToken: sendToken }, 'Sent to ' + dmd.name, { dmMsgs: dmMsgs, dmDraft: dmDraft, dmGentle: !!s.dmGentle, dmSendToken: 0 });
+      changeWithUndo({ dmMsgs: m, dmDraft: '', dmGentle: false, dmSendToken: sendToken }, 'Sent to ' + dmd.name, { dmMsgs: dmMsgs, dmDraft: dmDraft, dmGentle: !!s.dmGentle, dmSendToken: 0, dmTyping: '' });
+      // Show "typing…" dots before the reply arrives
+      setTimeout(function () {
+        if (self.state.dmSendToken === sendToken) self.setState({ dmTyping: dmKey });
+      }, 500);
       setTimeout(function () {
         if (self.state.dmSendToken !== sendToken) return;
         var m2 = Object.assign({}, self.state.dmMsgs || {}); m2[dmKey] = (m2[dmKey] || list).concat([['them', replyText]]);
-        self.setState({ dmMsgs: m2 });
-      }, 900);
+        self.setState({ dmMsgs: m2, dmTyping: '' });
+      }, 2000);
     };
     var tabBtn = function (k, label) {
       var on = cTab === k;
@@ -582,6 +586,7 @@ class BridgeBase extends DCLogic {
       reqReport: function () { changeWithUndo({ dmReq: 'reported' }, 'Blocked Alex', { dmReq: dmReqState }); },
       reqDelete: function () { changeWithUndo({ dmReq: 'deleted' }, 'Request deleted', { dmReq: dmReqState }); },
       isDm: screen === 'dm',
+      dmTyping: s.dmTyping === dmKey,
       dmName: dmd.name, dmFrom: 'Met in the ' + dmd.from, dmTint: dmd.tint, dmInitial: dmd.name[0],
       dmMessages: msgsFor(dmKey).map(function (m, index, list) {
         var me = m[0] === 'me';
@@ -1595,6 +1600,7 @@ class Bridge extends BridgeBase {
 <div><div style={{background: m.bg, color: m.fg, borderRadius: m.radius, padding: "12px 16px", maxWidth: "100%", fontSize: "16px", lineHeight: "1.45"}}>{m.text}</div>{m.lastInGroup && <div className="chat-meta">{m.seen ? 'Seen · ' : ''}{m.time || '7:40 PM'}</div>}</div>
 </div>
 </React.Fragment>))}
+{v.dmTyping && <div className="chat-group" style={{alignSelf: "flex-start"}}><PersonAvatar name={v.dmName} tint={v.dmTint} size={28} /><div className="typing-dots" role="status" aria-label={v.dmName + " is typing"}><i></i><i></i><i></i></div></div>}
 <div style={{marginTop: "auto", background: "rgba(255,255,255,0.6)", borderRadius: "24px", padding: "12px", display: "flex", flexDirection: "column", gap: "8px"}}>
 <div style={{display: "flex", alignItems: "center", gap: "8px"}}><Mo mood="happy" size={34} /><span style={{fontSize: "15px", fontWeight: "500"}}>Reply ideas</span></div>
 <div style={{display: "flex", flexWrap: "wrap", gap: "8px"}}>
