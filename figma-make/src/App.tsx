@@ -746,7 +746,7 @@ class BridgeBase extends DCLogic {
           pick: function () { var cur = refl.wins || []; setRefl({ wins: on ? cur.filter(function (x) { return x !== w; }) : cur.concat([w]) }); } };
       }),
       edCanSave: !!refl.feel, edSaveBg: refl.feel ? 'var(--ink)' : '#CFC8DB',
-      edSaveRefl: function () { if (refl.feel) { var all = Object.assign({}, s.refl || {}); all[evD.id] = Object.assign({}, refl, { done: true }); saveQuietly({ refl: all }, '+1 brave step'); } },
+      edSaveRefl: function () { if (refl.feel) { var all = Object.assign({}, s.refl || {}); all[evD.id] = Object.assign({}, refl, { done: true }); self.setState({ refl: all }); } },
       edReflMo: refl.feel === 'hard' ? 'Thanks for telling me. Showing up when it is hard still counts. Next time I can suggest a smaller event.'
         : (refl.feel === 'good' ? 'Love that! I will suggest Level 2 practice next time.' : 'Okay is a real win. Every event makes the next one easier.'),
       edReflWins: (refl.wins || []).length ? 'You noted: ' + (refl.wins || []).join(', ') + '.' : '',
@@ -868,7 +868,7 @@ class BridgeBase extends DCLogic {
       isHome: screen === 'home', isCircle: screen === 'circle', isPause: screen === 'pause', isReset: screen === 'reset',
       isPractice: screen === 'practice', isFeedback: screen === 'feedback', isWin: screen === 'win', isMe: screen === 'me',
       showTabs: ['pause', 'reset', 'win', 'checkin', 'help', 'newEvent', 'onboard'].indexOf(screen) < 0,
-      steps: steps, stepBump: !!s.stepBump,
+      steps: steps, stepBump: !!s.stepBump, showCelebrate: !!s.stepBump && screen !== 'win',
       homeMood: ciFeel === 'over' ? 'calm' : 'happy',
       moLine: ciFeel === 'over' ? "Thanks for telling me. Let's keep today gentle. Just reading a circle counts." : (ciFeel === 'ready' ? "You're ready to connect! Let's practice, then go for it." : (ciUp === 'none' ? "Let's warm up with one small practice today." : "Let's warm up for your " + upLabels[ciUp].toLowerCase().replace('a ', '') + '.')),
       isLow: battery === 'low', isOkay: battery === 'okay', isFull: battery === 'full',
@@ -1031,7 +1031,7 @@ class Bridge extends BridgeBase {
     if (countSteps(this.state) > countSteps(prevState)) {
       var self = this;
       this.setState({ stepBump: Date.now() });
-      setTimeout(function () { self.setState({ stepBump: 0 }); }, 1600);
+      setTimeout(function () { self.setState({ stepBump: 0 }); }, 2400);
     }
     if (prevState.screen !== this.state.screen) {
       // A toast from an earlier screen shouldn't follow you to the next one
@@ -2087,6 +2087,7 @@ class Bridge extends BridgeBase {
 </div>
 <div className="home-indicator" aria-hidden="true"></div>
 </>)}
+{v.showCelebrate && <div className="step-celebrate" role="status" aria-live="polite"><Mo mood="happy" size={64} /><strong>+1 brave step</strong><span>{v.steps} this week</span></div>}
 </div>
 </>);
   }
