@@ -1842,7 +1842,7 @@ class Bridge extends BridgeBase {
 </button>
 <div style={{flex: "1", display: "flex", flexDirection: "column", justifyContent: "center", gap: "18px"}}>
 <div className="rise" style={{background: "rgba(255,255,255,0.85)", borderRadius: "24px", padding: "26px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px", textAlign: "center", boxShadow: "0 24px 60px rgba(120,100,170,0.2)"}}>
-<div><Mo mood="worried" size={120} /></div>
+<div><Mo mood="calm" size={120} /></div>
 <span style={{fontSize: "27px", fontWeight: "600", lineHeight: "1.2"}}>Let's take a breath together</span>
 <span style={{fontSize: "17px", lineHeight: "1.45", color: "var(--muted)"}}>This might hurt Jordan's feelings. You can still send it. You decide.</span>
 <div style={{width: "100%", background: "#FBEDEA", borderRadius: "20px", padding: "14px 16px", textAlign: "left", fontSize: "16px", lineHeight: "1.4"}}>"Zelda?? Seriously, that's the most overrated answer ever."</div>
