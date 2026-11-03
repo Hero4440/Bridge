@@ -868,6 +868,8 @@ class BridgeBase extends DCLogic {
       isHome: screen === 'home', isCircle: screen === 'circle', isPause: screen === 'pause', isReset: screen === 'reset',
       isPractice: screen === 'practice', isFeedback: screen === 'feedback', isWin: screen === 'win', isMe: screen === 'me',
       showTabs: ['pause', 'reset', 'win', 'checkin', 'help', 'newEvent', 'onboard'].indexOf(screen) < 0,
+      // Greeting that follows the time of day
+      greeting: (function () { var h = new Date().getHours(); return h < 5 ? 'Hello' : (h < 12 ? 'Good morning' : (h < 17 ? 'Good afternoon' : 'Good evening')); })(),
       steps: steps, stepBump: !!s.stepBump, showCelebrate: !!s.stepBump && screen !== 'win',
       homeMood: ciFeel === 'over' ? 'calm' : 'happy',
       moLine: ciFeel === 'over' ? "Thanks for telling me. Let's keep today gentle. Just reading a circle counts." : (ciFeel === 'ready' ? "You're ready to connect! Let's practice, then go for it." : (ciUp === 'none' ? "Let's warm up with one small practice today." : "Let's warm up for your " + upLabels[ciUp].toLowerCase().replace('a ', '') + '.')),
@@ -1216,7 +1218,7 @@ class Bridge extends BridgeBase {
 {v.isHome && (<>
 <div className="tab-screen">
 <div className="tab-sticky-header" style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px"}}>
-<h1 style={{margin: "0", fontSize: "34px", fontWeight: "600", letterSpacing: "-0.5px"}}>Hi {v.firstName}</h1>
+<div style={{display: "flex", flexDirection: "column", minWidth: "0"}}><span style={{fontSize: "15px", fontWeight: "500", color: "var(--muted)"}}>{v.greeting}</span><h1 style={{margin: "0", fontSize: "34px", fontWeight: "600", letterSpacing: "-0.5px", lineHeight: "1.1"}}>{v.firstName}</h1></div>
 <div style={{display: "flex", alignItems: "center", gap: "8px"}}>
 <span style={{background: "rgba(255,255,255,0.75)", borderRadius: "999px", padding: "7px 14px", fontSize: "14px", fontWeight: "500", whiteSpace: "nowrap"}}>{v.steps} brave steps</span>
 <button onClick={v.openNotifs} aria-label={v.notifLabel} style={{position: "relative", width: "44px", height: "44px", flex: "0 0 auto", borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: "0"}}>
