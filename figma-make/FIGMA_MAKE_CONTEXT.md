@@ -1,0 +1,113 @@
+# Bridge – Figma Make prototype context
+
+This folder holds the code for the live Bridge prototype in Figma Make. Give this file to a new chat, or to Figma Make's AI, before asking for changes.
+
+- **Figma Make file:** https://www.figma.com/make/CmV9IOc2bubFxzcPJzz4Q7 ("Bridge Independence App")
+- **User flows (Figma design file):** https://www.figma.com/design/tipYMvE4FisuZCNeKZD8ZK, on the "User flows" page
+- **Last updated:** Nov 2, 2026
+
+## What Bridge is
+Bridge is an AI social coach for neurodivergent young adults, built for First Place AZ in the North American AI Challenge for Neurodiverse Learning. It helps users make and keep friends through interest-based Circles. **Mo**, a soft blob AI buddy, helps in three ways:
+- Practice role-play.
+- Reply ideas, a tone check and pause-before-send.
+- Calm-down and help when the user needs it.
+
+## Files in this folder
+| File | Goes to (in Figma Make) | Notes |
+|---|---|---|
+| `src/App.tsx` | `src/App.tsx` | The whole app (~100 KB). Starts with `// @ts-nocheck`. |
+| `src/index.css` | `src/index.css` | Outfit font, animations (breathe, floaty, rise), and phone/laptop fitting. |
+
+Don't change `main.tsx`, `package.json`, `vite.config.ts` or `.figma/` in Make.
+
+## How to update the Make prototype
+Figma Make's automatic code import is blocked from Claude's cloud environment, so updates are copy and paste:
+1. In Make, open code view and go to `src` → `App.tsx`.
+2. Press Cmd+A, then Delete, then paste the new `App.tsx`.
+3. Do the same for `index.css` if it changed.
+4. Reload the preview, or refresh the browser tab if it still shows the old version.
+
+## Code structure (App.tsx)
+- **Classes:** plain React class components, no other libraries.
+  - `DCLogic`: base class. `render()` returns `this.renderView(this.renderVals())`.
+  - `Mo`: the SVG blob. Props are `mood` (happy, worried or calm) and `size`.
+  - `Bridge`: the app. `BridgeBase.renderVals()` builds every value from `this.state`, and `Bridge.renderView(v)` draws the screens as `{v.isX && (...)}` blocks.
+  - `App`: wraps it in `.stage > .phone`.
+- **Navigation:** the `state.screen` value decides what shows. Possible values:
+  - Main tabs: `home`, `circles`, `circle`, `me`
+  - Messages and notifications: `dm`, `notifs`
+  - Events: `event`, `newEvent`
+  - Mo and practice: `practice`, `feedback`, `win`, `pause`, `reset` (breather), `help`
+  - First screen: `checkin`
+- **Bottom nav:** hidden on pause, reset, win, checkin, help and newEvent.
+- **Logic sections in `renderVals()`:** Events, Event detail (what to expect, prep, reflection, connect), Profile, DMs, Notifications, Themes. Each returns an object merged into the final `Object.assign(...)`.
+- **Themes:** colors are CSS variables set on `.bridge-app` from `state.theme`:
+  - `--bg` (gradient), `--ink` (primary/dark), `--soft` (light chips), `--muted` (secondary text).
+  - Themes are dawn (default), sage, mist and sand. Use `var(--ink)` and the others instead of hex for themed colors.
+  - SVG icons use `style={{stroke: "var(--ink)"}}`, because the `stroke` attribute doesn't read CSS variables.
+- **Screen fitting:** on screens 500px wide or narrower, the app fills the screen and keeps 50px clear at the top for the notch. On wider screens it shows as a centered 390×844 phone.
+- **Scroll reset:** `componentDidUpdate` scrolls `.bridge-scroll` back to the top when the screen changes.
+
+## Features by tab
+**Check-in (first screen).**
+- Questions: how you're feeling (Overwhelmed / Okay / Ready to connect), what's coming up, and what feels hardest.
+- The answers decide how many practice cards Home shows (1 / 2 / 3) and the level.
+
+**Home.**
+- Header: "Hi {first name}", brave steps, and a 🔔 bell with an unread badge.
+- Then the check-in summary, Mo's line, and the "Tonight in Gaming" card.
+- Then a reflection nudge: "How was Minecraft build night?"
+- **My plans:** only events the user is going to or hosting, plus "+ Create".
+- **Practice made for you.**
+
+**Circles.**
+- Two segments: **Circles | Messages**.
+- **Circles:** filters (For you / All / Quiet ones), then circle cards with Join or Just read.
+- **Inside a circle:**
+  - Event strip with "I'm in", Details, and "+ Plan an event".
+  - Chat with a Message link next to names.
+  - Mo reply ideas, a tone check and pause-before-send.
+  - An unsafe message (Alex asking for money) triggers a private warning with Report/Block.
+- **Messages:**
+  - DMs with Jordan, Maya and Priya. You can type, Mo gives reply ideas, and a harsh-word check offers Say it gently / Send anyway.
+  - Message requests: Alex's unsafe request is held by Mo, with Report and block / Delete.
+
+**Event details.**
+- **What to expect:** people, sound, lighting, and what to do if you need a break. Shows who's going and an RSVP button.
+- **Get ready with Mo:** a practice for the event plus a prep checklist.
+- **Past event:** a private reflection (+1 brave step), then Stay in touch: Message, or Say hi to send a message request.
+- **Create event:** host in a circle or outside circles; choose what, when, where, sound, lighting, and size or invites. In-person events show Mo's safety tip and "Tell Mom where I'll be". Check the preview, then create.
+
+**Notifications.**
+- Grouped into New and Earlier. Tapping one goes to its screen.
+- "Pause notifications for 1 hour".
+
+**Me.**
+- **Profile:** photo upload, plus first name, last name, gender and email with Edit/Save. In circles, people see only the first name and photo.
+- **Coach Maria connect request:** the user accepts and chooses what she sees, or declines.
+- **Theme picker:** small gradient circles in tiles (Dawn, Sage, Mist, Sand).
+- Also: badges, a support circle list (no toggles), and a 988 note.
+
+**Mo button in the nav.** Practice with me, Breathe with me (one-minute breather), I need help (text a trusted person, or 988).
+
+## Demo data
+- **Circles:** Gaming, Music, Anime, Cooking, Art, Tech. Members include Maya, Jordan, Lee, Priya, Ava, Kai, Ben, Rosa, Mia, Theo, Raj and Zoe.
+- **Events:**
+  - Co-op game night (Gaming, online)
+  - Sketch and chill (Art, Tempe library)
+  - Coffee with Jordan and Maya (outside circles; the user is going by default)
+  - Playlist swap (Music, text only)
+  - Past: Minecraft build night
+- **Practice scenarios:** joinin, onread, cancel, leave, repair, invite, disagree.
+
+## Design rules (team preferences)
+- **Look:** calm, soft and rounded. Outfit font, large tap targets (44px or more), and a dark pill nav with fixed-width tabs.
+- **Avoid:** childish or overly colorful styles, clutter, toggles in the support circle, and a nav that changes width between pages.
+- **Mo's tone:** kind, short and never judgmental. Safety warnings are private ("Only you can see this").
+- **Process:** don't invent features without saying so, and keep the Figma user flows in sync with the prototype.
+
+## Known gaps (prototype only)
+- State (theme, RSVPs, messages) resets when the page reloads.
+- Safe message requests (accept/decline) aren't built. "Say hi" only shows "Request sent".
+- Notifications are fixed demo items.
+- The Home user flow in Figma still shows the older Home order.
