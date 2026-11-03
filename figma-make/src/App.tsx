@@ -375,7 +375,7 @@ class BridgeBase extends DCLogic {
     var evCard = function (e) {
       var c = e.circle ? circleData[e.circle] : null;
       var g = rsvp[e.id] === 'going';
-      var cardDates = { e0: ['YESTERDAY','8'], e1: ['FRI','7'], e2: ['SAT','8'], e3: ['SUN','9'], e4: ['THU','6'] };
+      var cardDates = { e0: ['SUN','2'], e1: ['FRI','7'], e2: ['SAT','8'], e3: ['SUN','9'], e4: ['THU','6'] };
       var cardDate = e.dateDay ? [e.dateDay, e.dateNum] : (cardDates[e.id] || ['SUN','9']);
       return { title: e.title, when: e.when, where: e.where, tag: e.tag, meta: (e.duration || '1 hr') + ' · ' + Math.max(1, e.going || 0) + ' people',
         hostLabel: c ? c.name + ' circle' : 'Outside circles · friends',
@@ -689,9 +689,9 @@ class BridgeBase extends DCLogic {
     var winsList = ['I said hi', 'I asked a question', 'I stayed as long as I wanted', 'I left kindly'];
     var feelList = [['hard', 'It was hard'], ['okay', 'It was okay'], ['good', 'It went well']];
     var hiSent = s.hiSent || {};
-    var fallbackDates = { e0: ['YESTERDAY','8'], e1: ['FRI','7'], e2: ['SAT','8'], e3: ['SUN','9'], e4: ['THU','6'] };
+    var fallbackDates = { e0: ['SUN','2'], e1: ['FRI','7'], e2: ['SAT','8'], e3: ['SUN','9'], e4: ['THU','6'] };
     var detailDate = evD.dateDay ? [evD.dateDay, evD.dateNum] : (fallbackDates[evD.id] || ['SUN','9']);
-    var detailTimes = evD.start ? evD.start + ' – ' + evD.end + ' · ' + evD.duration : (evD.id === 'e3' ? '11:00 AM – 12:00 PM · 1 hr' : (evD.when || '').replace(' · ', ' · '));
+    var detailTimes = evD.start ? evD.start + ' – ' + evD.end + ' · ' + evD.duration : (evD.id === 'e3' ? '11:00 AM – 12:00 PM · 1 hr' : (evD.id === 'e0' ? '7:00 PM – 8:00 PM · 1 hr' : (evD.when || '').replace(' · ', ' · ')));
     var detailVenue = evD.venue || (inPersonD ? ((evD.where || '').indexOf('library') >= 0 ? 'Tempe Public Library' : 'Cartel Coffee Lab') : '');
     var detailAddress = evD.address || (detailVenue === 'Tempe Public Library' ? '3500 S Rural Rd' : '225 W University Dr, Tempe');
     var detailRsvp = rsvp[evD.id] || '';
@@ -1701,7 +1701,7 @@ class Bridge extends BridgeBase {
 <h1 style={{margin: "0", fontSize: "27px", fontWeight: "600", lineHeight: "1.2"}}>{v.edTitle}</h1>
 <span className="meta-pill">{v.edMeta}</span>
 <div className="event-fact"><DateTile day={v.edDateDay} date={v.edDateNum}/><div><strong>{v.edTimeRange}</strong><small>{v.edWhen}</small></div></div>
-{v.edInPerson ? <div className="venue-detail"><div><strong>{v.edVenue}</strong><span style={{fontSize:"14px",color:"var(--muted)"}}>{v.edAddress}</span></div><MapThumb/><div className="venue-actions"><button onClick={v.edDirections}>Directions</button><button onClick={v.edCopyAddress}>Copy address</button></div></div> : <div style={{background:"var(--soft)",borderRadius:"18px",padding:"14px"}}>Join link available 10 min before.</div>}
+{v.edInPerson ? <div className="venue-detail"><div><strong>{v.edVenue}</strong><span style={{fontSize:"14px",color:"var(--muted)"}}>{v.edAddress}</span></div><MapThumb/><div className="venue-actions"><button onClick={v.edDirections}>Directions</button><button onClick={v.edCopyAddress}>Copy address</button></div></div> : <div style={{background:"var(--soft)",borderRadius:"18px",padding:"14px"}}>{v.edPast ? "This event has ended." : "Join link available 10 min before."}</div>}
 <div style={{display:"flex",justifyContent:"space-between",gap:"8px",fontSize:"14px"}}><span>{v.edHostedBy}</span><span>{v.edSpots}</span></div>
 <div className="utility-buttons"><button onClick={v.edAddCalendar}>Add to calendar</button><button onClick={v.edShare}>Share</button></div>
 </div>
