@@ -751,7 +751,7 @@ class BridgeBase extends DCLogic {
       var c = circleData[k];
       return { key: k, name: c.name, initial: c.initial, tint: c.tint, here: c.here, topic: c.topic, icon: circleIconPaths[k],
         avatars: [c.m1[0], c.m2[0], c.m3 ? c.m3[0] : 'Sam'],
-        open: function () { changeWithUndo({ screen: 'circle', circle: k, draft: '', sent: '', menuOpen: false, safetyNote: '', unsafeHandled: false, moOpen: false }, 'Joined ' + c.name + ' chat', { screen: screen, circle: cKey, draft: draft, sent: sent, menuOpen: !!s.menuOpen, safetyNote: s.safetyNote || '', unsafeHandled: !!s.unsafeHandled, moOpen: !!s.moOpen }); } };
+        open: function () { self.setState({ screen: 'circle', circle: k, draft: '', sent: '', menuOpen: false, safetyNote: '', unsafeHandled: false, moOpen: false }); } };
     });
 
     // ---------- First-time setup, comfort, journey ----------
@@ -970,7 +970,7 @@ class BridgeBase extends DCLogic {
       ciSummary: feelLabels[ciFeel] + (ciUp === 'none' ? '' : ' · ' + (ciUp === 'group' ? 'hangout' : upLabels[ciUp].toLowerCase().replace('a ', '')) + ' coming up'),
       recList: recList, upNextText: upNextText,
       joinLabel: ciFeel === 'over' ? 'Read Gaming chat' : 'Join Gaming chat',
-      homeJoin: function () { changeWithUndo({ screen: 'circle', circle: 'gaming', draft: '', sent: '', readOnly: ciFeel === 'over', unsafeHandled: false, menuOpen: false, moOpen: false }, 'Joined Gaming chat', { screen: screen, circle: cKey, draft: draft, sent: sent, readOnly: readOnly, unsafeHandled: !!s.unsafeHandled, menuOpen: !!s.menuOpen, moOpen: !!s.moOpen }); },
+      homeJoin: function () { self.setState({ screen: 'circle', circle: 'gaming', draft: '', sent: '', readOnly: ciFeel === 'over', unsafeHandled: false, menuOpen: false, moOpen: false }); },
       circlesMoLine: ciFeel === 'over' ? 'Feeling overwhelmed? Try "Just read". No one expects you to post.' : 'You like ' + interestText + '. Start there?',
       filterOpts: chip({ foryou: 'For you', all: 'All' }, cFilter, 'cFilter'),
       circleCards: Object.keys(circleData).filter(function (k) {
@@ -981,7 +981,7 @@ class BridgeBase extends DCLogic {
         var c = circleData[k];
         var grads = { gaming: 'linear-gradient(120deg, #F9DCE4, #E3E0F8)', music: 'linear-gradient(120deg, #E3E0F8, #DCE4FA)', anime: 'linear-gradient(120deg, #FBE1D8, #F9DCE4)', cooking: 'linear-gradient(120deg, #DDF1E6, #F6E5C9)', art: 'linear-gradient(120deg, #F6E5C9, #FBE1D8)', tech: 'linear-gradient(120deg, #DCE4FA, #DDF1E6)' };
         return { key: k, name: c.name, here: c.here, topic: c.topic, grad: grads[k], tint: c.tint, icon: circleIconPaths[k], avatars: [c.m1[0], c.m2[0], c.m3 ? c.m3[0] : 'Sam'],
-          open: function () { changeWithUndo({ screen: 'circle', circle: k, draft: '', sent: '', readOnly: false, unsafeHandled: false, moOpen: false, safetyNote: '' }, 'Joined ' + c.name + ' chat', { screen: screen, circle: cKey, draft: draft, sent: sent, readOnly: readOnly, unsafeHandled: !!s.unsafeHandled, moOpen: !!s.moOpen, safetyNote: s.safetyNote || '' }); },
+          open: function () { self.setState({ screen: 'circle', circle: k, draft: '', sent: '', readOnly: false, unsafeHandled: false, moOpen: false, safetyNote: '' }); },
           read: function () { self.setState({ screen: 'circle', circle: k, draft: '', sent: '', readOnly: true, unsafeHandled: false, moOpen: false, safetyNote: '' }); } };
       }),
       isReadOnly: readOnly,
@@ -1014,6 +1014,10 @@ class BridgeBase extends DCLogic {
 class Bridge extends BridgeBase {
   componentDidUpdate(prevProps, prevState) {
     if (prevState.screen !== this.state.screen) {
+      // A toast from an earlier screen shouldn't follow you to the next one
+      if (this.state.uiToast && prevState.undoToken === this.state.undoToken && prevState.uiToast === this.state.uiToast) {
+        this.setState({ uiToast: '', undoPatch: null, undoToken: 0 });
+      }
       var el = document.querySelector('.bridge-scroll');
       if (el && this.state.screen === 'me' && String(prevState.screen).indexOf('me-') === 0) {
         var saved = this.state.meScroll || 0;
