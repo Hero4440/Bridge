@@ -110,6 +110,20 @@ function MapThumb() {
   return <span className="map-thumb" aria-hidden="true"><svg viewBox="0 0 100 64" width="100%" height="100%"><path d="M-5 15 35 42 75 17l30 20M15-5l18 70M70-5l-8 70" fill="none" stroke="#C8C1D4" strokeWidth="5"/><circle cx="56" cy="31" r="7" fill="var(--ink)"/><circle cx="56" cy="31" r="2.5" fill="#fff"/></svg></span>;
 }
 
+function BadgeMark({ kind, size = 36 }) {
+  var paths = {
+    hello: 'M4 5.5h16v11H9l-5 4v-15Z',
+    kind: 'M20.8 5.7c-2-2-5.2-2-7.2 0L12 7.3l-1.6-1.6a5.1 5.1 0 0 0-7.2 7.2L12 21l8.8-8.1a5.1 5.1 0 0 0 0-7.2Z',
+    pause: 'M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7',
+    event: 'M5 10h14v11H5zM8 10V7a4 4 0 0 1 8 0v3'
+  };
+  return <span className={"badge-mark badge-" + kind} style={{width:size + 'px',height:size + 'px'}}><svg width={Math.round(size * .48)} height={Math.round(size * .48)} viewBox="0 0 24 24" fill="none" style={{stroke:"var(--ink)"}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={paths[kind]}/></svg></span>;
+}
+
+function MeSubHeader({ title, onBack }) {
+  return <div className="sticky-header inner-header"><button onClick={onBack} aria-label="Back to Me" className="inner-back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke:"var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m14 6-6 6 6 6"/></svg></button><span className="header-title">{title}</span><span></span></div>;
+}
+
 class BridgeBase extends DCLogic {
   renderVals() {
     var s = this.state || {};
@@ -792,9 +806,43 @@ class BridgeBase extends DCLogic {
       journeyUp: steps > 3 ? 'Up from 3 last week' : 'Every step counts',
       redoSetup: function () { self.setState({ screen: 'onboard', onbStep: 2, moOpen: false }); }
     };
-    return Object.assign(evVals, profVals, dmVals, notifVals, themeVals, evDetailVals, onbVals, {
-      circles: circles, screenKey: screen, uiToast: s.uiToast || '', hasUiToast: !!s.uiToast,
-      clearToast: function () { self.setState({ uiToast: '' }); },
+    var openMeScreen = function (target) {
+      return function () {
+        var el = document.querySelector('.bridge-scroll');
+        self.setState({ screen: target, meScroll: el ? el.scrollTop : 0, moOpen: false });
+      };
+    };
+    var meScreenNames = ['me-journey','me-trusted','me-coach','me-profile','me-colors','me-comfort','me-interests','me-privacy'];
+    var meVals = {
+      isMeJourney: screen === 'me-journey', isMeTrusted: screen === 'me-trusted', isMeCoach: screen === 'me-coach',
+      isMeProfile: screen === 'me-profile', isMeColors: screen === 'me-colors', isMeComfort: screen === 'me-comfort',
+      isMeInterests: screen === 'me-interests', isMePrivacy: screen === 'me-privacy',
+      meBack: function () { self.setState({ screen: 'me', moOpen: false }); },
+      interestNames: interests.map(function (k) { return circleData[k] ? circleData[k].name : k; }).join(' · '),
+      interestTotal: interests.length,
+      openJourney: openMeScreen('me-journey'), openTrusted: openMeScreen('me-trusted'), openCoach: openMeScreen('me-coach'),
+      openProfile: openMeScreen('me-profile'), openColors: openMeScreen('me-colors'), openComfort: openMeScreen('me-comfort'),
+      openInterests: openMeScreen('me-interests'), openPrivacy: openMeScreen('me-privacy'),
+      showCoachPerson: reqState === 'choose' || reqState === 'connected',
+      comfortSummary: textLarge ? 'Large text' : (calmMode ? 'Calm mode on' : (textFirst ? 'Text first' : 'Voice is okay')),
+      blockedSummary: (dmReqState === 'reported' || (s.safetyNote || '').toLowerCase().indexOf('blocked') >= 0) ? 'Alex' : 'No blocked people',
+      meSettings: [
+        { label: 'Profile', value: '', path: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 21c.8-4 3.3-6 7.5-6s6.7 2 7.5 6', open: openMeScreen('me-profile') },
+        { label: 'Colors', value: themeVals.themeName, swatch: th.swatch, path: 'M12 3a9 9 0 1 0 0 18c1.6 0 2.2-1.2 1.5-2.3-.6-1 .1-2.2 1.3-2.2H17a4 4 0 0 0 4-4C21 7.3 17 3 12 3Z', open: openMeScreen('me-colors') },
+        { label: 'Comfort', value: textLarge ? 'Large' : (calmMode ? 'Calm' : 'Default'), path: 'M4 12h16M12 4v16M6.5 6.5l11 11M17.5 6.5l-11 11', open: openMeScreen('me-comfort') },
+        { label: 'Interests', value: interests.length + ' picked', path: 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z', open: openMeScreen('me-interests') },
+        { label: 'Privacy & safety', value: '', path: 'M12 3 5 6v5c0 4.6 2.8 8.2 7 10 4.2-1.8 7-5.4 7-10V6l-7-3Z', open: openMeScreen('me-privacy') }
+      ],
+      isMeArea: screen === 'me' || meScreenNames.indexOf(screen) >= 0
+    };
+    return Object.assign(evVals, profVals, dmVals, notifVals, themeVals, evDetailVals, onbVals, meVals, {
+      circles: circles, screenKey: screen, uiToast: s.uiToast || '', hasUiToast: !!s.uiToast, hasUndo: !!s.undoPatch,
+      clearToast: function () { self.setState({ uiToast: '', undoPatch: null, undoToken: 0 }); },
+      undoToast: function () {
+        if (!s.undoPatch) return;
+        self.setState(Object.assign({}, s.undoPatch, { uiToast: 'Undone', undoPatch: null, undoToken: 0 }));
+        setTimeout(function () { if (self.state.uiToast === 'Undone') self.setState({ uiToast: '' }); }, 1800);
+      },
       isCircles: screen === 'circles',
       isGaming: cKey === 'gaming',
       cName: cd.name, cTopic: cd.topic,
@@ -898,7 +946,7 @@ class BridgeBase extends DCLogic {
       unsafeIgnore: function () { self.setState({ unsafeHandled: true }); },
       reqPending: reqState === 'pending', reqChoose: reqState === 'choose', reqDeclined: reqState === 'declined',
       mariaConnected: reqState === 'connected',
-      reqAccept: function () { self.setState({ reqState: 'choose' }); },
+      reqAccept: function () { var el = document.querySelector('.bridge-scroll'); self.setState({ reqState: 'choose', screen: 'me-coach', meScroll: el ? el.scrollTop : 0 }); },
       reqDecline: function () { self.setState({ reqState: 'declined' }); },
       reqConnect: function () { changeWithUndo({ reqState: 'connected' }, 'Saved ✓', { reqState: reqState }); },
       seeSteps: seeSteps, seeHelp: seeHelp,
@@ -943,11 +991,11 @@ class BridgeBase extends DCLogic {
         var on = n === helpTo;
         return { name: n, on: on, bg: on ? 'var(--ink)' : 'var(--soft)', fg: on ? '#FFFFFF' : 'var(--ink)', pick: function () { self.setState({ helpTo: n, helpSent: false }); } };
       }),
-      sendHelp: function () { self.setState({ helpSent: true }); },
-      tabIsHome: screen === 'home', tabIsCircles: screen === 'circles' || screen === 'circle' || screen === 'dm', tabIsMe: screen === 'me',
+      sendHelp: function () { changeWithUndo({ helpSent: true }, 'Sent to ' + helpTo, { helpSent: !!s.helpSent }); },
+      tabIsHome: screen === 'home', tabIsCircles: screen === 'circles' || screen === 'circle' || screen === 'dm', tabIsMe: screen === 'me' || meScreenNames.indexOf(screen) >= 0,
       homeBg: screen === 'home' ? '#FFFFFF' : 'transparent', homeFg: screen === 'home' ? 'var(--ink)' : '#D9D3E8', homePad: screen === 'home' ? '0 18px' : '0',
       circlesBg: (screen === 'circles' || screen === 'circle' || screen === 'dm') ? '#FFFFFF' : 'transparent', circlesFg: (screen === 'circles' || screen === 'circle' || screen === 'dm') ? 'var(--ink)' : '#D9D3E8', circlesPad: (screen === 'circles' || screen === 'circle' || screen === 'dm') ? '0 18px' : '0',
-      meBg: screen === 'me' ? '#FFFFFF' : 'transparent', meFg: screen === 'me' ? 'var(--ink)' : '#D9D3E8', mePad: screen === 'me' ? '0 18px' : '0',
+      meBg: (screen === 'me' || meScreenNames.indexOf(screen) >= 0) ? '#FFFFFF' : 'transparent', meFg: (screen === 'me' || meScreenNames.indexOf(screen) >= 0) ? 'var(--ink)' : '#D9D3E8', mePad: (screen === 'me' || meScreenNames.indexOf(screen) >= 0) ? '0 18px' : '0',
       moBtnBg: s.moOpen ? '#FFFFFF' : 'var(--soft)',
       tabHomeBg: tab('home'), tabCircleBg: tab('circle'), tabMeBg: tab('me'),
       moOpen: !!s.moOpen,
@@ -967,8 +1015,11 @@ class Bridge extends BridgeBase {
   componentDidUpdate(prevProps, prevState) {
     if (prevState.screen !== this.state.screen) {
       var el = document.querySelector('.bridge-scroll');
-      if (el) el.scrollTop = 0;
-      var order = { onboard: -1, checkin: 0, home: 1, circles: 2, circle: 3, dm: 3, notifs: 2, newEvent: 3, event: 3, practice: 3, feedback: 4, pause: 4, reset: 5, help: 4, me: 1, win: 5 };
+      if (el && this.state.screen === 'me' && String(prevState.screen).indexOf('me-') === 0) {
+        var saved = this.state.meScroll || 0;
+        requestAnimationFrame(function () { el.scrollTop = saved; });
+      } else if (el) el.scrollTop = 0;
+      var order = { onboard: -1, checkin: 0, home: 1, circles: 2, circle: 3, dm: 3, notifs: 2, newEvent: 3, event: 3, practice: 3, feedback: 4, pause: 4, reset: 5, help: 4, me: 1, 'me-journey': 2, 'me-trusted': 2, 'me-coach': 2, 'me-profile': 2, 'me-colors': 2, 'me-comfort': 2, 'me-interests': 2, 'me-privacy': 2, win: 5 };
       var panel = document.querySelector('.screen-transition');
       if (panel && (order[this.state.screen] || 0) < (order[prevState.screen] || 0)) {
         panel.classList.add('screen-back');
@@ -1145,41 +1196,44 @@ class Bridge extends BridgeBase {
 <span style={{background: "rgba(255,255,255,0.75)", borderRadius: "999px", padding: "7px 14px", fontSize: "14px", fontWeight: "500", whiteSpace: "nowrap"}}>{v.steps} brave steps</span>
 <button onClick={v.openNotifs} aria-label={v.notifLabel} style={{position: "relative", width: "44px", height: "44px", flex: "0 0 auto", borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: "0"}}>
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"></path><path d="M10 20.5a2 2 0 0 0 4 0"></path></svg>
-{v.hasNotifCount && (<><span style={{position: "absolute", top: "-2px", right: "-2px", minWidth: "20px", height: "20px", borderRadius: "999px", background: "#E0709A", color: "#FFFFFF", fontSize: "12px", fontWeight: "600", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px", boxSizing: "border-box"}}>{v.notifCount}</span></>)}
+{v.hasNotifCount && (<><span style={{position: "absolute", top: "-2px", right: "-2px", minWidth: "20px", height: "20px", borderRadius: "999px", background: "#E0709A", color: "#FFFFFF", fontSize: "14px", fontWeight: "600", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px", boxSizing: "border-box"}}>{v.notifCount}</span></>)}
 </button>
 </div>
 </div>
 <div className="tab-screen-content">
-<div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", background: "rgba(255,255,255,0.55)", borderRadius: "18px", padding: "10px 14px"}}>
-<span style={{fontSize: "15px", lineHeight: "1.35", color: "var(--muted)"}}>{v.ciSummary}</span>
-<button onClick={v.goCheckin} style={{flex: "0 0 auto", border: "none", background: "transparent", padding: "8px", color: "var(--ink)", fontSize: "15px", fontWeight: "600"}}>Change</button>
+<div className="up-next-card">
+<div style={{display: "flex", gap: "14px", alignItems: "flex-start"}}>
+<div style={{flex: "0 0 auto"}}><Mo mood={v.homeMood} size={56} /></div>
+<div style={{display: "flex", flexDirection: "column", gap: "4px", minWidth: "0"}}>
+<span className="meta-label">Up next · about 2 min</span>
+<span style={{fontSize: "18px", lineHeight: "1.35", fontWeight: "600"}}>{v.upNextText}</span>
 </div>
-<div style={{borderRadius: "32px", padding: "4px 0", display: "flex", gap: "14px", alignItems: "center"}}>
-<div className="floaty" style={{flex: "0 0 auto"}}><Mo mood={v.homeMood} size={84} /></div>
-<p style={{margin: "0", fontSize: "18px", lineHeight: "1.4", fontWeight: "500"}}>{v.moLine}</p>
 </div>
-<div style={{background: "rgba(255,255,255,0.82)", borderRadius: "24px", padding: "20px", display: "flex", flexDirection: "column", gap: "10px", boxShadow: "0 20px 50px rgba(120,100,170,0.12)"}}>
+<button className="primary-action" onClick={v.recList[0].start}>Start 2-minute practice</button>
+<button className="quiet-action" onClick={() => document.getElementById('home-day')?.scrollIntoView({behavior: 'smooth'})}>Not now, just show me my day</button>
+<div className="checkin-line"><span>{v.ciSummary}</span><button onClick={v.goCheckin}>Change</button></div>
+</div>
+<div id="home-day" className="calm-card" style={{display: "flex", flexDirection: "column", gap: "10px"}}>
 <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-<span style={{fontSize: "15px", fontWeight: "500", color: "var(--muted)"}}>Tonight in Gaming</span>
-<span style={{display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", color: "#3E6B57"}}><span style={{width: "8px", height: "8px", borderRadius: "50%", background: "#5DBB8E", display: "inline-block"}}></span>3 here now</span>
+<span className="section-title">Tonight in Gaming</span>
+<span className="meta-pill">3 here now · usually quiet</span>
 </div>
-<h2 style={{margin: "0", fontSize: "23px", fontWeight: "600", lineHeight: "1.2"}}>What game got you hooked?</h2>
-<button onClick={v.homeJoin} style={{height: "52px", borderRadius: "20px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "17px", fontWeight: "500", marginTop: "4px"}}>{v.joinLabel}</button>
-<button onClick={v.goCircles} style={{height: "44px", border: "none", background: "transparent", color: "var(--ink)", fontSize: "16px", fontWeight:"600"}}>See all circles ›</button>
+<h2 style={{margin: "0", fontSize: "18px", fontWeight: "600", lineHeight: "1.3"}}>What game got you hooked?</h2>
+<button onClick={v.homeJoin} className="secondary-action">{v.joinLabel}</button>
 </div>
 {v.reflNudge && (<>
-<button onClick={v.openPast} style={{textAlign: "left", border: "none", display: "flex", gap: "12px", alignItems: "center", background: "rgba(255,255,255,0.7)", borderRadius: "24px", padding: "12px 14px", color: "var(--ink)"}}>
+<button onClick={v.openPast} className="calm-card" style={{textAlign: "left", border: "none", display: "flex", gap: "12px", alignItems: "center", color: "var(--ink)"}}>
 <Mo mood="happy" size={44} />
 <span style={{flex: "1", display: "flex", flexDirection: "column", gap: "2px"}}>
+<span className="section-title">Reflection</span>
 <span style={{fontSize: "16px", fontWeight: "600"}}>How was Minecraft build night?</span>
-<span style={{fontSize: "14px", color: "var(--muted)"}}>Reflect with Mo and stay in touch · 1&nbsp;min</span>
 </span>
-<span aria-hidden="true" style={{fontSize: "20px"}}>›</span>
+<span className="meta-pill">1 min</span>
 </button>
 </>)}
 <div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
 <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-<span style={{fontSize: "18px", fontWeight: "600"}}>My plans</span>
+<span className="section-title">My plans</span>
 <button onClick={v.newEventHome} style={{height: "40px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.85)", color: "var(--ink)", padding: "0 14px", fontSize: "15px", fontWeight: "500"}}>+ Create</button>
 </div>
 {v.hasEvToast && (<>
@@ -1195,23 +1249,25 @@ class Bridge extends BridgeBase {
 </div>
 </>)}
 <div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
-{v.homeEvents.map((ev, $index) => (<React.Fragment key={$index}>
-<div className="event-row-card"><DateTile day={ev.day} date={ev.date}/><button onClick={ev.open} className="event-copy" style={{border:0,background:"transparent",textAlign:"left",padding:0,color:"var(--ink)"}}><strong>{ev.title}</strong><span>{ev.when}</span><span>{ev.where}</span></button>{ev.notMine ? <button onClick={ev.toggle} style={{height:"40px",border:0,borderRadius:"14px",background:ev.inBg,color:ev.inFg,padding:"0 10px",fontWeight:"600"}}>{ev.inLabel}</button> : <span style={{fontSize:"12px",color:"var(--muted)"}}>Hosting</span>}
+{v.homeEvents.slice(0,2).map((ev, $index) => (<React.Fragment key={$index}>
+<div className="event-row-card"><DateTile day={ev.day} date={ev.date}/><button onClick={ev.open} className="event-copy" style={{border:0,background:"transparent",textAlign:"left",padding:0,color:"var(--ink)"}}><strong>{ev.title}</strong><span>{ev.when}</span><span>{ev.where}</span><span className="meta-pill">{ev.meta}</span></button>{ev.notMine ? <button onClick={ev.toggle} style={{height:"40px",border:0,borderRadius:"14px",background:ev.inBg,color:ev.inFg,padding:"0 10px",fontWeight:"600"}}>{ev.inLabel}</button> : <span style={{fontSize:"14px",color:"var(--muted)"}}>Hosting</span>}
 </div>
 </React.Fragment>))}
 </div>
+{v.homeEvents.length > 2 && <button onClick={v.goCircles} className="quiet-action">See all ›</button>}
 </div>
 <div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
-<span style={{fontSize: "18px", fontWeight: "600"}}>Practice made for you</span>
-{v.recList.map((r, $index) => (<React.Fragment key={$index}>
-<button onClick={r.start} style={{textAlign: "left", background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "24px", padding: "16px 18px", display: "flex", alignItems: "center", gap: "12px", color: "var(--ink)", boxShadow: "0 12px 30px rgba(120,100,170,0.10)"}}>
+<span className="section-title">More practice</span>
+{v.recList.slice(1,3).map((r, $index) => (<React.Fragment key={$index}>
+<button onClick={r.start} className="calm-card" style={{textAlign: "left", border: "none", display: "flex", alignItems: "center", gap: "12px", color: "var(--ink)"}}>
 <span style={{flex: "1", display: "flex", flexDirection: "column", gap: "4px"}}>
 <span style={{fontSize: "17px", fontWeight: "600"}}>{r.title}</span>
-<span style={{fontSize: "14px", lineHeight: "1.35", color: "var(--muted)"}}>{r.why}</span>
+<span style={{fontSize: "15px", lineHeight: "1.45", color: "var(--muted)"}}>{r.why}</span>
 </span>
-<span style={{background: "var(--soft)", borderRadius: "999px", padding: "6px 12px", fontSize: "13px", whiteSpace: "nowrap"}}>{r.level}</span>
+<span className="meta-pill">2 min</span>
 </button>
 </React.Fragment>))}
+{v.recList.length > 3 && <button onClick={v.goPractice} className="quiet-action">See all ›</button>}
 </div>
 </div>
 </div>
@@ -1917,170 +1973,51 @@ class Bridge extends BridgeBase {
 
 {v.isMe && (<>
 <div className="tab-screen">
-<div className="tab-sticky-header" style={{display: "flex", alignItems: "center", gap: "16px"}}>
+<div className="tab-sticky-header me-identity-header">
 <div style={{position: "relative", flex: "0 0 auto"}}>
-{v.hasPhoto && (<><img src={v.pPhoto} alt="Your profile photo" style={{width: "72px", height: "72px", borderRadius: "50%", objectFit: "cover", display: "block"}} /></>)}
-{v.noPhoto && (<><span style={{width: "72px", height: "72px", borderRadius: "50%", background: "linear-gradient(140deg, #F7C9D4, #C9B6F0)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px", fontWeight: "600", color: "var(--ink)"}}>{v.initials}</span></>)}
-<label aria-label="Change profile photo" style={{position: "absolute", right: "-4px", bottom: "-4px", width: "30px", height: "30px", borderRadius: "50%", background: "var(--ink)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", border: "2px solid #FFFFFF"}}>
-<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
-<input type="file" accept="image/*" onChange={v.pickPhoto} style={{display: "none"}} />
-</label>
+{v.hasPhoto ? <img src={v.pPhoto} alt="Your profile photo" className="me-avatar" /> : <span className="me-avatar me-initials">{v.initials}</span>}
+<label aria-label="Change profile photo" className="camera-button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" accept="image/*" onChange={v.pickPhoto} style={{display:"none"}} /></label>
 </div>
-<div style={{display: "flex", flexDirection: "column", minWidth: "0"}}>
-<h1 style={{margin: "0", fontSize: "28px", fontWeight: "600", lineHeight: "1.15"}}>{v.fullName}</h1>
-<span style={{fontSize: "15px", color: "var(--muted)"}}>{v.steps} brave steps this week</span>
-</div>
+<div className="me-identity-copy"><h1>{v.fullName}</h1><span>{v.interestNames}</span><span className="meta-pill">{v.steps} brave steps this week</span></div>
 </div>
 <div className="tab-screen-content me-content">
-{v.reqPending && (<>
-<div className="rise" style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 16px 40px rgba(120,100,170,0.16)"}}>
-<div style={{display: "flex", gap: "12px", alignItems: "center"}}>
-<Mo mood="happy" size={52} />
-<span style={{fontSize: "18px", fontWeight: "600"}}>Coach Maria wants to connect</span>
-</div>
-<p style={{margin: "0", fontSize: "16px", lineHeight: "1.45", color: "var(--muted)"}}>Maria from First Place would like to support you. She won't see anything unless you choose.</p>
-<div style={{display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "8px"}}>
-<button onClick={v.reqAccept} style={{height: "50px", borderRadius: "18px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "16px", fontWeight: "500"}}>Accept</button>
-<button onClick={v.reqDecline} style={{height: "50px", borderRadius: "18px", border: "none", background: "var(--soft)", color: "var(--ink)", fontSize: "16px", fontWeight: "500"}}>Not now</button>
-</div>
-</div>
-</>)}
-{v.reqChoose && (<>
-<div className="rise" style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "18px", display: "flex", flexDirection: "column", gap: "8px", boxShadow: "0 16px 40px rgba(120,100,170,0.16)"}}>
-<span style={{fontSize: "18px", fontWeight: "600"}}>What can Maria see?</span>
-<span style={{fontSize: "14px", color: "var(--muted)"}}>Tap to choose. You can change this later.</span>
-<div style={{display: "flex", flexWrap: "wrap", gap: "8px"}}>
-<button onClick={v.toggleSeeSteps} aria-pressed={v.seeSteps} style={{minHeight: "46px", borderRadius: "999px", border: "none", background: v.seeStepsBg, color: v.seeStepsFg, padding: "8px 16px", fontSize: "15px", fontWeight: "500"}}>My brave steps</button>
-<button onClick={v.toggleSeeHelp} aria-pressed={v.seeHelp} style={{minHeight: "46px", borderRadius: "999px", border: "none", background: v.seeHelpBg, color: v.seeHelpFg, padding: "8px 16px", fontSize: "15px", fontWeight: "500"}}>My "I need help" texts</button>
-</div>
-<span style={{fontSize: "14px", color: "var(--muted)"}}>Never shared: your chats, check-ins and pauses.</span>
-<button onClick={v.reqConnect} style={{height: "50px", borderRadius: "18px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "16px", fontWeight: "500", marginTop: "4px"}}>Connect</button>
-</div>
-</>)}
-{v.reqDeclined && (<>
-<div style={{background: "rgba(255,255,255,0.55)", borderRadius: "20px", padding: "12px 16px", fontSize: "15px", textAlign: "center"}}>Declined privately. Maria isn't told why.</div>
-</>)}
-<div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
-<div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-<span style={{fontSize: "18px", fontWeight: "600"}}>My profile</span>
-{v.profView && (<><button onClick={v.editProfile} style={{height: "38px", borderRadius: "999px", border: "none", background: "rgba(255,255,255,0.85)", color: "var(--ink)", padding: "0 14px", fontSize: "15px", fontWeight: "500"}}>Edit</button></>)}
-</div>
-<div style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "6px 18px", display: "flex", flexDirection: "column"}}>
-{v.profView && (<>
-<div style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "12px 0", borderBottom: "1px solid #EEE8F5"}}><span style={{fontSize: "14px", color: "var(--muted)"}}>First name</span><span style={{fontSize: "16px", fontWeight: "500", textAlign: "right", wordBreak: "break-all"}}>{v.pFirst}</span></div>
-<div style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "12px 0", borderBottom: "1px solid #EEE8F5"}}><span style={{fontSize: "14px", color: "var(--muted)"}}>Last name</span><span style={{fontSize: "16px", fontWeight: "500", textAlign: "right", wordBreak: "break-all"}}>{v.pLast}</span></div>
-<div style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "12px 0", borderBottom: "1px solid #EEE8F5"}}><span style={{fontSize: "14px", color: "var(--muted)"}}>Gender</span><span style={{fontSize: "16px", fontWeight: "500", textAlign: "right", wordBreak: "break-all"}}>{v.pGender}</span></div>
-<div style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "12px 0"}}><span style={{fontSize: "14px", color: "var(--muted)"}}>Email</span><span style={{fontSize: "16px", fontWeight: "500", textAlign: "right", wordBreak: "break-all"}}>{v.pEmail}</span></div>
-</>)}
-{v.profEdit && (<>
-<div style={{display: "flex", flexDirection: "column", gap: "14px", padding: "14px 0"}}>
-<label style={{display: "flex", flexDirection: "column", gap: "6px", fontSize: "14px", color: "var(--muted)"}}>First name<input type="text" value={v.pFirst} onChange={v.setFirst} autoComplete="given-name" style={{height: "48px", borderRadius: "16px", border: "1.5px solid #DCD3EA", background: "#FFFFFF", padding: "0 14px", fontSize: "16px", fontFamily: "inherit", color: "var(--ink)", width: "100%", boxSizing: "border-box"}} /></label>
-<label style={{display: "flex", flexDirection: "column", gap: "6px", fontSize: "14px", color: "var(--muted)"}}>Last name<input type="text" value={v.pLast} onChange={v.setLast} autoComplete="family-name" style={{height: "48px", borderRadius: "16px", border: "1.5px solid #DCD3EA", background: "#FFFFFF", padding: "0 14px", fontSize: "16px", fontFamily: "inherit", color: "var(--ink)", width: "100%", boxSizing: "border-box"}} /></label>
-<div style={{display: "flex", flexDirection: "column", gap: "8px"}}>
-<span style={{fontSize: "14px", color: "var(--muted)"}}>Gender</span>
-<div style={{display: "flex", gap: "8px", flexWrap: "wrap"}}>
-{v.genderOpts.map((o, $index) => (<React.Fragment key={$index}>
-<button onClick={o.pick} aria-pressed={o.on} style={{minHeight: "40px", borderRadius: "999px", border: "none", background: o.bg, color: o.fg, padding: "8px 14px", fontSize: "14px", boxShadow: "0 0 0 1px #E6DEF1"}}>{o.label}</button>
-</React.Fragment>))}
-</div>
-</div>
-<label style={{display: "flex", flexDirection: "column", gap: "6px", fontSize: "14px", color: "var(--muted)"}}>Email<input type="email" value={v.pEmail} onChange={v.setEmail} autoComplete="email" style={{height: "48px", borderRadius: "16px", border: "1.5px solid #DCD3EA", background: "#FFFFFF", padding: "0 14px", fontSize: "16px", fontFamily: "inherit", color: "var(--ink)", width: "100%", boxSizing: "border-box"}} /></label>
-{v.hasPhoto && (<><button onClick={v.removePhoto} style={{alignSelf: "flex-start", height: "40px", border: "none", background: "var(--soft)", borderRadius:"14px", color: "var(--ink)", fontSize: "15px", fontWeight:"600", padding: "0 14px"}}>Remove photo</button></>)}
-<button onClick={v.saveProfile} style={{height: "50px", borderRadius: "18px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "16px", fontWeight: "500"}}>Save</button>
-</div>
-</>)}
-</div>
-<span style={{fontSize: "13px", lineHeight: "1.4", color: "var(--muted)", padding: "0 4px"}}>In circles, people only see your first name and photo. Your email and gender stay private.</span>
-</div>
-<div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
-<div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline"}}>
-<span style={{fontSize: "18px", fontWeight: "600"}}>Theme</span>
-</div>
-<div style={{display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px"}}>
-{v.themeOpts.map((t, $index) => (<React.Fragment key={$index}>
-<button onClick={t.pick} aria-pressed={t.on} aria-label={"Theme: " + t.name} style={{display: "flex", alignItems: "center", gap: "12px", border: "none", borderRadius: "16px", padding: "10px 12px", background: "rgba(255,255,255,0.85)", boxShadow: t.ring, color: "var(--ink)", textAlign: "left"}}>
-<span style={{flex: "0 0 auto", width: "36px", height: "36px", borderRadius: "50%", background: t.swatch, boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.08)"}}></span>
-<span style={{flex: "1", fontSize: "16px", fontWeight: "500"}}>{t.name}</span>
-{t.on && (<><span aria-hidden="true" style={{fontSize: "15px"}}>✓</span></>)}
+<button onClick={v.openJourney} className="calm-card journey-preview" aria-label="Open My journey">
+<div className="journey-mini-bars">{v.journey.map((w,$i)=><span key={$i}><i style={{height:w.h,background:w.bg}}></i></span>)}</div>
+<div className="journey-preview-copy"><strong>My journey</strong><span>4 weeks · 3 badges</span><div className="badge-row"><BadgeMark kind="hello"/><BadgeMark kind="kind"/><BadgeMark kind="pause"/></div></div><span className="row-chevron">›</span>
 </button>
-</React.Fragment>))}
-</div>
-</div>
-<div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
-<span style={{fontSize: "18px", fontWeight: "600"}}>Comfort</span>
-<div className="comfort-card">
-<div className="segmented-row"><span>Text size</span><div className="segments">{v.sizeSeg.map((o, $i) => (<React.Fragment key={$i}><button className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button></React.Fragment>))}</div></div>
-<div className="segmented-row"><span>Calm mode</span><div className="segments">{v.calmSeg.map((o, $i) => (<React.Fragment key={$i}><button className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button></React.Fragment>))}</div></div>
-<div className="segmented-row"><span>Chatting</span><div className="segments">{v.chatSeg.map((o, $i) => (<React.Fragment key={$i}><button className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button></React.Fragment>))}</div></div>
-<span style={{fontSize: "13px", color: "var(--muted)", lineHeight: "1.4"}}>Calm mode turns off moving animations. Changes apply right away.</span>
-</div>
-<button className="row-link" onClick={v.redoSetup}><span>Change my interests and trusted person</span><span aria-hidden="true">›</span></button>
-</div>
-<div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
-<div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline"}}>
-<span style={{fontSize: "18px", fontWeight: "600"}}>My journey</span>
-<span style={{fontSize: "14px", color: "var(--muted)"}}>{v.journeyUp}</span>
-</div>
-<div className="journey-card">
-<div className="journey-bars">
-{v.journey.map((w, $i) => (<React.Fragment key={$i}>
-<div className="journey-col"><strong>{w.value}</strong><i style={{height: w.h, background: w.bg}}></i><small>{w.label}</small></div>
-</React.Fragment>))}
-</div>
-<span style={{fontSize: "13px", color: "var(--muted)"}}>Brave steps per week</span>
-<div className="journey-stats">
-<div><strong>6</strong><small>practices</small></div>
-<div><strong>2</strong><small>events joined</small></div>
-<div><strong>Level 2</strong><small>reached</small></div>
-</div>
-</div>
-</div>
-<div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
-<div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline"}}>
-<span style={{fontSize: "20px", fontWeight: "600"}}>My badges</span>
-<span style={{fontSize: "14px", color: "var(--muted)"}}>3 of 12 earned</span>
-</div>
-<div style={{background: "rgba(255,255,255,0.7)", borderRadius: "24px", padding: "16px 10px", display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "6px"}}>
-<div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", textAlign: "center"}}>
-<span style={{width: "68px", height: "68px", borderRadius: "50%", background: "linear-gradient(140deg, #FFFFFF, #E3E0F8)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 20px rgba(120,100,170,0.18)"}}><svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5.5h16v11H9l-5 4v-15Z"></path></svg></span>
-<span style={{fontSize: "14px", fontWeight: "600", lineHeight: "1.2"}}>First Hello</span>
-<span style={{fontSize: "12px", color: "var(--muted)", lineHeight: "1.2"}}>Said hi</span>
-</div>
-<div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", textAlign: "center"}}>
-<span style={{width: "68px", height: "68px", borderRadius: "50%", background: "linear-gradient(140deg, #FCE7EC, #F7C9D4)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 20px rgba(120,100,170,0.18)"}}><svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.8 5.7c-2-2-5.2-2-7.2 0L12 7.3l-1.6-1.6a5.1 5.1 0 0 0-7.2 7.2L12 21l8.8-8.1a5.1 5.1 0 0 0 0-7.2Z"></path></svg></span>
-<span style={{fontSize: "14px", fontWeight: "600", lineHeight: "1.2"}}>Kind Words</span>
-<span style={{fontSize: "12px", color: "var(--muted)", lineHeight: "1.2"}}>Disagreed gently</span>
-</div>
-<div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", textAlign: "center"}}>
-<span style={{width: "68px", height: "68px", borderRadius: "50%", background: "linear-gradient(140deg, #EEECFB, #D3CDF6)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 20px rgba(120,100,170,0.18)"}}><svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3"></path><path d="M3 12h15a3 3 0 1 1-3 3"></path><path d="M3 16h7"></path></svg></span>
-<span style={{fontSize: "14px", fontWeight: "600", lineHeight: "1.2"}}>Breather</span>
-<span style={{fontSize: "12px", color: "var(--muted)", lineHeight: "1.2"}}>Took a pause</span>
-</div>
-<div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", textAlign: "center"}}>
-<span style={{width: "68px", height: "68px", borderRadius: "50%", background: "#EEEAF3", border: "1.5px dashed #B9B0CB", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center"}}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8C83A0" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg></span>
-<span style={{fontSize: "14px", fontWeight: "600", lineHeight: "1.2", color: "var(--muted)"}}>Game Night</span>
-<span style={{fontSize: "12px", color: "var(--muted)", lineHeight: "1.2"}}>Go on Friday</span>
-</div>
-</div>
-</div>
-<div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
-<span style={{fontSize: "20px", fontWeight: "600"}}>My support circle</span>
-<div style={{background: "rgba(255,255,255,0.85)", borderRadius: "24px", padding: "4px 16px"}}>
-<div style={{minHeight: "68px", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid #EAE3F3"}}>
-<div style={{flex: "1", display: "flex", flexDirection: "column"}}><span style={{fontSize: "17px", fontWeight: "500"}}>{v.trusted} · {v.trustedRel}</span><span style={{fontSize: "14px", color: "var(--muted)"}}>Gets my "I need help" texts</span></div></div>
-{v.mariaConnected && (<>
-<div style={{minHeight: "68px", display: "flex", alignItems: "center", gap: "12px"}}>
-<div style={{flex: "1", display: "flex", flexDirection: "column"}}><span style={{fontSize: "17px", fontWeight: "500"}}>Coach Maria</span><span style={{fontSize: "14px", color: "var(--muted)"}}>{v.mariaSees}</span></div></div>
-</>)}
-</div>
-<span style={{fontSize: "14px", color: "var(--muted)", textAlign: "center"}}>Your chats stay private. You choose what they see.</span>
-</div>
-<div style={{background: "rgba(255,255,255,0.55)", borderRadius: "20px", padding: "14px 16px", fontSize: "15px", textAlign: "center"}}>Mo isn't a therapist. Need help now? Call or text 988.</div>
-</div>
-</div>
+{v.reqPending && <div className="calm-card coach-request"><div><Mo mood="happy" size={46}/><strong>Coach Maria wants to connect</strong></div><p>She won't see anything unless you choose.</p><div><button onClick={v.reqAccept}>Review request</button><button onClick={v.reqDecline}>Not now</button></div></div>}
+<section><h2 className="section-title">My people</h2><div className="me-list-card">
+<button className="me-list-row" onClick={v.openTrusted}><PersonAvatar name={v.trusted} size={40} tint="var(--soft)"/><span><strong>{v.trusted}</strong><small>{v.trustedRel} · Gets help texts</small></span><b>›</b></button>
+{v.showCoachPerson && <button className="me-list-row" onClick={v.openCoach}><PersonAvatar name="Coach Maria" size={40} tint="#DDF1E6"/><span><strong>Coach Maria</strong><small>{v.reqChoose ? 'Choose what she sees' : v.mariaSees}</small></span><b>›</b></button>}
+</div></section>
+<section><h2 className="section-title">Settings</h2><div className="me-list-card">
+{v.meSettings.map((item,$i)=><button className="me-list-row settings-row" onClick={item.open} key={$i}><span className="setting-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke:"var(--ink)"}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={item.path}/></svg></span><span><strong>{item.label}</strong></span>{item.swatch && <i className="setting-swatch" style={{background:item.swatch}}></i>}<small>{item.value}</small><b>›</b></button>)}
+</div></section>
+<div className="me-footer-card">Mo isn't a therapist. Need help now? <strong>Call 988.</strong></div>
+</div></div>
 </>)}
 
-{v.hasUiToast && <button className="ui-toast" onClick={v.clearToast}>{v.uiToast}</button>}
+{v.isMeJourney && <><MeSubHeader title="My journey" onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card"><div className="journey-bars">{v.journey.map((w,$i)=><div className="journey-col" key={$i}><strong>{w.value}</strong><i style={{height:w.h,background:w.bg}}></i><small>{w.label}</small></div>)}</div><span className="muted-copy">Brave steps per week</span><div className="journey-stats"><div><strong>6</strong><small>practices</small></div><div><strong>2</strong><small>events joined</small></div><div><strong>Level 2</strong><small>reached</small></div></div><h2 className="section-title">Badges</h2><div className="badge-grid"><div><BadgeMark kind="hello" size={52}/><strong>First Hello</strong><small>Said hi</small></div><div><BadgeMark kind="kind" size={52}/><strong>Kind Words</strong><small>Disagreed gently</small></div><div><BadgeMark kind="pause" size={52}/><strong>Breather</strong><small>Took a pause</small></div><div><BadgeMark kind="event" size={52}/><strong>Game Night</strong><small>Go to one event</small></div></div></div></div></>}
+
+{v.isMeTrusted && <><MeSubHeader title={v.trusted} onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card person-detail"><PersonAvatar name={v.trusted} size={56} tint="var(--soft)"/><h2>{v.trusted}</h2><span className="muted-copy">{v.trustedRel} · {v.trustedContact}</span><h3>What they can see</h3><div className="pill-group"><button className="choice-pill on">I need help texts</button></div><p className="muted-copy">Your chats, check-ins and pauses stay private.</p></div></div></>}
+
+{v.isMeCoach && <><MeSubHeader title="Coach Maria" onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card person-detail"><PersonAvatar name="Coach Maria" size={56} tint="#DDF1E6"/><h2>Coach Maria</h2><span className="muted-copy">First Place coach</span><h3>What she can see</h3><div className="pill-group"><button onClick={v.toggleSeeSteps} aria-pressed={v.seeSteps} className={v.seeSteps ? 'choice-pill on' : 'choice-pill'}>My brave steps</button><button onClick={v.toggleSeeHelp} aria-pressed={v.seeHelp} className={v.seeHelp ? 'choice-pill on' : 'choice-pill'}>I need help texts</button></div><p className="muted-copy">Your chats, check-ins and pauses stay private.</p>{v.reqChoose && <button className="primary-action" onClick={v.reqConnect}>Connect with Coach Maria</button>}</div></div></>}
+
+{v.isMeProfile && <><MeSubHeader title="Profile" onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card"><div className="sub-card-title"><h2>My profile</h2>{v.profView && <button onClick={v.editProfile}>Edit</button>}</div><div className="profile-photo-row">{v.hasPhoto ? <img src={v.pPhoto} alt="Your profile photo"/> : <span>{v.initials}</span>}<label>Change photo<input type="file" accept="image/*" onChange={v.pickPhoto}/></label></div>{v.profView ? <div className="profile-values"><div><span>First name</span><strong>{v.pFirst}</strong></div><div><span>Last name</span><strong>{v.pLast}</strong></div><div><span>Gender</span><strong>{v.pGender}</strong></div><div><span>Email</span><strong>{v.pEmail}</strong></div></div> : <div className="profile-form"><label>First name<input type="text" value={v.pFirst} onChange={v.setFirst}/></label><label>Last name<input type="text" value={v.pLast} onChange={v.setLast}/></label><span>Gender</span><div className="pill-group">{v.genderOpts.map((o,$i)=><button key={$i} onClick={o.pick} aria-pressed={o.on} className={o.on?'choice-pill on':'choice-pill'}>{o.label}</button>)}</div><label>Email<input type="email" value={v.pEmail} onChange={v.setEmail}/></label>{v.hasPhoto && <button className="quiet-action" onClick={v.removePhoto}>Remove profile photo</button>}<button className="primary-action" onClick={v.saveProfile}>Save profile</button></div>}<p className="muted-copy">In circles, people only see your first name and photo.</p></div></div></>}
+
+{v.isMeColors && <><MeSubHeader title="Colors" onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card"><div className="theme-grid">{v.themeOpts.map((t,$i)=><button key={$i} onClick={t.pick} aria-pressed={t.on} aria-label={'Theme: '+t.name} style={{boxShadow:t.ring}}><i style={{background:t.swatch}}></i><span>{t.name}</span>{t.on&&<b>✓</b>}</button>)}</div></div></div></>}
+
+{v.isMeComfort && <><MeSubHeader title="Comfort" onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card comfort-card"><div className="segmented-row"><span>Text size</span><div className="segments">{v.sizeSeg.map((o,$i)=><button key={$i} className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button>)}</div></div><div className="segmented-row"><span>Calm mode</span><div className="segments">{v.calmSeg.map((o,$i)=><button key={$i} className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button>)}</div></div><div className="segmented-row"><span>Chatting</span><div className="segments">{v.chatSeg.map((o,$i)=><button key={$i} className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button>)}</div></div><p className="muted-copy">Calm mode turns off moving animations. Changes save right away.</p></div></div></>}
+
+{v.isMeInterests && <><MeSubHeader title="Interests" onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card"><div className="interest-grid">{v.interestOpts.map((o,$i)=><button key={$i} onClick={o.pick} aria-pressed={o.on} className="interest-tile" style={{boxShadow:o.ring}}><CircleGlyph kind={o.key} tint={o.tint} size={40}/><span>{o.name}</span>{o.on&&<b className="tick">✓</b>}</button>)}</div><p className="muted-copy">{v.interestCount}. Changes save right away.</p></div></div></>}
+
+{v.isMePrivacy && <><MeSubHeader title="Privacy & safety" onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card privacy-card"><h2>Who sees what</h2><div><strong>{v.trusted}</strong><span>Gets your I need help texts</span></div>{v.mariaConnected&&<div><strong>Coach Maria</strong><span>{v.mariaSees}</span></div>}<p className="muted-copy">Your chats, check-ins and pauses are never shared.</p><h2>Blocked people</h2><div><strong>{v.blockedSummary}</strong></div><h2>Safety rules</h2><span className="safety-row"><b>1</b>Never share your address, passwords or money.</span><span className="safety-row"><b>2</b>If someone asks for secrets or money, Mo warns you privately.</span><span className="safety-row"><b>3</b>You can leave, mute or block anyone, anytime.</span><span className="safety-row"><b>4</b>Need help now? Tap Mo, then I need help, or call 988.</span></div></div></>}
+
+{v.hasUiToast && <div className="ui-toast" role="status" aria-live="polite">
+{v.uiToast === '+1 brave step' && <Mo mood="happy" size={32} />}
+<span>{v.uiToast}{v.hasUndo ? ' ·' : ''}</span>
+{v.hasUndo ? <button className="toast-undo" onClick={v.undoToast}>Undo</button> : <button className="toast-dismiss" onClick={v.clearToast}>Dismiss</button>}
+</div>}
 </div>
 </div>
 
