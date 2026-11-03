@@ -742,6 +742,8 @@ class BridgeBase extends DCLogic {
 
     // ---------- First-time setup, comfort, journey ----------
     var onbStep = s.onbStep || 1;
+    var trustedPhone = s.trustedPhone === undefined ? '(480) 555-0142' : s.trustedPhone;
+    var trustedEmail = s.trustedEmail || '';
     var interestText = interests.map(function (k) { return circleData[k] ? circleData[k].name.toLowerCase() : k; }).slice(0, 2).join(' and ') || 'new things';
     var segOpts = function (list, cur, key) {
       return list.map(function (pair) {
@@ -750,7 +752,7 @@ class BridgeBase extends DCLogic {
         return { label: pair[1], on: on, cls: on ? 'on' : '', pick: function () { if (!on) changeWithUndo(o, 'Saved ✓', previous); } };
       });
     };
-    var onbOk = onbStep === 2 ? interests.length > 0 : (onbStep === 4 ? !!(s.trusted === undefined ? 'Mom' : s.trusted).trim() : true);
+    var onbOk = onbStep === 2 ? interests.length > 0 : (onbStep === 4 ? (!!(s.trusted === undefined ? 'Mom' : s.trusted).trim() && trustedPhone.replace(/\D/g, '').length >= 10 && (!trustedEmail || /.+@.+\..+/.test(trustedEmail))) : true);
     var onbVals = {
       isOnboard: screen === 'onboard',
       onbStep: onbStep, onbStepText: 'Step ' + (onbStep - 1) + ' of 5', onbShowProgress: onbStep > 1,
@@ -769,6 +771,12 @@ class BridgeBase extends DCLogic {
       interestCount: interests.length ? interests.length + ' picked' : 'Pick at least one',
       trustedInput: s.trusted === undefined ? 'Mom' : s.trusted, trusted: trusted, trustedRel: trustedRel,
       setTrusted: function (e) { self.setState({ trusted: e.target.value, helpTo: '' }); },
+      trustedPhone: trustedPhone, trustedEmail: trustedEmail,
+      setTrustedPhone: function (e) { self.setState({ trustedPhone: e.target.value }); },
+      setTrustedEmail: function (e) { self.setState({ trustedEmail: e.target.value }); },
+      phoneHint: trustedPhone.replace(/\D/g, '').length >= 10 ? '' : 'Add a 10-digit number so Mo can text them.',
+      emailHint: (!trustedEmail || /.+@.+\..+/.test(trustedEmail)) ? '' : 'Check the email address, or leave it blank.',
+      trustedContact: trustedPhone + (trustedEmail ? ' · ' + trustedEmail : ''),
       relOpts: ['Parent', 'Sibling', 'Friend', 'Coach', 'Other'].map(function (r) {
         var on = r === trustedRel;
         return { label: r, on: on, bg: on ? 'var(--ink)' : 'rgba(255,255,255,0.85)', fg: on ? '#FFFFFF' : 'var(--ink)', pick: function () { self.setState({ trustedRel: r }); } };
@@ -1037,7 +1045,11 @@ class Bridge extends BridgeBase {
 <div className="onb-body">
 <h1 className="onb-title">Who can you count on?</h1>
 <span className="onb-sub">When you tap "I need help", Mo texts this person. They never see your chats.</span>
-<label className="onb-field">Their name<input type="text" value={v.trustedInput} onChange={v.setTrusted} placeholder="For example, Mom or Alex" /></label>
+<label className="onb-field">Their name<input type="text" value={v.trustedInput} onChange={v.setTrusted} placeholder="For example, Mom or Alex" autoComplete="off" /></label>
+<label className="onb-field">Phone number<input type="tel" inputMode="tel" value={v.trustedPhone} onChange={v.setTrustedPhone} placeholder="(480) 555-0142" autoComplete="off" /></label>
+{v.phoneHint && (<><span className="field-hint">{v.phoneHint}</span></>)}
+<label className="onb-field">Email (optional)<input type="email" value={v.trustedEmail} onChange={v.setTrustedEmail} placeholder="Backup if a text doesn't go through" autoComplete="off" /></label>
+{v.emailHint && (<><span className="field-hint">{v.emailHint}</span></>)}
 <span style={{fontSize: "15px", fontWeight: "600"}}>They are my</span>
 <div style={{display: "flex", flexWrap: "wrap", gap: "8px"}}>
 {v.relOpts.map((o, $i) => (<React.Fragment key={$i}>
