@@ -1906,10 +1906,12 @@ class Bridge extends BridgeBase {
 <textarea value={v.coolNote} onChange={v.setCoolNote} rows={3} aria-label="Private note" placeholder="Type exactly how you feel. Nobody will see this." style={{borderRadius: "18px", border: "1.5px solid #DCD3EA", background: "#FFFFFF", padding: "12px 14px", font: "16px Outfit, system-ui, sans-serif", color: "var(--ink)", resize: "none", outline: "none"}}></textarea>
 <span className="muted-copy">Only you see this. It never gets sent, and it's cleared when you leave.</span>
 <span className="section-title">What would help now?</span>
-<button onClick={v.coolBreathe} className={v.coolBreatheFirst ? "primary-action" : "secondary-action"}>Breathe for 1 minute</button>
-<button onClick={v.coolPractice} className="secondary-action" style={{height: "auto", minHeight: "48px", padding: "10px 14px"}}>{v.coolPracticeLabel}</button>
-<button onClick={v.coolSpace} className="secondary-action">Take space for an hour</button>
-<button onClick={v.coolHelp} className="quiet-action">Text {v.trusted} instead</button>
+<div className="me-list-card">
+<button className="me-list-row settings-row" onClick={v.coolBreathe}><span className="setting-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke:"var(--ink)"}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 9c2.5-2 5.5-2 8 0s5.5 2 8 0M4 15c2.5-2 5.5-2 8 0s5.5 2 8 0"/></svg></span><span><strong>Breathe for 1 minute</strong><small>Slow your body down first</small></span>{v.coolBreatheFirst && <small className="meta-pill">Suggested</small>}<b>›</b></button>
+<button className="me-list-row settings-row" onClick={v.coolPractice}><span className="setting-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke:"var(--ink)"}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5.5h16v11H9l-5 4v-15Z"/></svg></span><span><strong>Practice a calm reply</strong><small>{v.coolPracticeLabel.replace('Practice a calm reply · ', '')}</small></span><b>›</b></button>
+<button className="me-list-row settings-row" onClick={v.coolSpace}><span className="setting-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke:"var(--ink)"}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 7v5l3 2M12 3a9 9 0 1 0 9 9 9 9 0 0 0-9-9Z"/></svg></span><span><strong>Take space for an hour</strong><small>Notifications pause. Nobody is told.</small></span><b>›</b></button>
+<button className="me-list-row settings-row" onClick={v.coolHelp}><span className="setting-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke:"var(--ink)"}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 4h10v16H7zM10 7h4M11 17h2"/></svg></span><span><strong>Text {v.trusted}</strong><small>Ask them to call you</small></span><b>›</b></button>
+</div>
 </div>
 </>)}
 
