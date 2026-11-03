@@ -60,6 +60,13 @@ button:active{transform:scale(.97)}
 .typing-dots i{width:8px;height:8px;border-radius:50%;background:var(--muted);opacity:.4;animation:typingDot 1.2s ease-in-out infinite}
 .typing-dots i:nth-child(2){animation-delay:.15s}.typing-dots i:nth-child(3){animation-delay:.3s}
 @keyframes typingDot{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-4px);opacity:.9}}
+/* "Mo is thinking": reply ideas shimmer briefly, then appear */
+.idea-chip{position:relative;overflow:hidden}
+.idea-chip::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(100deg,var(--soft) 30%,#fff 50%,var(--soft) 70%);background-size:220% 100%;animation:moThink .9s ease-in-out both}
+.idea-chip:nth-child(2)::after{animation-delay:.12s}.idea-chip:nth-child(3)::after{animation-delay:.24s}
+@keyframes moThink{0%{opacity:1;background-position:120% 0}75%{opacity:1;background-position:-20% 0}100%{opacity:0;background-position:-20% 0}}
+.calm-mode .idea-chip::after{display:none}
+@media (prefers-reduced-motion:reduce){.idea-chip::after{display:none}}
 /* Mo explains why */
 .why-line{font-size:15px;line-height:1.45;color:var(--ink);opacity:.8;padding:0 4px}
 .why-box{width:100%;box-sizing:border-box;background:rgba(255,255,255,.88);border-radius:24px;padding:16px;text-align:left;display:flex;flex-direction:column;gap:4px;box-shadow:0 10px 28px rgba(120,100,170,.10)}.why-box strong{font-size:14px}.why-box span{font-size:15px;line-height:1.45;color:var(--ink);opacity:.8}

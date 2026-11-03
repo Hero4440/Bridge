@@ -1493,10 +1493,10 @@ class Bridge extends BridgeBase {
 <span style={{fontSize: "16px", fontWeight: "500"}}>Want a reply idea?</span>
 </div>
 <div style={{display: "flex", flexWrap: "wrap", gap: "8px"}}>
-<button onClick={v.chipAsk} style={{minHeight: "44px", borderRadius: "999px", border: "none", background: "#FFFFFF", padding: "8px 16px", fontSize: "15px", color: "var(--ink)"}}>Ask {v.m2Name} a question</button>
-<button onClick={v.chipShare} style={{minHeight: "44px", borderRadius: "999px", border: "none", background: "#FFFFFF", padding: "8px 16px", fontSize: "15px", color: "var(--ink)"}}>Share my own</button>
+<button className="idea-chip" onClick={v.chipAsk} style={{minHeight: "44px", borderRadius: "999px", border: "none", background: "#FFFFFF", padding: "8px 16px", fontSize: "15px", color: "var(--ink)"}}>Ask {v.m2Name} a question</button>
+<button className="idea-chip" onClick={v.chipShare} style={{minHeight: "44px", borderRadius: "999px", border: "none", background: "#FFFFFF", padding: "8px 16px", fontSize: "15px", color: "var(--ink)"}}>Share my own</button>
 {v.isGaming && (<>
-<button onClick={v.chipOwn} style={{minHeight: "44px", borderRadius: "999px", border: "none", background: "var(--soft)", padding: "8px 16px", fontSize: "15px", color: "var(--ink)"}}>Write my own</button>
+<button className="idea-chip" onClick={v.chipOwn} style={{minHeight: "44px", borderRadius: "999px", border: "none", background: "var(--soft)", padding: "8px 16px", fontSize: "15px", color: "var(--ink)"}}>Write my own</button>
 </>)}
 </div>
 </div>
@@ -1605,7 +1605,7 @@ class Bridge extends BridgeBase {
 <div style={{display: "flex", alignItems: "center", gap: "8px"}}><Mo mood="happy" size={34} /><span style={{fontSize: "15px", fontWeight: "500"}}>Reply ideas</span></div>
 <div style={{display: "flex", flexWrap: "wrap", gap: "8px"}}>
 {v.dmIdeas.map((i, $index) => (<React.Fragment key={$index}>
-<button onClick={i.pick} style={{minHeight: "40px", borderRadius: "999px", border: "none", background: "#FFFFFF", padding: "8px 14px", fontSize: "14px", color: "var(--ink)", textAlign: "left"}}>{i.label}</button>
+<button className="idea-chip" onClick={i.pick} style={{minHeight: "40px", borderRadius: "999px", border: "none", background: "#FFFFFF", padding: "8px 14px", fontSize: "14px", color: "var(--ink)", textAlign: "left"}}>{i.label}</button>
 </React.Fragment>))}
 </div>
 </div>
