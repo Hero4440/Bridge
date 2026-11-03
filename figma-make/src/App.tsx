@@ -800,15 +800,15 @@ class BridgeBase extends DCLogic {
         return { label: pair[1], on: on, cls: on ? 'on' : '', pick: function () { if (!on) saveQuietly(o, 'Saved ✓'); } };
       });
     };
-    var onbOk = onbStep === 2 ? interests.length > 0 : (onbStep === 4 ? (!!(s.trusted === undefined ? 'Mom' : s.trusted).trim() && trustedPhone.replace(/\D/g, '').length >= 10 && (!trustedEmail || /.+@.+\..+/.test(trustedEmail))) : true);
+    var onbOk = onbStep === 2 ? interests.length > 0 : (onbStep === 3 ? (!!(s.trusted === undefined ? 'Mom' : s.trusted).trim() && trustedPhone.replace(/\D/g, '').length >= 10 && (!trustedEmail || /.+@.+\..+/.test(trustedEmail))) : true);
     var onbVals = {
       isOnboard: screen === 'onboard',
-      onbStep: onbStep, onbStepText: 'Step ' + (onbStep - 1) + ' of 5', onbShowProgress: onbStep > 1,
-      onbPct: Math.round(((onbStep - 1) / 5) * 100) + '%',
-      onb1: onbStep === 1, onb2: onbStep === 2, onb3: onbStep === 3, onb4: onbStep === 4, onb5: onbStep === 5, onb6: onbStep === 6,
+      onbStep: onbStep, onbStepText: 'Step ' + (onbStep - 1) + ' of 3', onbShowProgress: onbStep > 1,
+      onbPct: Math.round(((onbStep - 1) / 3) * 100) + '%',
+      onb1: onbStep === 1, onb2: onbStep === 2, onb3: onbStep === 3, onb4: onbStep === 4,
       onbBack: function () { self.setState({ onbStep: Math.max(1, onbStep - 1) }); },
-      onbNext: function () { if (!onbOk) return; if (onbStep >= 6) { self.setState({ onbDone: true, screen: 'checkin' }); } else { self.setState({ onbStep: onbStep + 1 }); } },
-      onbNextLabel: onbStep === 1 ? 'Get started' : (onbStep === 6 ? 'I understand' : 'Next'),
+      onbNext: function () { if (!onbOk) return; if (onbStep >= 4) { self.setState({ onbDone: true, screen: 'checkin' }); } else { self.setState({ onbStep: onbStep + 1 }); } },
+      onbNextLabel: onbStep === 1 ? 'Get started' : (onbStep === 4 ? 'I understand, let’s go' : 'Next'),
       onbNextBg: onbOk ? 'var(--ink)' : '#CFC8DB',
       interestOpts: Object.keys(circleData).map(function (k) {
         var on = interests.indexOf(k) >= 0;
@@ -1104,7 +1104,8 @@ class Bridge extends BridgeBase {
 <div><span className="onb-dot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5.5h16v11H9l-5 4v-15Z"></path></svg></span>Practice with Mo before the real thing</div>
 <div><span className="onb-dot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 5 6v5c0 4.6 2.8 8.2 7 10 4.2-1.8 7-5.4 7-10V6l-7-3Z"></path></svg></span>You decide what to share, always</div>
 </div>
-<span style={{fontSize: "14px", color: "var(--muted)"}}>Setup takes about 2 minutes.</span>
+<span className="onb-sub">Mo is your AI buddy. Mo never sends messages for you, never shares your chats, and isn’t a therapist.</span>
+<span style={{fontSize: "14px", color: "var(--muted)"}}>3 quick steps, about 1 minute.</span>
 </div>
 </>)}
 
@@ -1127,25 +1128,6 @@ class Bridge extends BridgeBase {
 
 {v.onb3 && (<>
 <div className="onb-body">
-<div style={{display: "flex", alignItems: "center", gap: "14px"}}><Mo mood="happy" size={88} /><div style={{display: "flex", flexDirection: "column", gap: "4px"}}><h1 className="onb-title" style={{textAlign: "left"}}>Meet Mo</h1><span className="onb-sub" style={{textAlign: "left"}}>Your AI buddy. Mo is here to help, not to judge.</span></div></div>
-<div className="onb-card">
-<strong>Mo can</strong>
-<span>✓ Help you practice conversations</span>
-<span>✓ Suggest replies and check your tone</span>
-<span>✓ Explain why something might sound harsh</span>
-<span>✓ Help you calm down when it's a lot</span>
-</div>
-<div className="onb-card soft">
-<strong>Mo won't</strong>
-<span>✕ Send messages for you</span>
-<span>✕ Share your chats with anyone</span>
-<span>✕ Replace a doctor or therapist</span>
-</div>
-</div>
-</>)}
-
-{v.onb4 && (<>
-<div className="onb-body">
 <h1 className="onb-title">Who can you count on?</h1>
 <span className="onb-sub">When you tap "I need help", Mo texts this person. They never see your chats.</span>
 <label className="onb-field">Their name<input type="text" value={v.trustedInput} onChange={v.setTrusted} placeholder="For example, Mom or Alex" autoComplete="off" /></label>
@@ -1163,7 +1145,7 @@ class Bridge extends BridgeBase {
 </div>
 </>)}
 
-{v.onb5 && (<>
+{v.onb4 && (<>
 <div className="onb-body">
 <h1 className="onb-title">Make it comfortable</h1>
 <span className="onb-sub">Changes show right away. You can change them later in Me.</span>
@@ -1183,13 +1165,7 @@ class Bridge extends BridgeBase {
 <div className="segmented-row"><span>Chatting</span><div className="segments">{v.chatSeg.map((o, $i) => (<React.Fragment key={$i}><button className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button></React.Fragment>))}</div></div>
 </div>
 <div style={{display: "flex", gap: "12px", alignItems: "center", background: "rgba(255,255,255,0.6)", borderRadius: "20px", padding: "12px 14px"}}><span style={{flex: "0 0 auto"}}><Mo mood="calm" size={40} /></span><span style={{fontSize: "14px", lineHeight: "1.4"}}>Calm mode turns off moving animations. Text first means circles and events start in text, and voice is always optional.</span></div>
-</div>
-</>)}
-
-{v.onb6 && (<>
-<div className="onb-body">
-<h1 className="onb-title">A few safety rules</h1>
-<span className="onb-sub">Short and simple. Mo will remind you if something looks wrong.</span>
+<h2 className="section-title" style={{margin: "6px 0 0"}}>A few safety rules</h2>
 <div className="onb-card">
 <span className="safety-row"><b>1</b>Never share your address, passwords or money.</span>
 <span className="safety-row"><b>2</b>If someone asks for secrets or money, Mo warns you privately.</span>
