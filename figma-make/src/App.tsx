@@ -780,6 +780,34 @@ class BridgeBase extends DCLogic {
       reflNudge: !(s.refl && s.refl.e0 && s.refl.e0.done),
       openPast: function () { self.setState({ screen: 'event', evId: 'e0', evBackTo: 'home', moOpen: false, evToast: '' }); }
     };
+
+    // ---------- Cool down (anger and frustration) ----------
+    var coolWhat = s.coolWhat || '';
+    var coolLevel = s.coolLevel || '';
+    var coolWhatLabels = { rude: 'Someone said something rude', plans: 'Plans changed', misread: 'I was misunderstood', loud: 'Too much noise or people', other: 'Something else' };
+    var coolMoLines = {
+      rude: "That would sting. You don't have to answer right away.",
+      plans: "Changes can throw off a whole day. Feeling thrown off makes sense.",
+      misread: "It's frustrating when people don't get what you meant. We can find words that land.",
+      loud: "Too much input wears anyone down. Taking space is a smart move.",
+      other: "Whatever it is, the feeling is real. Let's slow it down first."
+    };
+    var coolScen = { rude: 'disagree', plans: 'cancel', misread: 'repair', loud: 'leave', other: 'repair' }[coolWhat] || 'repair';
+    var coolVals = {
+      isCool: screen === 'cool',
+      coolWhatOpts: chip(coolWhatLabels, coolWhat, 'coolWhat'),
+      coolLevelOpts: chip({ little: 'A little', lot: 'A lot', max: 'Really a lot' }, coolLevel, 'coolLevel'),
+      coolPicked: !!coolWhat, coolMoLine: coolWhat ? coolMoLines[coolWhat] : '',
+      coolBreatheFirst: coolLevel === 'max',
+      coolNote: s.coolNote || '',
+      setCoolNote: function (e) { self.setState({ coolNote: e.target.value }); },
+      coolBreathe: go('reset', { trustSent: false, resetFrom: 'cool' }),
+      coolPractice: function () { self.setState({ screen: 'practice', pScen: coolScen, pLevel: 1, pStarted: true, pChoice: '', coolNote: '', moOpen: false }); },
+      coolPracticeLabel: 'Practice a calm reply · ' + scripts[coolScen].title,
+      coolSpace: function () { saveQuietly({ screen: 'home', notifPaused: true, coolNote: '', moOpen: false }, 'Taking space · notifications paused for 1 hour'); },
+      coolHelp: go('help', { helpSent: false, coolNote: '' }),
+      coolBack: go(s.coolFrom && s.coolFrom !== 'cool' ? s.coolFrom : 'home', { coolNote: '' })
+    };
     var wasKind = s.winType === 'kind';
     var circles = Object.keys(circleData).map(function (k) {
       var c = circleData[k];
@@ -871,7 +899,7 @@ class BridgeBase extends DCLogic {
       ],
       isMeArea: screen === 'me' || meScreenNames.indexOf(screen) >= 0
     };
-    return Object.assign(evVals, profVals, dmVals, notifVals, themeVals, evDetailVals, onbVals, meVals, {
+    return Object.assign(evVals, coolVals, profVals, dmVals, notifVals, themeVals, evDetailVals, onbVals, meVals, {
       circles: circles, screenKey: screen, uiToast: s.uiToast || '', hasUiToast: !!s.uiToast, hasUndo: !!s.undoPatch, toastQuiet: !!s.toastQuiet,
       clearToast: function () { self.setState({ uiToast: '', undoPatch: null, undoToken: 0 }); },
       undoToast: function () {
@@ -890,7 +918,7 @@ class BridgeBase extends DCLogic {
       winText: wasKind ? "That's a real friendship skill. Jordan just invited you to play on Friday." : cd.m2[0] + " replied to you. That's how friendships start.",
       isHome: screen === 'home', isCircle: screen === 'circle', isPause: screen === 'pause', isReset: screen === 'reset',
       isPractice: screen === 'practice', isFeedback: screen === 'feedback', isWin: screen === 'win', isMe: screen === 'me',
-      showTabs: ['pause', 'reset', 'win', 'checkin', 'help', 'newEvent', 'onboard'].indexOf(screen) < 0,
+      showTabs: ['pause', 'reset', 'win', 'checkin', 'help', 'newEvent', 'onboard', 'cool'].indexOf(screen) < 0,
       // Greeting that follows the time of day
       greeting: (function () { var h = new Date().getHours(); return h < 5 ? 'Hello' : (h < 12 ? 'Good morning' : (h < 17 ? 'Good afternoon' : 'Good evening')); })(),
       steps: steps, stepBump: !!s.stepBump, showCelebrate: !!s.stepBump && screen !== 'win',
@@ -1047,6 +1075,8 @@ class BridgeBase extends DCLogic {
       moPracticeHint: screen === 'circle' ? 'Practice replying to ' + cd.m2[0] : (screen === 'home' ? 'Practice inviting someone' : 'Practice a conversation'),
       moPractice: go('practice', { pChoice: '', pStarted: false }),
       moBreathe: go('reset', { trustSent: false, resetFrom: screen }),
+      moCool: go('cool', { coolWhat: '', coolLevel: '', coolNote: '', coolFrom: screen === 'reset' ? (s.resetFrom || 'home') : screen }),
+      showCoolLink: s.resetFrom !== 'cool',
       moHelp: go('help', { helpSent: false })
     });
   }
@@ -1071,7 +1101,7 @@ class Bridge extends BridgeBase {
         var saved = this.state.meScroll || 0;
         requestAnimationFrame(function () { el.scrollTop = saved; });
       } else if (el) el.scrollTop = 0;
-      var order = { onboard: -1, checkin: 0, home: 1, circles: 2, circle: 3, dm: 3, notifs: 2, newEvent: 3, event: 3, practice: 3, feedback: 4, pause: 4, reset: 5, help: 4, me: 1, 'me-journey': 2, 'me-trusted': 2, 'me-coach': 2, 'me-profile': 2, 'me-colors': 2, 'me-comfort': 2, 'me-interests': 2, 'me-privacy': 2, win: 5 };
+      var order = { onboard: -1, checkin: 0, cool: 4, home: 1, circles: 2, circle: 3, dm: 3, notifs: 2, newEvent: 3, event: 3, practice: 3, feedback: 4, pause: 4, reset: 5, help: 4, me: 1, 'me-journey': 2, 'me-trusted': 2, 'me-coach': 2, 'me-profile': 2, 'me-colors': 2, 'me-comfort': 2, 'me-interests': 2, 'me-privacy': 2, win: 5 };
       var panel = document.querySelector('.screen-transition');
       if (panel && (order[this.state.screen] || 0) < (order[prevState.screen] || 0)) {
         panel.classList.add('screen-back');
@@ -1843,6 +1873,43 @@ class Bridge extends BridgeBase {
 </div>
 </>)}
 
+{v.isCool && (<>
+<div style={{padding: "20px 20px 28px", display: "flex", flexDirection: "column", gap: "14px"}}>
+<div className="sticky-header inner-header" style={{display: "flex", alignItems: "center", gap: "12px"}}>
+<button onClick={v.coolBack} aria-label="Back" style={{width: "44px", height: "44px", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center"}}>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"></path></svg>
+</button>
+<h1 style={{margin: "0", fontSize: "17px", fontWeight: "600"}}>Cool down</h1>
+<span></span>
+</div>
+<div className="calm-card" style={{display: "flex", gap: "12px", alignItems: "center"}}>
+<Mo mood="calm" size={56} />
+<span style={{flex: "1", fontSize: "16px", lineHeight: "1.45"}}>Being frustrated is okay. Let's slow it down before you decide anything.</span>
+</div>
+<span className="section-title">What happened?</span>
+<div style={{display: "flex", flexWrap: "wrap", gap: "8px"}}>
+{v.coolWhatOpts.map((o, $i) => (<React.Fragment key={$i}>
+<button onClick={o.pick} aria-pressed={o.on} style={{minHeight: "44px", borderRadius: "999px", border: "none", background: o.bg, color: o.fg, padding: "8px 16px", fontSize: "15px", fontWeight: "500"}}>{o.label}</button>
+</React.Fragment>))}
+</div>
+<span className="section-title">How strong is it?</span>
+<div style={{display: "flex", flexWrap: "wrap", gap: "8px"}}>
+{v.coolLevelOpts.map((o, $i) => (<React.Fragment key={$i}>
+<button onClick={o.pick} aria-pressed={o.on} style={{minHeight: "44px", borderRadius: "999px", border: "none", background: o.bg, color: o.fg, padding: "8px 16px", fontSize: "15px", fontWeight: "500"}}>{o.label}</button>
+</React.Fragment>))}
+</div>
+{v.coolPicked && <div className="why-box rise"><strong>Mo</strong><span>{v.coolMoLine}</span></div>}
+<span className="section-title">Say it here first</span>
+<textarea value={v.coolNote} onChange={v.setCoolNote} rows={3} aria-label="Private note" placeholder="Type exactly how you feel. Nobody will see this." style={{borderRadius: "18px", border: "1.5px solid #DCD3EA", background: "#FFFFFF", padding: "12px 14px", font: "16px Outfit, system-ui, sans-serif", color: "var(--ink)", resize: "none", outline: "none"}}></textarea>
+<span className="muted-copy">Only you see this. It never gets sent, and it's cleared when you leave.</span>
+<span className="section-title">What would help now?</span>
+<button onClick={v.coolBreathe} className={v.coolBreatheFirst ? "primary-action" : "secondary-action"}>Breathe for 1 minute</button>
+<button onClick={v.coolPractice} className="secondary-action" style={{height: "auto", minHeight: "48px", padding: "10px 14px"}}>{v.coolPracticeLabel}</button>
+<button onClick={v.coolSpace} className="secondary-action">Take space for an hour</button>
+<button onClick={v.coolHelp} className="quiet-action">Text {v.trusted} instead</button>
+</div>
+</>)}
+
 {v.isReset && (<>
 <div style={{width: "100%", minHeight: "100%", boxSizing: "border-box", padding: "36px 24px 30px", display: "flex", flexDirection: "column", alignItems: "stretch", gap: "16px", textAlign: "center", background: "var(--bg)"}}>
 <span style={{fontSize: "15px", color: "var(--muted)", letterSpacing: "1px"}}>ONE-MINUTE BREATHER</span>
@@ -1862,6 +1929,7 @@ class Bridge extends BridgeBase {
 <div style={{width: "100%", display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto"}}>
 <button onClick={v.readyAfterReset} style={{height: "54px", borderRadius: "20px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "17px", fontWeight: "500"}}>I'm ready</button>
 <button onClick={v.textTrusted} style={{height: "54px", borderRadius: "20px", border: "none", background: "rgba(255,255,255,0.8)", color: "var(--ink)", fontSize: "17px", fontWeight: "500"}}>Text someone I trust</button>
+{v.showCoolLink && <button onClick={v.moCool} className="quiet-action">Still frustrated? Talk it through with Mo ›</button>}
 {v.trustSent && (<>
 <span className="rise" style={{fontSize: "15px", color: "#3E6B57"}}>Sent to {v.trusted}: "Can you call me when you're free?"</span>
 </>)}
@@ -2072,8 +2140,8 @@ class Bridge extends BridgeBase {
 <span style={{fontSize: "14px", color: "var(--muted)"}}>{v.moPracticeHint}</span>
 </button>
 <button onClick={v.moBreathe} style={{textAlign: "left", minHeight: "56px", borderRadius: "18px", border: "none", background: "transparent", padding: "10px 14px", color: "var(--ink)", display: "flex", flexDirection: "column", gap: "2px"}}>
-<span style={{fontSize: "16px", fontWeight: "600"}}>Breathe with me</span>
-<span style={{fontSize: "14px", color: "var(--muted)"}}>A one-minute calm-down</span>
+<span style={{fontSize: "16px", fontWeight: "600"}}>Calm down</span>
+<span style={{fontSize: "14px", color: "var(--muted)"}}>Breathe, or cool off if you're frustrated</span>
 </button>
 <button onClick={v.moHelp} style={{textAlign: "left", minHeight: "56px", borderRadius: "18px", border: "none", background: "transparent", padding: "10px 14px", color: "var(--ink)", display: "flex", flexDirection: "column", gap: "2px"}}>
 <span style={{fontSize: "16px", fontWeight: "600"}}>I need help</span>
