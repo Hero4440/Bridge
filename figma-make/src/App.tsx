@@ -114,6 +114,21 @@ class BridgeBase extends DCLogic {
   renderVals() {
     var s = this.state || {};
     var self = this;
+    var changeWithUndo = function (patch, message, undoPatch) {
+      var token = Date.now();
+      self.setState(Object.assign({}, patch, { uiToast: message, undoPatch: undoPatch, undoToken: token }));
+      setTimeout(function () {
+        if (self.state.undoToken === token) self.setState({ uiToast: '', undoPatch: null, undoToken: 0 });
+      }, 5000);
+      return token;
+    };
+    var notify = function (message) {
+      var token = Date.now();
+      self.setState({ uiToast: message, undoPatch: null, undoToken: token });
+      setTimeout(function () {
+        if (self.state.undoToken === token) self.setState({ uiToast: '', undoToken: 0 });
+      }, 5000);
+    };
     var screen = s.screen || (s.onbDone ? 'checkin' : 'onboard');
     var trusted = (s.trusted || '').trim() || 'Mom';
     var trustedRel = s.trustedRel || 'Parent';
@@ -330,7 +345,7 @@ class BridgeBase extends DCLogic {
         goingText: (e.going + (g ? 1 : 0)) + ' going',
         isMine: !!e.mine, notMine: !e.mine,
         inLabel: g ? 'Going ✓' : "I'm in", inBg: g ? 'var(--ink)' : 'var(--soft)', inFg: g ? '#FFFFFF' : 'var(--ink)',
-        toggle: function () { var r = Object.assign({}, rsvp); r[e.id] = g ? '' : 'going'; self.setState({ rsvp: r, uiToast: g ? 'Saved' : 'Going ✓' }); },
+        toggle: function () { var r = Object.assign({}, rsvp); r[e.id] = g ? '' : 'going'; changeWithUndo({ rsvp: r }, g ? 'RSVP removed' : "You're going ✓", { rsvp: rsvp }); },
         sense: [e.size, e.sound, e.light].filter(Boolean),
         open: function () { self.setState({ screen: 'event', evId: e.id, evBackTo: screen, moOpen: false, evToast: '' }); } };
     };
@@ -401,8 +416,9 @@ class BridgeBase extends DCLogic {
         prep: evInPerson ? 'leave' : 'joinin' };
       var r = Object.assign({}, rsvp); r[ne.id] = 'going';
       var toCircle = evFrom === 'circle' && !evIsOutside;
-      self.setState({ events: [ne].concat(events), rsvp: r, screen: toCircle ? 'circle' : 'home', circle: evIsOutside ? cKey : evHost,
-        evToast: evIsOutside ? 'Invites sent to ' + evInvite.join(', ') + '. Mo will remind you an hour before.' : 'Your event is posted in ' + circleData[evHost].name + '. Mo will remind you an hour before.' });
+      changeWithUndo({ events: [ne].concat(events), rsvp: r, screen: toCircle ? 'circle' : 'home', circle: evIsOutside ? cKey : evHost,
+        evToast: evIsOutside ? 'Invites sent to ' + evInvite.join(', ') + '. Mo will remind you an hour before.' : 'Your event is posted in ' + circleData[evHost].name + '. Mo will remind you an hour before.' },
+        'Event created', { events: events, rsvp: rsvp, screen: 'newEvent', circle: cKey, evToast: '' });
     };
     var evVals = {
       isNewEvent: screen === 'newEvent',
@@ -461,12 +477,12 @@ class BridgeBase extends DCLogic {
       hasPhoto: !!s.pPhoto, noPhoto: !s.pPhoto, pPhoto: s.pPhoto || '',
       profEdit: !!s.profEdit, profView: !s.profEdit,
       editProfile: function () { self.setState({ profEdit: true }); },
-      saveProfile: function () { self.setState({ profEdit: false }); },
+      saveProfile: function () { self.setState({ profEdit: false }); notify('Saved ✓'); },
       setFirst: function (e) { self.setState({ pFirst: e.target.value }); },
       setLast: function (e) { self.setState({ pLast: e.target.value }); },
       setEmail: function (e) { self.setState({ pEmail: e.target.value }); },
-      pickPhoto: function (e) { var f = e.target.files && e.target.files[0]; if (f) self.setState({ pPhoto: URL.createObjectURL(f) }); },
-      removePhoto: function () { self.setState({ pPhoto: '' }); },
+      pickPhoto: function (e) { var f = e.target.files && e.target.files[0]; if (f) changeWithUndo({ pPhoto: URL.createObjectURL(f) }, 'Saved ✓', { pPhoto: s.pPhoto || '' }); },
+      removePhoto: function () { changeWithUndo({ pPhoto: '' }, 'Photo removed', { pPhoto: s.pPhoto || '' }); },
       genderOpts: genderList.map(function (g) {
         var on = g === pGender;
         return { label: g, on: on, bg: on ? 'var(--ink)' : 'rgba(255,255,255,0.85)', fg: on ? '#FFFFFF' : 'var(--ink)',
@@ -508,8 +524,10 @@ class BridgeBase extends DCLogic {
       var idx = dmd.ideas.indexOf(dmDraft); var replyText = idx >= 0 ? dmd.replies[idx] : dmd.reply;
       var list = msgsFor(dmKey).concat([['me', dmDraft]]);
       var m = Object.assign({}, dmMsgs); m[dmKey] = list;
-      self.setState({ dmMsgs: m, dmDraft: '', dmGentle: false });
+      var sendToken = Date.now();
+      changeWithUndo({ dmMsgs: m, dmDraft: '', dmGentle: false, dmSendToken: sendToken }, 'Sent to ' + dmd.name, { dmMsgs: dmMsgs, dmDraft: dmDraft, dmGentle: !!s.dmGentle, dmSendToken: 0 });
       setTimeout(function () {
+        if (self.state.dmSendToken !== sendToken) return;
         var m2 = Object.assign({}, self.state.dmMsgs || {}); m2[dmKey] = (m2[dmKey] || list).concat([['them', replyText]]);
         self.setState({ dmMsgs: m2 });
       }, 900);
@@ -531,8 +549,8 @@ class BridgeBase extends DCLogic {
       }),
       reqPendingDm: dmReqState === 'pending', reqDone: dmReqState !== 'pending',
       reqDoneText: dmReqState === 'reported' ? 'Reported and blocked. Alex can’t message you.' : 'Request deleted. Alex isn’t told.',
-      reqReport: function () { self.setState({ dmReq: 'reported' }); },
-      reqDelete: function () { self.setState({ dmReq: 'deleted' }); },
+      reqReport: function () { changeWithUndo({ dmReq: 'reported' }, 'Blocked Alex', { dmReq: dmReqState }); },
+      reqDelete: function () { changeWithUndo({ dmReq: 'deleted' }, 'Request deleted', { dmReq: dmReqState }); },
       isDm: screen === 'dm',
       dmName: dmd.name, dmFrom: 'Met in the ' + dmd.from, dmTint: dmd.tint, dmInitial: dmd.name[0],
       dmMessages: msgsFor(dmKey).map(function (m, index, list) {
@@ -589,7 +607,7 @@ class BridgeBase extends DCLogic {
       notifBack: go('home'),
       pauseLabel: notifPaused ? 'Paused for 1 hour · Turn back on' : 'Pause notifications for 1 hour',
       pauseBg: notifPaused ? 'var(--ink)' : 'rgba(255,255,255,0.85)', pauseFg: notifPaused ? '#FFFFFF' : 'var(--ink)',
-      togglePause: function () { self.setState({ notifPaused: !notifPaused }); },
+      togglePause: function () { changeWithUndo({ notifPaused: !notifPaused }, notifPaused ? 'Notifications resumed' : 'Notifications paused for 1 hour', { notifPaused: notifPaused }); },
       notifMoLine: notifPaused ? 'Notifications are paused. I’ll still let your trusted people reach you if you need help.' : 'I bundle notifications so they don’t pile up. Tap one to go there.'
     };
 
@@ -609,7 +627,7 @@ class BridgeBase extends DCLogic {
         var t = themes[k]; var on = k === themeKey;
         return { name: t.name, desc: t.desc, bg: t.bg, ink: t.ink, swatch: t.swatch, on: on,
           ring: on ? '0 0 0 2px ' + t.ink : '0 0 0 1px rgba(0,0,0,0.08)',
-          pick: function () { self.setState({ theme: k }); } };
+          pick: function () { if (k !== themeKey) changeWithUndo({ theme: k }, 'Saved ✓', { theme: themeKey }); } };
       })
     };
 
@@ -634,7 +652,7 @@ class BridgeBase extends DCLogic {
     var detailVenue = evD.venue || (inPersonD ? ((evD.where || '').indexOf('library') >= 0 ? 'Tempe Public Library' : 'Cartel Coffee Lab') : '');
     var detailAddress = evD.address || (detailVenue === 'Tempe Public Library' ? '3500 S Rural Rd' : '225 W University Dr, Tempe');
     var detailRsvp = rsvp[evD.id] || '';
-    var setDetailRsvp = function (value) { var r = Object.assign({}, rsvp); r[evD.id] = value; self.setState({ rsvp: r, uiToast: value === 'going' ? 'Going ✓' : (value === 'maybe' ? 'Saved as maybe' : 'RSVP updated') }); };
+    var setDetailRsvp = function (value) { var r = Object.assign({}, rsvp); r[evD.id] = value; changeWithUndo({ rsvp: r }, value === 'going' ? "You're going ✓" : (value === 'maybe' ? 'Maybe saved' : "You can't go"), { rsvp: rsvp }); };
     var evDetailVals = {
       isEvent: screen === 'event',
       edBack: go(s.evBackTo === 'circle' ? 'circle' : 'home'),
@@ -645,10 +663,10 @@ class BridgeBase extends DCLogic {
       edHostedBy: evD.mine ? 'Hosted by you' : 'Hosted by ' + ((evD.people || [])[0] || 'Jordan'),
       edSpots: (evD.going + (detailRsvp === 'going' ? 1 : 0)) + ' of ' + ((evD.size || '').match(/\d+/g) || [6]).slice(-1)[0] + ' spots',
       edRsvp: ['Going','Maybe',"Can't go"].map(function (label) { var key = label === 'Going' ? 'going' : (label === 'Maybe' ? 'maybe' : 'cant'); return { label: label, on: detailRsvp === key, pick: function () { setDetailRsvp(key); } }; }),
-      edDirections: function () { self.setState({ uiToast: 'Directions opened' }); },
-      edCopyAddress: function () { self.setState({ uiToast: 'Address copied' }); },
-      edAddCalendar: function () { self.setState({ uiToast: 'Added to calendar' }); },
-      edShare: function () { self.setState({ uiToast: 'Share sheet opened' }); },
+      edDirections: function () { notify('Directions opened'); },
+      edCopyAddress: function () { notify('Address copied'); },
+      edAddCalendar: function () { notify('Added to calendar'); },
+      edShare: function () { notify('Share sheet opened'); },
       edSense: [
         { label: 'People', value: evD.size || '-', path: 'M8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20c.5-3.5 2.5-5 5.5-5s5 1.5 5.5 5M13.5 15.3c.8-.2 1.6-.3 2.5-.3 3 0 5 1.5 5.5 5' },
         { label: 'Sound', value: evD.sound || '-', path: 'M4 10v4h4l5 4V6L8 10H4ZM16.5 9a4 4 0 0 1 0 6' },
@@ -685,7 +703,7 @@ class BridgeBase extends DCLogic {
           pick: function () { var cur = refl.wins || []; setRefl({ wins: on ? cur.filter(function (x) { return x !== w; }) : cur.concat([w]) }); } };
       }),
       edCanSave: !!refl.feel, edSaveBg: refl.feel ? 'var(--ink)' : '#CFC8DB',
-      edSaveRefl: function () { if (refl.feel) { setRefl({ done: true }); self.setState({ uiToast: 'Saved' }); } },
+      edSaveRefl: function () { if (refl.feel) { var all = Object.assign({}, s.refl || {}); all[evD.id] = Object.assign({}, refl, { done: true }); changeWithUndo({ refl: all }, '+1 brave step', { refl: s.refl || {} }); } },
       edReflMo: refl.feel === 'hard' ? 'Thanks for telling me. Showing up when it is hard still counts. Next time I can suggest a smaller event.'
         : (refl.feel === 'good' ? 'Love that! I will suggest Level 2 practice next time.' : 'Okay is a real win. Every event makes the next one easier.'),
       edReflWins: (refl.wins || []).length ? 'You noted: ' + (refl.wins || []).join(', ') + '.' : '',
@@ -693,7 +711,7 @@ class BridgeBase extends DCLogic {
         var k = n.toLowerCase(); var canDm = !!dmData[k];
         return { name: n, initial: n[0], canDm: canDm, noDm: !canDm, sent: !!hiSent[k], notSent: !hiSent[k],
           msg: function () { self.setState({ screen: 'dm', dm: k, dmDraft: 'Thanks for last night! Want to build again sometime?', moOpen: false }); },
-          hi: function () { var h = Object.assign({}, hiSent); h[k] = true; self.setState({ hiSent: h, uiToast: 'Request sent' }); } };
+          hi: function () { var h = Object.assign({}, hiSent); h[k] = true; changeWithUndo({ hiSent: h }, 'Request sent', { hiSent: hiSent }); } };
       }),
       reflNudge: !(s.refl && s.refl.e0 && s.refl.e0.done),
       openPast: function () { self.setState({ screen: 'event', evId: 'e0', evBackTo: 'home', moOpen: false, evToast: '' }); }
@@ -703,7 +721,7 @@ class BridgeBase extends DCLogic {
       var c = circleData[k];
       return { key: k, name: c.name, initial: c.initial, tint: c.tint, here: c.here, topic: c.topic, icon: circleIconPaths[k],
         avatars: [c.m1[0], c.m2[0], c.m3 ? c.m3[0] : 'Sam'],
-        open: function () { self.setState({ screen: 'circle', circle: k, draft: '', sent: '', menuOpen: false, safetyNote: '', unsafeHandled: false, moOpen: false }); } };
+        open: function () { changeWithUndo({ screen: 'circle', circle: k, draft: '', sent: '', menuOpen: false, safetyNote: '', unsafeHandled: false, moOpen: false }, 'Joined ' + c.name + ' chat', { screen: screen, circle: cKey, draft: draft, sent: sent, menuOpen: !!s.menuOpen, safetyNote: s.safetyNote || '', unsafeHandled: !!s.unsafeHandled, moOpen: !!s.moOpen }); } };
     });
 
     // ---------- First-time setup, comfort, journey ----------
@@ -712,7 +730,8 @@ class BridgeBase extends DCLogic {
     var segOpts = function (list, cur, key) {
       return list.map(function (pair) {
         var on = pair[0] === cur; var o = {}; o[key] = pair[0];
-        return { label: pair[1], on: on, cls: on ? 'on' : '', pick: function () { self.setState(o); } };
+        var previous = {}; previous[key] = cur;
+        return { label: pair[1], on: on, cls: on ? 'on' : '', pick: function () { if (!on) changeWithUndo(o, 'Saved ✓', previous); } };
       });
     };
     var onbOk = onbStep === 2 ? interests.length > 0 : (onbStep === 4 ? !!(s.trusted === undefined ? 'Mom' : s.trusted).trim() : true);
@@ -729,7 +748,7 @@ class BridgeBase extends DCLogic {
         var on = interests.indexOf(k) >= 0;
         return { key: k, name: circleData[k].name, tint: circleData[k].tint, on: on,
           ring: on ? '0 0 0 2px var(--ink)' : '0 0 0 1px rgba(0,0,0,0.06)',
-          pick: function () { self.setState({ interests: on ? interests.filter(function (x) { return x !== k; }) : interests.concat([k]) }); } };
+          pick: function () { var next = on ? interests.filter(function (x) { return x !== k; }) : interests.concat([k]); if (next.length) changeWithUndo({ interests: next }, 'Saved ✓', { interests: interests }); } };
       }),
       interestCount: interests.length ? interests.length + ' picked' : 'Pick at least one',
       trustedInput: s.trusted === undefined ? 'Mom' : s.trusted, trusted: trusted, trustedRel: trustedRel,
@@ -777,8 +796,8 @@ class BridgeBase extends DCLogic {
       goReset: go('reset', { trustSent: false }), goFeedback: go('feedback'),
       menuOpen: !!s.menuOpen,
       toggleMenu: function () { self.setState({ menuOpen: !s.menuOpen }); },
-      doReport: function () { self.setState({ menuOpen: false, safetyNote: 'Thanks. A moderator will check this chat.' }); },
-      doBlock: function () { self.setState({ menuOpen: false, safetyNote: 'Done. You can block anyone, anytime.' }); },
+      doReport: function () { changeWithUndo({ menuOpen: false, safetyNote: 'Thanks. A moderator will check this chat.' }, 'Report sent', { menuOpen: !!s.menuOpen, safetyNote: s.safetyNote || '' }); },
+      doBlock: function () { changeWithUndo({ menuOpen: false, safetyNote: 'Done. You can block anyone, anytime.' }, 'Member blocked', { menuOpen: !!s.menuOpen, safetyNote: s.safetyNote || '' }); },
       hasSafetyNote: !!s.safetyNote, safetyNote: s.safetyNote || '',
       isSent: !!sent,
       sentText: drafts[sent] || '',
@@ -786,7 +805,7 @@ class BridgeBase extends DCLogic {
       resultMood: sentKind ? 'happy' : 'calm',
       resultLine: sentKind ? cd.m2[0] + ' replied! That was a brave step.' : "Sent. If it didn't land well, I can help you follow up.",
       resultButton: sentKind ? 'Get my badge' : 'Help me follow up',
-      resultAction: sentKind ? go('win', { won: true, winType: sent === 'kind' ? 'kind' : 'hello' }) : go('practice', { pChoice: '', pStarted: false }),
+      resultAction: sentKind ? function () { changeWithUndo({ screen: 'win', won: true, winType: sent === 'kind' ? 'kind' : 'hello' }, '+1 brave step', { screen: screen, won: !!s.won, winType: s.winType }); } : go('practice', { pChoice: '', pStarted: false }),
       showSuggest: !sent && !draft && !readOnly,
       showComposer: !sent && !readOnly,
       chipAsk: function () { self.setState({ draft: 'ask' }); },
@@ -805,7 +824,7 @@ class BridgeBase extends DCLogic {
       send: function () {
         if (!draft) return;
         if (draft === 'angry') self.setState({ screen: 'pause' });
-        else self.setState({ sent: draft, draft: '' });
+        else changeWithUndo({ sent: draft, draft: '' }, 'Sent to ' + cd.name + ' chat', { sent: sent, draft: draft });
       },
       sayKindly: go('circle', { draft: 'kind' }),
       sendAnyway: go('circle', { sent: 'angry', draft: '' }),
@@ -815,7 +834,7 @@ class BridgeBase extends DCLogic {
       planMusic: function () { self.setState({ plan: 'music' }); },
       planWater: function () { self.setState({ plan: 'water' }); },
       readyAfterReset: go('circle', { draft: 'kind' }),
-      textTrusted: function () { self.setState({ trustSent: true }); },
+      textTrusted: function () { changeWithUndo({ trustSent: true }, 'Text sent to ' + trusted, { trustSent: !!s.trustSent }); },
       trustSent: !!s.trustSent,
       pChosen: !!pChoice, pNotChosen: !pChoice,
       pText: choiceGood ? ps.good : ps.vague,
@@ -835,19 +854,19 @@ class BridgeBase extends DCLogic {
       hasUnsafe: !!cd.m3,
       m3Name: cd.m3 ? cd.m3[0] : '', m3Text: cd.m3 ? cd.m3[1] : '',
       showUnsafeCard: !s.unsafeHandled,
-      unsafeReport: function () { self.setState({ unsafeHandled: true, safetyNote: 'Reported. A moderator will review Alex. Thanks for keeping the circle safe.' }); },
-      unsafeBlock: function () { self.setState({ unsafeHandled: true, safetyNote: 'Alex is blocked. They can’t message you anymore.' }); },
+      unsafeReport: function () { changeWithUndo({ unsafeHandled: true, safetyNote: 'Reported. A moderator will review Alex. Thanks for keeping the circle safe.' }, 'Reported Alex', { unsafeHandled: !!s.unsafeHandled, safetyNote: s.safetyNote || '' }); },
+      unsafeBlock: function () { changeWithUndo({ unsafeHandled: true, safetyNote: 'Alex is blocked. They can’t message you anymore.' }, 'Blocked Alex', { unsafeHandled: !!s.unsafeHandled, safetyNote: s.safetyNote || '' }); },
       unsafeIgnore: function () { self.setState({ unsafeHandled: true }); },
       reqPending: reqState === 'pending', reqChoose: reqState === 'choose', reqDeclined: reqState === 'declined',
       mariaConnected: reqState === 'connected',
       reqAccept: function () { self.setState({ reqState: 'choose' }); },
       reqDecline: function () { self.setState({ reqState: 'declined' }); },
-      reqConnect: function () { self.setState({ reqState: 'connected' }); },
+      reqConnect: function () { changeWithUndo({ reqState: 'connected' }, 'Saved ✓', { reqState: reqState }); },
       seeSteps: seeSteps, seeHelp: seeHelp,
       seeStepsBg: seeSteps ? 'var(--ink)' : 'var(--soft)', seeStepsFg: seeSteps ? '#FFFFFF' : 'var(--ink)',
       seeHelpBg: seeHelp ? 'var(--ink)' : 'var(--soft)', seeHelpFg: seeHelp ? '#FFFFFF' : 'var(--ink)',
-      toggleSeeSteps: function () { self.setState({ seeSteps: !seeSteps }); },
-      toggleSeeHelp: function () { self.setState({ seeHelp: !seeHelp }); },
+      toggleSeeSteps: function () { changeWithUndo({ seeSteps: !seeSteps }, 'Saved ✓', { seeSteps: seeSteps }); },
+      toggleSeeHelp: function () { changeWithUndo({ seeHelp: !seeHelp }, 'Saved ✓', { seeHelp: seeHelp }); },
       mariaSees: (seeSteps && seeHelp) ? 'Sees my brave steps and help texts' : (seeSteps ? 'Sees my brave steps' : (seeHelp ? 'Gets my "I need help" texts' : 'Connected, sees nothing yet')),
       showFloat: ['practice', 'feedback'].indexOf(screen) < 0,
       showMoMenu: !!s.moOpen && ['practice', 'feedback'].indexOf(screen) < 0,
@@ -862,9 +881,9 @@ class BridgeBase extends DCLogic {
       hardOpts: chip({ start: 'Starting a chat', keep: 'Keeping it going', tone: 'Reading tone', disagree: 'Disagreeing', leave: 'Leaving or saying no' }, ciHard, 'ciHard'),
       finishCheckin: go('home'), goCheckin: go('checkin'),
       ciSummary: feelLabels[ciFeel] + (ciUp === 'none' ? '' : ' · ' + (ciUp === 'group' ? 'hangout' : upLabels[ciUp].toLowerCase().replace('a ', '')) + ' coming up'),
-      recList: recList,
-      joinLabel: ciFeel === 'over' ? 'Just read tonight' : 'Join the chat',
-      homeJoin: go('circle', { circle: 'gaming', draft: '', sent: '', readOnly: ciFeel === 'over', unsafeHandled: false }),
+      recList: recList, upNextText: upNextText,
+      joinLabel: ciFeel === 'over' ? 'Read Gaming chat' : 'Join Gaming chat',
+      homeJoin: function () { changeWithUndo({ screen: 'circle', circle: 'gaming', draft: '', sent: '', readOnly: ciFeel === 'over', unsafeHandled: false, menuOpen: false, moOpen: false }, 'Joined Gaming chat', { screen: screen, circle: cKey, draft: draft, sent: sent, readOnly: readOnly, unsafeHandled: !!s.unsafeHandled, menuOpen: !!s.menuOpen, moOpen: !!s.moOpen }); },
       circlesMoLine: ciFeel === 'over' ? 'Feeling overwhelmed? Try "Just read". No one expects you to post.' : 'You like ' + interestText + '. Start there?',
       filterOpts: chip({ foryou: 'For you', all: 'All' }, cFilter, 'cFilter'),
       circleCards: Object.keys(circleData).filter(function (k) {
@@ -875,7 +894,7 @@ class BridgeBase extends DCLogic {
         var c = circleData[k];
         var grads = { gaming: 'linear-gradient(120deg, #F9DCE4, #E3E0F8)', music: 'linear-gradient(120deg, #E3E0F8, #DCE4FA)', anime: 'linear-gradient(120deg, #FBE1D8, #F9DCE4)', cooking: 'linear-gradient(120deg, #DDF1E6, #F6E5C9)', art: 'linear-gradient(120deg, #F6E5C9, #FBE1D8)', tech: 'linear-gradient(120deg, #DCE4FA, #DDF1E6)' };
         return { key: k, name: c.name, here: c.here, topic: c.topic, grad: grads[k], tint: c.tint, icon: circleIconPaths[k], avatars: [c.m1[0], c.m2[0], c.m3 ? c.m3[0] : 'Sam'],
-          open: function () { self.setState({ screen: 'circle', circle: k, draft: '', sent: '', readOnly: false, unsafeHandled: false, moOpen: false, safetyNote: '' }); },
+          open: function () { changeWithUndo({ screen: 'circle', circle: k, draft: '', sent: '', readOnly: false, unsafeHandled: false, moOpen: false, safetyNote: '' }, 'Joined ' + c.name + ' chat', { screen: screen, circle: cKey, draft: draft, sent: sent, readOnly: readOnly, unsafeHandled: !!s.unsafeHandled, moOpen: !!s.moOpen, safetyNote: s.safetyNote || '' }); },
           read: function () { self.setState({ screen: 'circle', circle: k, draft: '', sent: '', readOnly: true, unsafeHandled: false, moOpen: false, safetyNote: '' }); } };
       }),
       isReadOnly: readOnly,
