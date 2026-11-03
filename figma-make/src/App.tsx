@@ -276,7 +276,23 @@ class BridgeBase extends DCLogic {
     recKeys = recKeys.slice(0, recCount);
     var pScen = s.pScen || recKeys[0];
     var ps = scripts[pScen];
-    var levelNames = ['Level 1 · hints on', 'Level 2 · no hints', 'Level 3 · realistic'];
+    // ----- Level 3: user types their own reply (rule-based check until the AI API is connected) -----
+    var pTyped = s.pTyped || '';
+    var pOwn = s.pOwn || '';
+    var pHintUsed = !!s.pHintUsed;
+    var evalOwn = function (t) {
+      var low = t.toLowerCase();
+      var harshList = ['whatever', 'stupid', 'shut up', 'annoying', 'hate', 'overrated', 'dumb', 'seriously', 'always', 'never mind'];
+      var harsh = harshList.filter(function (w) { return low.indexOf(w) >= 0; })[0] || '';
+      var words = t.trim() ? t.trim().split(/\s+/).length : 0;
+      var asks = t.indexOf('?') >= 0;
+      var kind = /(thank|sorry|no worries|i get|fair|had fun|see you|no pressure|that's okay|that is okay|love|cool|nice|haha|i see)/.test(low);
+      return { harsh: harsh, words: words, asks: asks, kind: kind, good: !harsh && words >= 4 && (asks || kind) };
+    };
+    var ownEv = evalOwn(pOwn);
+    var typedEv = evalOwn(pTyped);
+    if (pChoice === 'own') choiceGood = ownEv.good;
+    var levelNames = ['Level 1 · Guided', 'Level 2 · Light help', 'Level 3 · On your own'];
     var scenItem = function (k) {
       var on = k === pScen;
       var iconMap = { joinin: 'M8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM16 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 21c.5-4 2.2-6 5-6M14 15c4 0 6.5 2 7 6', onread: 'M4 5h16v12H9l-5 4V5ZM8 10h8', cancel: 'M4 5h16v15H4zM8 3v4M16 3v4M7 13l10 0', leave: 'M10 4H5v16h5M15 8l4 4-4 4M19 12H9', repair: 'M4 5h16v12H9l-5 4V5Zm5 7 2 2 4-5', invite: 'M12 5v14M5 12h14', disagree: 'M5 7h14M5 12h10M5 17h7' };
@@ -302,10 +318,10 @@ class BridgeBase extends DCLogic {
           pick: function () { self.setState(o); } };
       });
     };
-    var levelList = [['Level 1', 'hints on'], ['Level 2', 'no hints'], ['Level 3', 'realistic']].map(function (l, i) {
+    var levelList = [['Level 1', 'Guided'], ['Level 2', 'Light help'], ['Level 3', 'On your own']].map(function (l, i) {
       var on = pLevel === i + 1;
       return { name: l[0], desc: l[1], bg: on ? 'var(--ink)' : 'rgba(255,255,255,0.85)', fg: on ? '#FFFFFF' : 'var(--ink)',
-        pick: function () { self.setState({ pLevel: i + 1 }); } };
+        pick: function () { self.setState({ pLevel: i + 1, pTyped: '', pOwn: '', pHintUsed: false }); } };
     });
 
     // ---------- Events ----------
@@ -792,7 +808,7 @@ class BridgeBase extends DCLogic {
       setLow: function () { self.setState({ battery: 'low' }); },
       setOkay: function () { self.setState({ battery: 'okay' }); },
       setFull: function () { self.setState({ battery: 'full' }); },
-      goHome: go('home'), goCircle: go('circle'), goPractice: go('practice', { pChoice: '', pStarted: false }), goMe: go('me'),
+      goHome: go('home'), goCircle: go('circle'), goPractice: go('practice', { pChoice: '', pStarted: false, pTyped: '', pOwn: '', pHintUsed: false }), goMe: go('me'),
       goReset: go('reset', { trustSent: false }), goFeedback: go('feedback'),
       menuOpen: !!s.menuOpen,
       toggleMenu: function () { self.setState({ menuOpen: !s.menuOpen }); },
@@ -837,20 +853,35 @@ class BridgeBase extends DCLogic {
       textTrusted: function () { changeWithUndo({ trustSent: true }, 'Text sent to ' + trusted, { trustSent: !!s.trustSent }); },
       trustSent: !!s.trustSent,
       pChosen: !!pChoice, pNotChosen: !pChoice,
-      pText: choiceGood ? ps.good : ps.vague,
+      pText: pChoice === 'own' ? pOwn : (choiceGood ? ps.good : ps.vague),
       pReply: choiceGood ? ps.goodReply : ps.vagueReply,
       pTitle: ps.title, pPartner: ps.partner, pOpener: ps.opener, pHint: ps.hint,
       pGoodText: ps.good, pVagueText: ps.vague,
-      showHint: pLevel === 1,
+      showHint: pLevel === 1 || (pLevel === 2 && pHintUsed),
       levelLabel: levelNames[pLevel - 1],
       pPicking: !pStarted, pStarted: pStarted,
       recScenarios: recScenarios, moreScenarios: moreScenarios, pScene: ps.scene, levels: levelList,
-      startPractice: function () { self.setState({ pStarted: true, pChoice: '' }); },
+      startPractice: function () { self.setState({ pStarted: true, pChoice: '', pTyped: '', pOwn: '', pHintUsed: false }); },
+      levelExplain: pLevel === 1 ? 'Guided: Mo shows a hint and two replies to choose from.' : (pLevel === 2 ? 'Light help: choose a reply. Ask Mo for one hint only if you need it.' : 'On your own: no choices. Type your reply like a real chat, and Mo gives feedback after.'),
+      pShowChoices: !pChoice && pLevel < 3, pShowType: !pChoice && pLevel === 3,
+      pChoiceVagueFirst: pLevel === 2, pChoiceGoodFirst: pLevel !== 2,
+      pHintAsk: !pChoice && pLevel === 2 && !pHintUsed,
+      askHint: function () { self.setState({ pHintUsed: true }); },
+      pTyped: pTyped,
+      setTyped: function (e) { self.setState({ pTyped: e.target.value }); },
+      sendTyped: function () { if (pTyped.trim()) self.setState({ pOwn: pTyped.trim(), pChoice: 'own', pTyped: '' }); },
+      typedKey: function (e) { if (e.key === 'Enter' && pTyped.trim()) self.setState({ pOwn: pTyped.trim(), pChoice: 'own', pTyped: '' }); },
+      typedSendBg: pTyped.trim() ? 'var(--ink)' : '#CFC8DB',
+      typedHasTone: pTyped.trim().length > 0,
+      typedTone: typedEv.harsh ? 'Might sound harsh' : (typedEv.words < 4 ? 'A bit short' : ((typedEv.asks || typedEv.kind) ? 'Sounds friendly' : 'Okay so far')),
+      typedDot: typedEv.harsh ? 'var(--ink)' : (typedEv.words < 4 ? '#E3B341' : '#5DBB8E'),
+      typedToneBg: typedEv.harsh ? '#FBE1DC' : (typedEv.words < 4 ? '#FBF0D6' : '#DDF1E6'),
+      fbIsOwn: pChoice === 'own', fbExample: ps.good,
       pickGood: function () { self.setState({ pChoice: 'good' }); },
       pickVague: function () { self.setState({ pChoice: 'vague' }); },
       fbTitle: choiceGood ? 'You did it well' : 'Good start',
-      fbStar: choiceGood ? ps.starGood : ps.starVague,
-      fbSpark: choiceGood ? ps.sparkGood : ps.sparkVague,
+      fbStar: pChoice === 'own' ? (ownEv.good ? 'You wrote it yourself' + (ownEv.asks ? ' and asked a question back, which keeps the chat going.' : ' and kept it warm and clear.') : 'You wrote your own reply. That is the hardest level, and you did it.') : (choiceGood ? ps.starGood : ps.starVague),
+      fbSpark: pChoice === 'own' ? (ownEv.harsh ? '"' + ownEv.harsh + '" can sound harsh. Try saying how you feel instead, like "I was looking forward to it."' : (ownEv.words < 4 ? 'Add a little more, like a question or how you feel, so they know what to say next.' : (ownEv.good ? (ownEv.asks ? 'Next time, share a little about you too, so it feels like a two-way chat.' : 'Ask a question back to keep it going.') : 'Try adding a question back or a kind word, so they feel welcome to reply.'))) : (choiceGood ? ps.sparkGood : ps.sparkVague),
       hasUnsafe: !!cd.m3,
       m3Name: cd.m3 ? cd.m3[0] : '', m3Text: cd.m3 ? cd.m3[1] : '',
       showUnsafeCard: !s.unsafeHandled,
@@ -1728,11 +1759,11 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.isPractice && (<>
-<div style={{padding: "28px 20px", display: "flex", flexDirection: "column", gap: "16px"}}>
+<div style={{padding: "28px 20px 110px", display: "flex", flexDirection: "column", gap: "16px"}}>
 <div className="sticky-header inner-header">
 <button onClick={v.goHome} aria-label="Back to Home" style={{width:"44px",height:"44px",border:0,borderRadius:"16px",background:"rgba(255,255,255,.7)",display:"grid",placeItems:"center"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke:"var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m14 6-6 6 6 6"/></svg></button>
 <h1 className="header-title">Practice</h1>
-<span style={{background: "rgba(255,255,255,0.75)", borderRadius: "999px", padding: "6px 8px", fontSize: "11px",textAlign:"center"}}>{v.levelLabel.split(' · ')[0]}</span>
+<span style={{background: "rgba(255,255,255,0.75)", borderRadius: "999px", padding: "6px 8px", fontSize: "14px",textAlign:"center"}}>{v.levelLabel.split(' · ')[0]}</span>
 </div>
 {v.pPicking && (<>
 <div style={{display: "flex", flexDirection: "column", gap: "14px"}}>
@@ -1744,14 +1775,14 @@ class Bridge extends BridgeBase {
 {v.recScenarios.map((sc, $index) => (<React.Fragment key={$index}>
 <button onClick={sc.pick} style={{textAlign: "left", minHeight: "64px", borderRadius: "20px", border: "none", background: sc.bg, color: sc.fg, padding: "10px 12px", display: "grid", gridTemplateColumns:"38px 1fr auto", alignItems:"center", gap: "10px"}}>
 <span style={{width:"38px",height:"38px",borderRadius:"12px",background:sc.fg==="#FFFFFF"?"rgba(255,255,255,.15)":"var(--soft)",display:"grid",placeItems:"center"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: sc.fg}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={sc.icon}/></svg></span>
-<span style={{display:"flex",flexDirection:"column"}}><span style={{fontSize: "16px", fontWeight: "600"}}>{sc.title}</span><span style={{fontSize: "14px"}}>{sc.group}</span></span><span style={{fontSize:"12px",fontWeight:"600"}}>2 min</span>
+<span style={{display:"flex",flexDirection:"column"}}><span style={{fontSize: "16px", fontWeight: "600"}}>{sc.title}</span><span style={{fontSize: "14px"}}>{sc.group}</span></span><span className="meta-pill">2 min</span>
 </button>
 </React.Fragment>))}
 <span style={{fontSize: "16px", fontWeight: "600"}}>More to practice</span>
 {v.moreScenarios.map((sc, $index) => (<React.Fragment key={$index}>
 <button onClick={sc.pick} style={{textAlign: "left", minHeight: "64px", borderRadius: "20px", border: "none", background: sc.bg, color: sc.fg, padding: "10px 12px", display: "grid", gridTemplateColumns:"38px 1fr auto", alignItems:"center", gap: "10px"}}>
 <span style={{width:"38px",height:"38px",borderRadius:"12px",background:sc.fg==="#FFFFFF"?"rgba(255,255,255,.15)":"var(--soft)",display:"grid",placeItems:"center"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: sc.fg}} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d={sc.icon}/></svg></span>
-<span style={{display:"flex",flexDirection:"column"}}><span style={{fontSize: "16px", fontWeight: "600"}}>{sc.title}</span><span style={{fontSize: "14px"}}>{sc.group}</span></span><span style={{fontSize:"12px",fontWeight:"600"}}>2 min</span>
+<span style={{display:"flex",flexDirection:"column"}}><span style={{fontSize: "16px", fontWeight: "600"}}>{sc.title}</span><span style={{fontSize: "14px"}}>{sc.group}</span></span><span className="meta-pill">2 min</span>
 </button>
 </React.Fragment>))}
 <span style={{fontSize: "16px", fontWeight: "500"}}>Pick a level</span>
@@ -1759,11 +1790,11 @@ class Bridge extends BridgeBase {
 {v.levels.map((lv, $index) => (<React.Fragment key={$index}>
 <button onClick={lv.pick} style={{minHeight: "64px", borderRadius: "18px", border: "none", background: lv.bg, color: lv.fg, padding: "8px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px"}}>
 <span style={{fontSize: "16px", fontWeight: "600"}}>{lv.name}</span>
-<span style={{fontSize: "13px"}}>{lv.desc}</span>
+<span style={{fontSize: "14px"}}>{lv.desc}</span>
 </button>
 </React.Fragment>))}
 </div>
-<button onClick={v.startPractice} style={{height: "54px", borderRadius: "20px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "17px", fontWeight: "500"}}>Start practice</button>
+<span style={{fontSize: "14px", lineHeight: "1.4", color: "var(--muted)", padding: "0 4px"}}>{v.levelExplain}</span>
 </div>
 </>)}
 {v.pStarted && (<>
@@ -1790,20 +1821,39 @@ class Bridge extends BridgeBase {
 </div>
 </>)}
 </div>
-{v.pNotChosen && (<>
+{v.pShowChoices && (<>
 <div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
 {v.showHint && (<>
-<div style={{background: "var(--soft)", borderRadius: "20px", padding: "12px 16px", fontSize: "16px", lineHeight: "1.4"}}>Hint from Mo: {v.pHint}</div>
+<div className="rise" style={{background: "var(--soft)", borderRadius: "20px", padding: "12px 16px", fontSize: "16px", lineHeight: "1.4"}}>Hint from Mo: {v.pHint}</div>
 </>)}
-<button onClick={v.pickGood} style={{textAlign: "left", minHeight: "56px", borderRadius: "20px", border: "none", background: "rgba(255,255,255,0.85)", padding: "12px 16px", fontSize: "16px", lineHeight: "1.4", color: "var(--ink)"}}>"{v.pGoodText}"</button>
-<button onClick={v.pickVague} style={{textAlign: "left", minHeight: "56px", borderRadius: "20px", border: "none", background: "rgba(255,255,255,0.85)", padding: "12px 16px", fontSize: "16px", lineHeight: "1.4", color: "var(--ink)"}}>"{v.pVagueText}"</button>
+{v.pHintAsk && (<>
+<button onClick={v.askHint} style={{alignSelf: "flex-start", minHeight: "40px", borderRadius: "999px", border: "1.5px dashed #B9B1C8", background: "transparent", color: "var(--ink)", padding: "6px 14px", fontSize: "14px", fontWeight: "500"}}>Need a hint? (1 left)</button>
+</>)}
+<span style={{fontSize: "14px", color: "var(--muted)", padding: "0 4px"}}>Pick a reply</span>
+{v.pChoiceGoodFirst && (<><button onClick={v.pickGood} style={{textAlign: "left", minHeight: "56px", borderRadius: "20px", border: "none", background: "rgba(255,255,255,0.85)", padding: "12px 16px", fontSize: "16px", lineHeight: "1.4", color: "var(--ink)"}}>"{v.pGoodText}"</button>
+<button onClick={v.pickVague} style={{textAlign: "left", minHeight: "56px", borderRadius: "20px", border: "none", background: "rgba(255,255,255,0.85)", padding: "12px 16px", fontSize: "16px", lineHeight: "1.4", color: "var(--ink)"}}>"{v.pVagueText}"</button></>)}
+{v.pChoiceVagueFirst && (<><button onClick={v.pickVague} style={{textAlign: "left", minHeight: "56px", borderRadius: "20px", border: "none", background: "rgba(255,255,255,0.85)", padding: "12px 16px", fontSize: "16px", lineHeight: "1.4", color: "var(--ink)"}}>"{v.pVagueText}"</button>
+<button onClick={v.pickGood} style={{textAlign: "left", minHeight: "56px", borderRadius: "20px", border: "none", background: "rgba(255,255,255,0.85)", padding: "12px 16px", fontSize: "16px", lineHeight: "1.4", color: "var(--ink)"}}>"{v.pGoodText}"</button></>)}
 </div>
 </>)}
-{v.pChosen && (<>
-<button onClick={v.goFeedback} style={{height: "54px", borderRadius: "20px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "17px", fontWeight: "500"}}>See how I did</button>
+{v.pShowType && (<>
+<div style={{display: "flex", flexDirection: "column", gap: "8px"}}>
+<span style={{fontSize: "14px", color: "var(--muted)", padding: "0 4px"}}>No hints this time. Reply like you would in a real chat.</span>
+{v.typedHasTone && (<>
+<span style={{alignSelf: "flex-start", display: "flex", alignItems: "center", gap: "8px", background: v.typedToneBg, borderRadius: "999px", padding: "6px 14px", fontSize: "14px"}}><span style={{width: "8px", height: "8px", borderRadius: "50%", background: v.typedDot, display: "inline-block"}}></span>Mo: {v.typedTone}</span>
+</>)}
+<div style={{display: "flex", gap: "10px", alignItems: "center"}}>
+<input value={v.pTyped} onChange={v.setTyped} onKeyDown={v.typedKey} placeholder={"Reply to " + v.pPartner} aria-label={"Reply to " + v.pPartner} autoComplete="off" style={{flex: "1", minWidth: "0", height: "52px", borderRadius: "24px", border: "none", background: "rgba(255,255,255,0.9)", padding: "0 18px", fontSize: "16px", fontFamily: "inherit", color: "var(--ink)", outline: "none", boxSizing: "border-box"}} />
+<button onClick={v.sendTyped} aria-label="Send reply" style={{width: "52px", height: "52px", flex: "0 0 auto", borderRadius: "50%", border: "none", background: v.typedSendBg, display: "flex", alignItems: "center", justifyContent: "center"}}>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"></path></svg>
+</button>
+</div>
+</div>
 </>)}
 </div>
 </>)}
+{v.pPicking && <div className="sticky-cta"><button onClick={v.startPractice}>Start practice</button></div>}
+{v.pChosen && <div className="sticky-cta"><button onClick={v.goFeedback}>See how I did</button></div>}
 </div>
 </>)}
 
