@@ -291,9 +291,9 @@ class BridgeBase extends DCLogic {
     var hardMap = { start: ['joinin', 'invite'], keep: ['onread', 'joinin'], tone: ['repair', 'onread'], disagree: ['disagree', 'repair'], leave: ['leave', 'cancel'] };
     var upMap = { group: ['joinin', 'leave'], text: ['onread', 'invite'], hard: ['repair', 'disagree'], none: [] };
     var whyHard = { start: 'starting a chat', keep: 'keeping a chat going', tone: 'reading tone', disagree: 'disagreeing', leave: 'leaving or saying no' };
-    var feelLabels = { over: 'Overwhelmed', okay: 'Okay', ready: 'Ready to connect' };
+    var feelLabels = { over: 'Overwhelmed', frus: 'Frustrated', okay: 'Okay', ready: 'Ready to connect' };
     var upLabels = { group: 'A group hangout', text: 'Texting someone new', hard: 'A hard conversation', none: 'Nothing planned' };
-    var recCount = ciFeel === 'over' ? 1 : (ciFeel === 'ready' ? 3 : 2);
+    var recCount = (ciFeel === 'over' || ciFeel === 'frus') ? 1 : (ciFeel === 'ready' ? 3 : 2);
     var recLevel = ciFeel === 'ready' ? 2 : 1;
     var recKeys = [];
     hardMap[ciHard].concat(upMap[ciUp]).forEach(function (k) { if (recKeys.indexOf(k) < 0) recKeys.push(k); });
@@ -922,8 +922,8 @@ class BridgeBase extends DCLogic {
       // Greeting that follows the time of day
       greeting: (function () { var h = new Date().getHours(); return h < 5 ? 'Hello' : (h < 12 ? 'Good morning' : (h < 17 ? 'Good afternoon' : 'Good evening')); })(),
       steps: steps, stepBump: !!s.stepBump, showCelebrate: !!s.stepBump && screen !== 'win',
-      homeMood: ciFeel === 'over' ? 'calm' : 'happy',
-      moLine: ciFeel === 'over' ? "Thanks for telling me. Let's keep today gentle. Just reading a circle counts." : (ciFeel === 'ready' ? "You're ready to connect! Let's practice, then go for it." : (ciUp === 'none' ? "Let's warm up with one small practice today." : "Let's warm up for your " + upLabels[ciUp].toLowerCase().replace('a ', '') + '.')),
+      homeMood: (ciFeel === 'over' || ciFeel === 'frus') ? 'calm' : 'happy',
+      moLine: ciFeel === 'over' ? "Thanks for telling me. Let's keep today gentle. Just reading a circle counts." : ciFeel === 'frus' ? "Thanks for telling me. Let's cool down first, then decide what to do." : (ciFeel === 'ready' ? "You're ready to connect! Let's practice, then go for it." : (ciUp === 'none' ? "Let's warm up with one small practice today." : "Let's warm up for your " + upLabels[ciUp].toLowerCase().replace('a ', '') + '.')),
       isLow: battery === 'low', isOkay: battery === 'okay', isFull: battery === 'full',
       lowBg: pick(battery === 'low'), okayBg: pick(battery === 'okay'), fullBg: pick(battery === 'full'),
       lowFg: pickFg(battery === 'low'), okayFg: pickFg(battery === 'okay'), fullFg: pickFg(battery === 'full'),
@@ -1037,10 +1037,13 @@ class BridgeBase extends DCLogic {
       showDay: ciFeel !== 'over' || !!s.homeFull, calmDay: ciFeel === 'over' && !s.homeFull,
       showMyDay: function () { self.setState({ homeFull: true }); setTimeout(function () { var el = document.getElementById('home-day'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 60); },
       ciSummary: feelLabels[ciFeel] + (ciUp === 'none' ? '' : ' · ' + (ciUp === 'group' ? 'hangout' : upLabels[ciUp].toLowerCase().replace('a ', '')) + ' coming up'),
-      recList: recList, upNextText: upNextText,
+      recList: recList, upNextText: ciFeel === 'frus' ? 'Cool down first, then decide what to do' : upNextText,
+      upNextLabel: ciFeel === 'frus' ? 'Up next · about 3 min' : 'Up next · about 2 min',
+      upNextBtn: ciFeel === 'frus' ? 'Cool down with Mo' : 'Start 2-minute practice',
+      upNextGo: ciFeel === 'frus' ? go('cool', { coolWhat: '', coolLevel: '', coolNote: '', coolFrom: 'home' }) : recList[0].start,
       joinLabel: ciFeel === 'over' ? 'Read Gaming chat' : 'Join Gaming chat',
       homeJoin: function () { self.setState({ screen: 'circle', circle: 'gaming', draft: '', sent: '', readOnly: ciFeel === 'over', unsafeHandled: false, menuOpen: false, moOpen: false }); },
-      circlesMoLine: ciFeel === 'over' ? 'Feeling overwhelmed? Try "Just read". No one expects you to post.' : 'You like ' + interestText + '. Start there?',
+      circlesMoLine: ciFeel === 'over' ? 'Feeling overwhelmed? Try "Just read". No one expects you to post.' : ciFeel === 'frus' ? 'Feeling frustrated? Reading first is fine, and I check your tone before anything is sent.' : 'You like ' + interestText + '. Start there?',
       filterOpts: chip({ foryou: 'For you', all: 'All' }, cFilter, 'cFilter'),
       circleCards: Object.keys(circleData).filter(function (k) {
         if (cFilter === 'foryou') return interests.indexOf(k) >= 0;
@@ -1263,11 +1266,11 @@ class Bridge extends BridgeBase {
 <div style={{display: "flex", gap: "14px", alignItems: "flex-start"}}>
 <div style={{flex: "0 0 auto"}}><Mo mood={v.homeMood} size={56} /></div>
 <div style={{display: "flex", flexDirection: "column", gap: "4px", minWidth: "0"}}>
-<span className="meta-label">Up next · about 2 min</span>
+<span className="meta-label">{v.upNextLabel}</span>
 <span style={{fontSize: "18px", lineHeight: "1.35", fontWeight: "600"}}>{v.upNextText}</span>
 </div>
 </div>
-<button className="primary-action" onClick={v.recList[0].start}>Start 2-minute practice</button>
+<button className="primary-action" onClick={v.upNextGo}>{v.upNextBtn}</button>
 {v.showDay && <button className="quiet-action" onClick={v.showMyDay}>Not now, just show me my day</button>}
 <div className="checkin-line"><span>{v.ciSummary}</span><button onClick={v.goCheckin}>Change</button></div>
 </div>
