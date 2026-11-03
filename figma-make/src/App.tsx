@@ -1881,7 +1881,7 @@ class Bridge extends BridgeBase {
 <span style={{fontSize: "15px", color: "var(--muted)"}}>{v.pScene} Mo plays {v.pPartner}.</span>
 </div>
 </div>
-<div style={{display: "flex", flexDirection: "column", gap: "12px", minHeight: "220px"}}>
+<div style={{display: "flex", flexDirection: "column", gap: "12px"}}>
 <div style={{display: "flex", flexDirection: "column", gap: "6px"}}>
 <span style={{fontSize: "14px", color: "var(--muted)", paddingLeft: "4px"}}>{v.pPartner} (practice)</span>
 <div style={{alignSelf: "flex-start", background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "80%", fontSize: "17px", lineHeight: "1.45"}}>{v.pOpener}</div>
