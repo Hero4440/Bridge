@@ -130,15 +130,23 @@ class BridgeBase extends DCLogic {
     var self = this;
     var changeWithUndo = function (patch, message, undoPatch) {
       var token = Date.now();
-      self.setState(Object.assign({}, patch, { uiToast: message, undoPatch: undoPatch, undoToken: token }));
+      self.setState(Object.assign({}, patch, { uiToast: message, undoPatch: undoPatch, undoToken: token, toastQuiet: false }));
       setTimeout(function () {
         if (self.state.undoToken === token) self.setState({ uiToast: '', undoPatch: null, undoToken: 0 });
       }, 5000);
       return token;
     };
+    // Small changes (settings, saves) get a short quiet confirmation without Undo
+    var saveQuietly = function (patch, message) {
+      var token = Date.now();
+      self.setState(Object.assign({}, patch, { uiToast: message, undoPatch: null, undoToken: token, toastQuiet: true }));
+      setTimeout(function () {
+        if (self.state.undoToken === token) self.setState({ uiToast: '', undoToken: 0, toastQuiet: false });
+      }, 1800);
+    };
     var notify = function (message) {
       var token = Date.now();
-      self.setState({ uiToast: message, undoPatch: null, undoToken: token });
+      self.setState({ uiToast: message, undoPatch: null, undoToken: token, toastQuiet: false });
       setTimeout(function () {
         if (self.state.undoToken === token) self.setState({ uiToast: '', undoToken: 0 });
       }, 5000);
@@ -511,7 +519,7 @@ class BridgeBase extends DCLogic {
       setFirst: function (e) { self.setState({ pFirst: e.target.value }); },
       setLast: function (e) { self.setState({ pLast: e.target.value }); },
       setEmail: function (e) { self.setState({ pEmail: e.target.value }); },
-      pickPhoto: function (e) { var f = e.target.files && e.target.files[0]; if (f) changeWithUndo({ pPhoto: URL.createObjectURL(f) }, 'Saved ✓', { pPhoto: s.pPhoto || '' }); },
+      pickPhoto: function (e) { var f = e.target.files && e.target.files[0]; if (f) saveQuietly({ pPhoto: URL.createObjectURL(f) }, 'Saved ✓'); },
       removePhoto: function () { changeWithUndo({ pPhoto: '' }, 'Photo removed', { pPhoto: s.pPhoto || '' }); },
       genderOpts: genderList.map(function (g) {
         var on = g === pGender;
@@ -642,7 +650,7 @@ class BridgeBase extends DCLogic {
       notifBack: go('home'),
       pauseLabel: notifPaused ? 'Paused for 1 hour · Turn back on' : 'Pause notifications for 1 hour',
       pauseBg: notifPaused ? 'var(--ink)' : 'rgba(255,255,255,0.85)', pauseFg: notifPaused ? '#FFFFFF' : 'var(--ink)',
-      togglePause: function () { changeWithUndo({ notifPaused: !notifPaused }, notifPaused ? 'Notifications resumed' : 'Notifications paused for 1 hour', { notifPaused: notifPaused }); },
+      togglePause: function () { saveQuietly({ notifPaused: !notifPaused }, notifPaused ? 'Notifications resumed' : 'Notifications paused for 1 hour'); },
       notifMoLine: notifPaused ? 'Notifications are paused. I’ll still let your trusted people reach you if you need help.' : 'I bundle notifications so they don’t pile up. Tap one to go there.'
     };
 
@@ -662,7 +670,7 @@ class BridgeBase extends DCLogic {
         var t = themes[k]; var on = k === themeKey;
         return { name: t.name, desc: t.desc, bg: t.bg, ink: t.ink, swatch: t.swatch, on: on,
           ring: on ? '0 0 0 2px ' + t.ink : '0 0 0 1px rgba(0,0,0,0.08)',
-          pick: function () { if (k !== themeKey) changeWithUndo({ theme: k }, 'Saved ✓', { theme: themeKey }); } };
+          pick: function () { if (k !== themeKey) saveQuietly({ theme: k }, 'Saved ✓'); } };
       })
     };
 
@@ -738,7 +746,7 @@ class BridgeBase extends DCLogic {
           pick: function () { var cur = refl.wins || []; setRefl({ wins: on ? cur.filter(function (x) { return x !== w; }) : cur.concat([w]) }); } };
       }),
       edCanSave: !!refl.feel, edSaveBg: refl.feel ? 'var(--ink)' : '#CFC8DB',
-      edSaveRefl: function () { if (refl.feel) { var all = Object.assign({}, s.refl || {}); all[evD.id] = Object.assign({}, refl, { done: true }); changeWithUndo({ refl: all }, '+1 brave step', { refl: s.refl || {} }); } },
+      edSaveRefl: function () { if (refl.feel) { var all = Object.assign({}, s.refl || {}); all[evD.id] = Object.assign({}, refl, { done: true }); saveQuietly({ refl: all }, '+1 brave step'); } },
       edReflMo: refl.feel === 'hard' ? 'Thanks for telling me. Showing up when it is hard still counts. Next time I can suggest a smaller event.'
         : (refl.feel === 'good' ? 'Love that! I will suggest Level 2 practice next time.' : 'Okay is a real win. Every event makes the next one easier.'),
       edReflWins: (refl.wins || []).length ? 'You noted: ' + (refl.wins || []).join(', ') + '.' : '',
@@ -768,7 +776,7 @@ class BridgeBase extends DCLogic {
       return list.map(function (pair) {
         var on = pair[0] === cur; var o = {}; o[key] = pair[0];
         var previous = {}; previous[key] = cur;
-        return { label: pair[1], on: on, cls: on ? 'on' : '', pick: function () { if (!on) changeWithUndo(o, 'Saved ✓', previous); } };
+        return { label: pair[1], on: on, cls: on ? 'on' : '', pick: function () { if (!on) saveQuietly(o, 'Saved ✓'); } };
       });
     };
     var onbOk = onbStep === 2 ? interests.length > 0 : (onbStep === 4 ? (!!(s.trusted === undefined ? 'Mom' : s.trusted).trim() && trustedPhone.replace(/\D/g, '').length >= 10 && (!trustedEmail || /.+@.+\..+/.test(trustedEmail))) : true);
@@ -785,7 +793,7 @@ class BridgeBase extends DCLogic {
         var on = interests.indexOf(k) >= 0;
         return { key: k, name: circleData[k].name, tint: circleData[k].tint, on: on,
           ring: on ? '0 0 0 2px var(--ink)' : '0 0 0 1px rgba(0,0,0,0.06)',
-          pick: function () { var next = on ? interests.filter(function (x) { return x !== k; }) : interests.concat([k]); if (next.length) changeWithUndo({ interests: next }, 'Saved ✓', { interests: interests }); } };
+          pick: function () { var next = on ? interests.filter(function (x) { return x !== k; }) : interests.concat([k]); if (next.length) saveQuietly({ interests: next }, 'Saved ✓'); } };
       }),
       interestCount: interests.length ? interests.length + ' picked' : 'Pick at least one',
       trustedInput: s.trusted === undefined ? 'Mom' : s.trusted, trusted: trusted, trustedRel: trustedRel,
@@ -841,7 +849,7 @@ class BridgeBase extends DCLogic {
       isMeArea: screen === 'me' || meScreenNames.indexOf(screen) >= 0
     };
     return Object.assign(evVals, profVals, dmVals, notifVals, themeVals, evDetailVals, onbVals, meVals, {
-      circles: circles, screenKey: screen, uiToast: s.uiToast || '', hasUiToast: !!s.uiToast, hasUndo: !!s.undoPatch,
+      circles: circles, screenKey: screen, uiToast: s.uiToast || '', hasUiToast: !!s.uiToast, hasUndo: !!s.undoPatch, toastQuiet: !!s.toastQuiet,
       clearToast: function () { self.setState({ uiToast: '', undoPatch: null, undoToken: 0 }); },
       undoToast: function () {
         if (!s.undoPatch) return;
@@ -882,7 +890,7 @@ class BridgeBase extends DCLogic {
       resultMood: sentKind ? 'happy' : 'calm',
       resultLine: sentKind ? cd.m2[0] + ' replied! That was a brave step.' : "Sent. If it didn't land well, I can help you follow up.",
       resultButton: sentKind ? 'Get my badge' : 'Help me follow up',
-      resultAction: sentKind ? function () { changeWithUndo({ screen: 'win', won: true, winType: sent === 'kind' ? 'kind' : 'hello' }, '+1 brave step', { screen: screen, won: !!s.won, winType: s.winType }); } : go('practice', { pChoice: '', pStarted: false }),
+      resultAction: sentKind ? function () { self.setState({ screen: 'win', won: true, winType: sent === 'kind' ? 'kind' : 'hello' }); } : go('practice', { pChoice: '', pStarted: false }),
       showSuggest: !sent && !draft && !readOnly,
       showComposer: !sent && !readOnly,
       chipAsk: function () { self.setState({ draft: 'ask' }); },
@@ -911,7 +919,7 @@ class BridgeBase extends DCLogic {
       planMusic: function () { self.setState({ plan: 'music' }); },
       planWater: function () { self.setState({ plan: 'water' }); },
       readyAfterReset: go('circle', { draft: 'kind' }),
-      textTrusted: function () { changeWithUndo({ trustSent: true }, 'Text sent to ' + trusted, { trustSent: !!s.trustSent }); },
+      textTrusted: function () { saveQuietly({ trustSent: true }, 'Text sent to ' + trusted); },
       trustSent: !!s.trustSent,
       pChosen: !!pChoice, pNotChosen: !pChoice,
       pText: pChoice === 'own' ? pOwn : (choiceGood ? ps.good : ps.vague),
@@ -953,12 +961,12 @@ class BridgeBase extends DCLogic {
       mariaConnected: reqState === 'connected',
       reqAccept: function () { var el = document.querySelector('.bridge-scroll'); self.setState({ reqState: 'choose', screen: 'me-coach', meScroll: el ? el.scrollTop : 0 }); },
       reqDecline: function () { self.setState({ reqState: 'declined' }); },
-      reqConnect: function () { changeWithUndo({ reqState: 'connected' }, 'Saved ✓', { reqState: reqState }); },
+      reqConnect: function () { saveQuietly({ reqState: 'connected' }, 'Saved ✓'); },
       seeSteps: seeSteps, seeHelp: seeHelp,
       seeStepsBg: seeSteps ? 'var(--ink)' : 'var(--soft)', seeStepsFg: seeSteps ? '#FFFFFF' : 'var(--ink)',
       seeHelpBg: seeHelp ? 'var(--ink)' : 'var(--soft)', seeHelpFg: seeHelp ? '#FFFFFF' : 'var(--ink)',
-      toggleSeeSteps: function () { changeWithUndo({ seeSteps: !seeSteps }, 'Saved ✓', { seeSteps: seeSteps }); },
-      toggleSeeHelp: function () { changeWithUndo({ seeHelp: !seeHelp }, 'Saved ✓', { seeHelp: seeHelp }); },
+      toggleSeeSteps: function () { saveQuietly({ seeSteps: !seeSteps }, 'Saved ✓'); },
+      toggleSeeHelp: function () { saveQuietly({ seeHelp: !seeHelp }, 'Saved ✓'); },
       mariaSees: (seeSteps && seeHelp) ? 'Sees my brave steps and help texts' : (seeSteps ? 'Sees my brave steps' : (seeHelp ? 'Gets my "I need help" texts' : 'Connected, sees nothing yet')),
       showFloat: ['practice', 'feedback'].indexOf(screen) < 0,
       showMoMenu: !!s.moOpen && ['practice', 'feedback'].indexOf(screen) < 0,
@@ -996,7 +1004,7 @@ class BridgeBase extends DCLogic {
         var on = n === helpTo;
         return { name: n, on: on, bg: on ? 'var(--ink)' : 'var(--soft)', fg: on ? '#FFFFFF' : 'var(--ink)', pick: function () { self.setState({ helpTo: n, helpSent: false }); } };
       }),
-      sendHelp: function () { changeWithUndo({ helpSent: true }, 'Sent to ' + helpTo, { helpSent: !!s.helpSent }); },
+      sendHelp: function () { self.setState({ helpSent: true }); },
       tabIsHome: screen === 'home', tabIsCircles: screen === 'circles' || screen === 'circle' || screen === 'dm', tabIsMe: screen === 'me' || meScreenNames.indexOf(screen) >= 0,
       homeBg: screen === 'home' ? '#FFFFFF' : 'transparent', homeFg: screen === 'home' ? 'var(--ink)' : '#D9D3E8', homePad: screen === 'home' ? '0 18px' : '0',
       circlesBg: (screen === 'circles' || screen === 'circle' || screen === 'dm') ? '#FFFFFF' : 'transparent', circlesFg: (screen === 'circles' || screen === 'circle' || screen === 'dm') ? 'var(--ink)' : '#D9D3E8', circlesPad: (screen === 'circles' || screen === 'circle' || screen === 'dm') ? '0 18px' : '0',
@@ -2036,7 +2044,7 @@ class Bridge extends BridgeBase {
 {v.hasUiToast && <div className="ui-toast" role="status" aria-live="polite">
 {v.uiToast === '+1 brave step' && <Mo mood="happy" size={32} />}
 <span>{v.uiToast}{v.hasUndo ? ' ·' : ''}</span>
-{v.hasUndo ? <button className="toast-undo" onClick={v.undoToast}>Undo</button> : <button className="toast-dismiss" onClick={v.clearToast}>Dismiss</button>}
+{v.hasUndo ? <button className="toast-undo" onClick={v.undoToast}>Undo</button> : (!v.toastQuiet && <button className="toast-dismiss" onClick={v.clearToast}>Dismiss</button>)}
 </div>}
 </div>
 </div>
