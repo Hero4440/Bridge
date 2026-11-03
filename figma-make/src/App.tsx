@@ -158,6 +158,8 @@ class BridgeBase extends DCLogic {
     var textLarge = !!s.textLarge;
     var calmMode = !!s.calmMode;
     var textFirst = s.textFirst === undefined ? true : s.textFirst;
+    var plainWords = !!s.plainWords;
+    var stepWord = plainWords ? 'step' : 'brave step';
     var draft = s.draft || '';
     var battery = (s.ciFeel === 'over') ? 'low' : (s.ciFeel === 'ready' ? 'full' : 'okay');
     var sent = s.sent || '';
@@ -820,6 +822,8 @@ class BridgeBase extends DCLogic {
       }),
       sizeSeg: segOpts([[false, 'Default'], [true, 'Large']], textLarge, 'textLarge'),
       calmSeg: segOpts([[false, 'Off'], [true, 'On']], calmMode, 'calmMode'),
+      wordsSeg: segOpts([[false, 'Friendly'], [true, 'Plain']], plainWords, 'plainWords'),
+      stepWord: stepWord, stepsWord: stepWord + 's', stepOne: '+1 ' + stepWord, stepsPerWeek: plainWords ? 'Steps per week' : 'Brave steps per week',
       chatSeg: segOpts([[true, 'Text first'], [false, 'Voice is okay']], textFirst, 'textFirst'),
       appClass: 'bridge-app' + (calmMode ? ' calm-mode' : '') + (textLarge ? ' text-large' : ''),
       journey: [['Oct 13', 1], ['Oct 20', 2], ['Oct 27', 3], ['This week', steps]].map(function (w, i, all) {
@@ -900,7 +904,7 @@ class BridgeBase extends DCLogic {
       sentText: drafts[sent] || '',
       jordanReply: replies[sent] || '',
       resultMood: sentKind ? 'happy' : 'calm',
-      resultLine: sentKind ? cd.m2[0] + ' replied! That was a brave step.' : "Sent. If it didn't land well, I can help you follow up.",
+      resultLine: sentKind ? cd.m2[0] + (plainWords ? ' replied.' : ' replied! That was a brave step.') : "Sent. If it didn't land well, I can help you follow up.",
       resultButton: sentKind ? 'Get my badge' : 'Help me follow up',
       resultAction: sentKind ? function () { self.setState({ screen: 'win', won: true, winType: sent === 'kind' ? 'kind' : 'hello' }); } : go('practice', { pChoice: '', pStarted: false }),
       showSuggest: !sent && !draft && !readOnly,
@@ -1232,7 +1236,7 @@ class Bridge extends BridgeBase {
 <div className="tab-sticky-header" style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px"}}>
 <div style={{display: "flex", flexDirection: "column", minWidth: "0"}}><span style={{fontSize: "15px", fontWeight: "500", color: "var(--muted)"}}>{v.greeting}</span><h1 style={{margin: "0", fontSize: "34px", fontWeight: "600", letterSpacing: "-0.5px", lineHeight: "1.1"}}>{v.firstName}</h1></div>
 <div style={{display: "flex", alignItems: "center", gap: "8px"}}>
-<span style={{background: "rgba(255,255,255,0.75)", borderRadius: "999px", padding: "7px 14px", fontSize: "14px", fontWeight: "500", whiteSpace: "nowrap"}}>{v.steps} brave steps</span>
+<span style={{background: "rgba(255,255,255,0.75)", borderRadius: "999px", padding: "7px 14px", fontSize: "14px", fontWeight: "500", whiteSpace: "nowrap"}}>{v.steps} {v.stepsWord}</span>
 <button onClick={v.openNotifs} aria-label={v.notifLabel} style={{position: "relative", width: "44px", height: "44px", flex: "0 0 auto", borderRadius: "50%", border: "none", background: "rgba(255,255,255,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: "0"}}>
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"></path><path d="M10 20.5a2 2 0 0 0 4 0"></path></svg>
 {v.hasNotifCount && (<><span style={{position: "absolute", top: "-2px", right: "-2px", minWidth: "20px", height: "20px", borderRadius: "999px", background: "#E0709A", color: "#FFFFFF", fontSize: "14px", fontWeight: "600", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px", boxSizing: "border-box"}}>{v.notifCount}</span></>)}
@@ -1803,7 +1807,7 @@ class Bridge extends BridgeBase {
 <span style={{flex: "1", display: "flex", flexDirection: "column", gap: "4px"}}>
 <span style={{fontSize: "15px", lineHeight: "1.4", color: "#2F5A47"}}>{v.edReflMo}</span>
 <span style={{fontSize: "14px", lineHeight: "1.4", color: "#2F5A47"}}>{v.edReflWins}</span>
-<span style={{fontSize: "14px", fontWeight: "600", color: "#2F5A47"}}>+1 brave step</span>
+<span style={{fontSize: "14px", fontWeight: "600", color: "#2F5A47"}}>{v.stepOne}</span>
 </span>
 </div>
 </>)}
@@ -2005,7 +2009,7 @@ class Bridge extends BridgeBase {
 
 {v.isWin && (<>
 <div style={{width: "100%", minHeight: "100%", boxSizing: "border-box", padding: "50px 20px 30px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", textAlign: "center", background: "var(--bg)"}}>
-<span style={{fontSize: "15px", color: "var(--muted)", letterSpacing: "1px"}}>BRAVE STEP EARNED</span>
+<span style={{fontSize: "15px", color: "var(--muted)", letterSpacing: "1px", textTransform: "uppercase"}}>{v.stepWord} earned</span>
 <div className="rise" style={{width: "190px", height: "190px", borderRadius: "50%", background: "rgba(255,255,255,0.9)", boxShadow: "0 24px 60px rgba(120,100,170,0.22)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px"}}>
 <Mo mood="happy" size={110} />
 <span style={{fontSize: "18px", fontWeight: "600"}}>{v.winBadge}</span>
@@ -2031,7 +2035,7 @@ class Bridge extends BridgeBase {
 {v.hasPhoto ? <img src={v.pPhoto} alt="Your profile photo" className="me-avatar" /> : <span className="me-avatar me-initials">{v.initials}</span>}
 <label aria-label="Change profile photo" className="camera-button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" accept="image/*" onChange={v.pickPhoto} style={{display:"none"}} /></label>
 </div>
-<div className="me-identity-copy"><h1>{v.fullName}</h1><span>{v.interestNames}</span><span className="meta-pill">{v.steps} brave steps this week</span></div>
+<div className="me-identity-copy"><h1>{v.fullName}</h1><span>{v.interestNames}</span><span className="meta-pill">{v.steps} {v.stepsWord} this week</span></div>
 </div>
 <div className="tab-screen-content me-content">
 <button onClick={v.openJourney} className="calm-card journey-preview" aria-label="Open My journey">
@@ -2050,7 +2054,7 @@ class Bridge extends BridgeBase {
 </div></div>
 </>)}
 
-{v.isMeJourney && <><MeSubHeader title="My journey" onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card"><div className="journey-bars">{v.journey.map((w,$i)=><div className="journey-col" key={$i}><strong>{w.value}</strong><i style={{height:w.h,background:w.bg}}></i><small>{w.label}</small></div>)}</div><span className="muted-copy">Brave steps per week</span><div className="journey-stats"><div><strong>6</strong><small>practices</small></div><div><strong>2</strong><small>events joined</small></div><div><strong>Level 2</strong><small>reached</small></div></div><h2 className="section-title">Badges</h2><div className="badge-grid"><div><BadgeMark kind="hello" size={52}/><strong>First Hello</strong><small>Said hi</small></div><div><BadgeMark kind="kind" size={52}/><strong>Kind Words</strong><small>Disagreed gently</small></div><div><BadgeMark kind="pause" size={52}/><strong>Breather</strong><small>Took a pause</small></div><div><BadgeMark kind="event" size={52}/><strong>Game Night</strong><small>Go to one event</small></div></div><span className="muted-copy no-streaks">No streaks here. Skip a day or a week and nothing resets. Your steps and badges stay yours.</span></div></div></>}
+{v.isMeJourney && <><MeSubHeader title="My journey" onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card"><div className="journey-bars">{v.journey.map((w,$i)=><div className="journey-col" key={$i}><strong>{w.value}</strong><i style={{height:w.h,background:w.bg}}></i><small>{w.label}</small></div>)}</div><span className="muted-copy">{v.stepsPerWeek}</span><div className="journey-stats"><div><strong>6</strong><small>practices</small></div><div><strong>2</strong><small>events joined</small></div><div><strong>Level 2</strong><small>reached</small></div></div><h2 className="section-title">Badges</h2><div className="badge-grid"><div><BadgeMark kind="hello" size={52}/><strong>First Hello</strong><small>Said hi</small></div><div><BadgeMark kind="kind" size={52}/><strong>Kind Words</strong><small>Disagreed gently</small></div><div><BadgeMark kind="pause" size={52}/><strong>Breather</strong><small>Took a pause</small></div><div><BadgeMark kind="event" size={52}/><strong>Game Night</strong><small>Go to one event</small></div></div><span className="muted-copy no-streaks">No streaks here. Skip a day or a week and nothing resets. Your steps and badges stay yours.</span></div></div></>}
 
 {v.isMeTrusted && <><MeSubHeader title={v.trusted} onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card person-detail"><PersonAvatar name={v.trusted} size={56} tint="var(--soft)"/><h2>{v.trusted}</h2><span className="muted-copy">{v.trustedRel} · {v.trustedContact}</span><h3>What they can see</h3><div className="pill-group"><button className="choice-pill on">I need help texts</button></div><p className="muted-copy">Your chats, check-ins and pauses stay private.</p></div></div></>}
 
@@ -2060,7 +2064,7 @@ class Bridge extends BridgeBase {
 
 {v.isMeColors && <><MeSubHeader title="Colors" onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card"><div className="theme-grid">{v.themeOpts.map((t,$i)=><button key={$i} onClick={t.pick} aria-pressed={t.on} aria-label={'Theme: '+t.name} style={{boxShadow:t.ring}}><i style={{background:t.swatch}}></i><span>{t.name}</span>{t.on&&<b>✓</b>}</button>)}</div></div></div></>}
 
-{v.isMeComfort && <><MeSubHeader title="Comfort" onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card comfort-card"><div className="segmented-row"><span>Text size</span><div className="segments">{v.sizeSeg.map((o,$i)=><button key={$i} className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button>)}</div></div><div className="segmented-row"><span>Calm mode</span><div className="segments">{v.calmSeg.map((o,$i)=><button key={$i} className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button>)}</div></div><div className="segmented-row"><span>Chatting</span><div className="segments">{v.chatSeg.map((o,$i)=><button key={$i} className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button>)}</div></div><p className="muted-copy">Calm mode turns off moving animations. Changes save right away.</p></div></div></>}
+{v.isMeComfort && <><MeSubHeader title="Comfort" onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card comfort-card"><div className="segmented-row"><span>Text size</span><div className="segments">{v.sizeSeg.map((o,$i)=><button key={$i} className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button>)}</div></div><div className="segmented-row"><span>Calm mode</span><div className="segments">{v.calmSeg.map((o,$i)=><button key={$i} className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button>)}</div></div><div className="segmented-row"><span>Chatting</span><div className="segments">{v.chatSeg.map((o,$i)=><button key={$i} className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button>)}</div></div><div className="segmented-row"><span>Words</span><div className="segments">{v.wordsSeg.map((o,$i)=><button key={$i} className={o.cls} aria-pressed={o.on} onClick={o.pick}>{o.label}</button>)}</div></div><p className="muted-copy">Calm mode turns off moving animations. Plain words drop the cheerful extras, like “brave steps”. Changes save right away.</p></div></div></>}
 
 {v.isMeInterests && <><MeSubHeader title="Interests" onBack={v.meBack}/><div className="me-sub-content"><div className="calm-card me-sub-card"><div className="interest-grid">{v.interestOpts.map((o,$i)=><button key={$i} onClick={o.pick} aria-pressed={o.on} className="interest-tile" style={{boxShadow:o.ring}}><CircleGlyph kind={o.key} tint={o.tint} size={40}/><span>{o.name}</span>{o.on&&<b className="tick">✓</b>}</button>)}</div><p className="muted-copy">{v.interestCount}. Changes save right away.</p></div></div></>}
 
@@ -2112,7 +2116,7 @@ class Bridge extends BridgeBase {
 </div>
 <div className="home-indicator" aria-hidden="true"></div>
 </>)}
-{v.showCelebrate && <div className="step-celebrate" role="status" aria-live="polite"><Mo mood="happy" size={64} /><strong>+1 brave step</strong><span>{v.steps} this week</span></div>}
+{v.showCelebrate && <div className="step-celebrate" role="status" aria-live="polite"><Mo mood="happy" size={64} /><strong>{v.stepOne}</strong><span>{v.steps} this week</span></div>}
 </div>
 </>);
   }
