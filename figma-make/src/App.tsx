@@ -276,6 +276,9 @@ class BridgeBase extends DCLogic {
         why: fromHard ? 'Because ' + whyHard[ciHard] + ' feels hard lately' : 'For your ' + upLabels[ciUp].toLowerCase().replace('a ', '') + ' coming up',
         start: function () { self.setState({ screen: 'practice', pScen: k, pLevel: recLevel, pStarted: true, pChoice: '', moOpen: false }); } };
     });
+    var upNextText = ciUp === 'group'
+      ? "Warm up for tonight's Gaming chat"
+      : (ciUp === 'none' ? 'Practice one small conversation step' : 'Warm up for ' + upLabels[ciUp].toLowerCase());
     var chip = function (opts, cur, key) {
       return Object.keys(opts).map(function (k) {
         var on = k === cur; var o = {};
@@ -321,7 +324,7 @@ class BridgeBase extends DCLogic {
       var g = rsvp[e.id] === 'going';
       var cardDates = { e0: ['YESTERDAY','8'], e1: ['FRI','7'], e2: ['SAT','8'], e3: ['SUN','9'], e4: ['THU','6'] };
       var cardDate = e.dateDay ? [e.dateDay, e.dateNum] : (cardDates[e.id] || ['SUN','9']);
-      return { title: e.title, when: e.when, where: e.where, tag: e.tag,
+      return { title: e.title, when: e.when, where: e.where, tag: e.tag, meta: (e.duration || '1 hr') + ' · ' + Math.max(1, e.going || 0) + ' people',
         hostLabel: c ? c.name + ' circle' : 'Outside circles · friends',
         tint: c ? c.tint : '#E4F1F0', icon: e.circle || 'gaming', day: cardDate[0], date: cardDate[1],
         goingText: (e.going + (g ? 1 : 0)) + ' going',
@@ -592,10 +595,10 @@ class BridgeBase extends DCLogic {
 
     // ---------- Themes ----------
     var themes = {
-      dawn: { name: 'Dawn', desc: 'Soft peach and lilac', swatch: 'linear-gradient(135deg, #F7CFC6, #B9A6E3)', bg: 'linear-gradient(170deg, #FBE6DD 0%, #F1E4F3 45%, #DFE3FA 100%)', bar: 'rgba(251,232,226,0.97)', ink: '#3B3350', soft: '#EFE6F8', muted: '#6E6585' },
-      sage: { name: 'Sage', desc: 'Quiet greens', swatch: 'linear-gradient(135deg, #CFE5D2, #5E8B74)', bg: 'linear-gradient(170deg, #EAF2E6 0%, #E5EFE8 50%, #DDEBEC 100%)', bar: 'rgba(234,242,231,0.97)', ink: '#2F4A3F', soft: '#DCEBE0', muted: '#5F7068' },
-      mist: { name: 'Mist', desc: 'Cool blue-grey', swatch: 'linear-gradient(135deg, #D3E1F2, #5F7BA6)', bg: 'linear-gradient(170deg, #E6EEF8 0%, #E7ECF7 50%, #EEF0F6 100%)', bar: 'rgba(230,238,248,0.97)', ink: '#2F3F5A', soft: '#DFE7F4', muted: '#5F6B80' },
-      sand: { name: 'Sand', desc: 'Warm and low-contrast', swatch: 'linear-gradient(135deg, #F1E3CF, #A88A6E)', bg: 'linear-gradient(170deg, #F6EFE4 0%, #F2EAE1 50%, #ECE5EC 100%)', bar: 'rgba(246,239,228,0.97)', ink: '#4A3D34', soft: '#EFE5D8', muted: '#77695E' }
+      dawn: { name: 'Dawn', desc: 'Soft peach and lilac', swatch: 'linear-gradient(135deg, #F7CFC6, #B9A6E3)', bg: 'linear-gradient(170deg, #FBE6DD 0%, #F1E4F3 45%, #DFE3FA 100%)', bar: 'rgba(251,232,226,0.97)', ink: '#3B3350', soft: '#EFE6F8', muted: '#5E5574' },
+      sage: { name: 'Sage', desc: 'Quiet greens', swatch: 'linear-gradient(135deg, #CFE5D2, #5E8B74)', bg: 'linear-gradient(170deg, #EAF2E6 0%, #E5EFE8 50%, #DDEBEC 100%)', bar: 'rgba(234,242,231,0.97)', ink: '#2F4A3F', soft: '#DCEBE0', muted: '#4F5F57' },
+      mist: { name: 'Mist', desc: 'Cool blue-grey', swatch: 'linear-gradient(135deg, #D3E1F2, #5F7BA6)', bg: 'linear-gradient(170deg, #E6EEF8 0%, #E7ECF7 50%, #EEF0F6 100%)', bar: 'rgba(230,238,248,0.97)', ink: '#2F3F5A', soft: '#DFE7F4', muted: '#505C70' },
+      sand: { name: 'Sand', desc: 'Warm and low-contrast', swatch: 'linear-gradient(135deg, #F1E3CF, #A88A6E)', bg: 'linear-gradient(170deg, #F6EFE4 0%, #F2EAE1 50%, #ECE5EC 100%)', bar: 'rgba(246,239,228,0.97)', ink: '#4A3D34', soft: '#EFE5D8', muted: '#665A50' }
     };
     var themeKey = themes[s.theme] ? s.theme : 'dawn';
     var th = themes[themeKey];
@@ -635,7 +638,7 @@ class BridgeBase extends DCLogic {
     var evDetailVals = {
       isEvent: screen === 'event',
       edBack: go(s.evBackTo === 'circle' ? 'circle' : 'home'),
-      edTitle: evD.title, edWhen: evD.when, edWhere: evD.where,
+      edTitle: evD.title, edWhen: evD.when, edWhere: evD.where, edMeta: (evD.duration || '1 hr') + ' · ' + Math.max(1, evD.going || 0) + ' people',
       edHost: evDc ? evDc.name + ' circle' : 'Outside circles · friends', edTint: evDc ? evDc.tint : '#E4F1F0',
       edIcon: evD.circle || 'gaming', edDateDay: detailDate[0], edDateNum: detailDate[1], edTimeRange: detailTimes,
       edInPerson: inPersonD, edVenue: detailVenue, edAddress: detailAddress,
@@ -794,7 +797,7 @@ class BridgeBase extends DCLogic {
       draftColor: draft ? 'var(--ink)' : 'var(--muted)',
       draftRing: isAngry ? '0 0 0 2px #EE9F95' : 'none',
       toneBg: isAngry ? '#FBE1DC' : '#DDF1E6',
-      toneDot: isAngry ? '#E07A6B' : '#5DBB8E',
+      toneDot: isAngry ? 'var(--ink)' : '#5DBB8E',
       toneLabel: isAngry ? 'Mo: this might sound harsh' : 'Mo: sounds friendly',
       toneWhy: isAngry ? 'Why: "Seriously" and "overrated" can sound like you are making fun of what ' + cd.m2[0] + ' loves.' : '', hasToneWhy: isAngry,
       sendBg: draft ? 'var(--ink)' : 'rgba(255,255,255,0.7)',
@@ -1026,7 +1029,7 @@ class Bridge extends BridgeBase {
 <span className="safety-row"><b>1</b>Never share your address, passwords or money.</span>
 <span className="safety-row"><b>2</b>If someone asks for secrets or money, Mo warns you privately.</span>
 <span className="safety-row"><b>3</b>You can leave, mute or block anyone, anytime. They are not told why.</span>
-<span className="safety-row"><b>4</b>Need help now? Tap Mo, then "I need help", or call or text 988.</span>
+<span className="safety-row"><b>4</b>Need help now? Tap Mo, then "I need help", or call 988.</span>
 </div>
 </div>
 </>)}
@@ -1038,9 +1041,9 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.isCheckin && (<>
-<div style={{padding: "32px 20px 28px", display: "flex", flexDirection: "column", gap: "20px"}}>
+<div style={{padding: "32px 20px 110px", display: "flex", flexDirection: "column", gap: "20px"}}>
 <div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", textAlign: "center"}}>
-<div className="floaty"><Mo mood="happy" size={96} /></div>
+<div><Mo mood="happy" size={96} /></div>
 <h1 style={{margin: "0", fontSize: "28px", fontWeight: "600"}}>Hi {v.firstName}! Quick check-in</h1>
 <span style={{fontSize: "16px", color: "var(--muted)"}}>Three taps. Mo uses this to plan today's practice.</span>
 </div>
@@ -1068,8 +1071,8 @@ class Bridge extends BridgeBase {
 </React.Fragment>))}
 </div>
 </div>
-<button onClick={v.finishCheckin} style={{height: "56px", borderRadius: "20px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "17px", fontWeight: "500", marginTop: "4px"}}>See my day</button>
 </div>
+<div className="sticky-cta"><button onClick={v.finishCheckin}>See my day</button></div>
 </>)}
 
 {v.isHome && (<>
@@ -1180,7 +1183,7 @@ class Bridge extends BridgeBase {
 <div style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "18px", display: "flex", flexDirection: "column", gap: "10px"}}>
 <span style={{fontSize: "18px", fontWeight: "600"}}>Talk to someone right now</span>
 <span style={{fontSize: "15px", color: "var(--muted)"}}>Free, any time of day or night.</span>
-<button style={{height: "50px", borderRadius: "18px", border: "none", background: "#FBE1DC", color: "var(--ink)", fontSize: "16px", fontWeight: "500"}}>Call or text 988</button>
+<button style={{height: "50px", borderRadius: "18px", border: "none", background: "#FBE1DC", color: "var(--ink)", fontSize: "16px", fontWeight: "500"}}>Call 988</button>
 </div>
 <button onClick={v.goReset} style={{height: "44px", border: "none", background: "transparent", color: "var(--ink)", fontSize: "16px", fontWeight:"600"}}>Breathe with Mo first ›</button>
 </div>
@@ -1211,13 +1214,13 @@ class Bridge extends BridgeBase {
 <div style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 10px 28px rgba(120,100,170,0.10)"}}>
 <div style={{background: c.tint, padding: "14px 16px", boxSizing: "border-box", display: "flex", justifyContent: "space-between", alignItems: "center"}}>
 <div style={{display: "flex", alignItems: "center", gap: "10px"}}><CircleGlyph kind={c.key} tint="rgba(255,255,255,.65)" /><span style={{fontSize: "20px", fontWeight: "600"}}>{c.name}</span></div>
-<div style={{display: "flex", alignItems: "center", gap: "8px"}}><div className="avatar-stack">{c.avatars.slice(0,3).map((name, i) => <PersonAvatar key={name} name={name} size={28} tint={i === 0 ? "#F9DCE4" : i === 1 ? "#E3E0F8" : "#DDF1E6"} />)}</div><span style={{fontSize: "13px", color: "var(--muted)"}}>+{c.here} here now</span></div>
+<div style={{display: "flex", alignItems: "center", gap: "8px"}}><div className="avatar-stack">{c.avatars.slice(0,3).map((name, i) => <PersonAvatar key={name} name={name} size={28} tint={i === 0 ? "#F9DCE4" : i === 1 ? "#E3E0F8" : "#DDF1E6"} />)}</div><span className="meta-pill">{c.here} here now · usually quiet</span></div>
 </div>
 <div style={{padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: "10px"}}>
-<span style={{fontSize: "13px", color: "var(--muted)", letterSpacing: "1px"}}>TONIGHT'S TOPIC</span>
+<span style={{fontSize: "14px", color: "var(--muted)", letterSpacing: "1px"}}>TONIGHT'S TOPIC</span>
 <span style={{fontSize: "19px", fontWeight: "600"}}>{c.topic}</span>
 <div style={{display: "flex", gap: "8px"}}>
-<button onClick={c.open} style={{flex: "1", height: "46px", borderRadius: "16px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "16px", fontWeight: "500"}}>Join</button>
+<button onClick={c.open} style={{flex: "1", height: "46px", borderRadius: "16px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "16px", fontWeight: "500"}}>Join {c.name} chat</button>
 <button onClick={c.read} style={{flex: "1", height: "46px", borderRadius: "16px", border: "none", background: "var(--soft)", color: "var(--ink)", fontSize: "16px", fontWeight: "500"}}>Just read</button>
 </div>
 </div>
@@ -1230,7 +1233,7 @@ class Bridge extends BridgeBase {
 <button onClick={d.open} style={{textAlign: "left", display: "flex", alignItems: "center", gap: "12px", background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "24px", padding: "12px 14px", color: "var(--ink)", boxShadow: "0 10px 26px rgba(120,100,170,0.10)"}}>
 <span style={{flex: "0 0 auto", width: "48px", height: "48px", borderRadius: "50%", background: d.tint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "19px", fontWeight: "600"}}>{d.initial}</span>
 <span style={{flex: "1", minWidth: "0", display: "flex", flexDirection: "column", gap: "2px"}}>
-<span style={{display: "flex", justifyContent: "space-between", gap: "8px"}}><span style={{fontSize: "17px", fontWeight: "600"}}>{d.name}</span><span style={{fontSize: "13px", color: "var(--muted)"}}>{d.from}</span></span>
+<span style={{display: "flex", justifyContent: "space-between", gap: "8px"}}><span style={{fontSize: "17px", fontWeight: "600"}}>{d.name}</span><span style={{fontSize: "14px", color: "var(--muted)"}}>{d.from}</span></span>
 <span style={{fontSize: "14px", color: "var(--muted)", fontWeight: d.weight, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>{d.preview}</span>
 </span>
 {d.unread && (<><span aria-label="Unread" style={{flex: "0 0 auto", width: "10px", height: "10px", borderRadius: "50%", background: "#E0709A"}}></span></>)}
@@ -1241,7 +1244,7 @@ class Bridge extends BridgeBase {
 <div style={{background: "#FBEDEA", borderRadius: "24px", padding: "14px", display: "flex", flexDirection: "column", gap: "10px"}}>
 <div style={{display: "flex", alignItems: "center", gap: "12px"}}>
 <span style={{flex: "0 0 auto", width: "44px", height: "44px", borderRadius: "50%", background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: "600"}}>A</span>
-<div style={{display: "flex", flexDirection: "column"}}><span style={{fontSize: "16px", fontWeight: "600"}}>Alex</span><span style={{fontSize: "13px", color: "var(--muted)"}}>Anime circle · you haven't talked yet</span></div>
+<div style={{display: "flex", flexDirection: "column"}}><span style={{fontSize: "16px", fontWeight: "600"}}>Alex</span><span style={{fontSize: "14px", color: "var(--muted)"}}>Anime circle · you haven't talked yet</span></div>
 </div>
 <div style={{display: "flex", gap: "10px", alignItems: "flex-start"}}>
 <Mo mood="worried" size={40} />
@@ -1278,8 +1281,8 @@ class Bridge extends BridgeBase {
 </div>
 {v.menuOpen && (<>
 <div style={{display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "8px"}}>
-<button onClick={v.doReport} style={{height: "46px", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.85)", color: "var(--ink)", fontSize: "15px", fontWeight: "500"}}>Report</button>
-<button onClick={v.doBlock} style={{height: "46px", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.85)", color: "var(--ink)", fontSize: "15px", fontWeight: "500"}}>Block</button>
+<button onClick={v.doReport} style={{height: "46px", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.85)", color: "var(--ink)", fontSize: "15px", fontWeight: "500"}}>Report chat</button>
+<button onClick={v.doBlock} style={{height: "46px", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.85)", color: "var(--ink)", fontSize: "15px", fontWeight: "500"}}>Block member</button>
 </div>
 </>)}
 {v.hasSafetyNote && (<>
@@ -1293,7 +1296,7 @@ class Bridge extends BridgeBase {
 </div>
 </>)}
 {v.circleEvents.map((ev, $index) => (<React.Fragment key={$index}>
-<div className="event-row-card"><DateTile day={ev.day} date={ev.date}/><button onClick={ev.open} className="event-copy" style={{border:0,background:"transparent",textAlign:"left",padding:0,color:"var(--ink)"}}><strong>{ev.title}</strong><span>{ev.when}</span><span>{ev.where}</span></button>{ev.notMine ? <button onClick={ev.toggle} style={{height:"38px",border:0,borderRadius:"13px",background:ev.inBg,color:ev.inFg,padding:"0 9px",fontWeight:"600"}}>{ev.inLabel}</button> : <span style={{fontSize:"12px",color:"var(--muted)"}}>Hosting</span>}</div>
+<div className="event-row-card"><DateTile day={ev.day} date={ev.date}/><button onClick={ev.open} className="event-copy" style={{border:0,background:"transparent",textAlign:"left",padding:0,color:"var(--ink)"}}><strong>{ev.title}</strong><span>{ev.when}</span><span>{ev.where}</span><span className="meta-pill">{ev.meta}</span></button>{ev.notMine ? <button onClick={ev.toggle} style={{height:"38px",border:0,borderRadius:"13px",background:ev.inBg,color:ev.inFg,padding:"0 9px",fontWeight:"600"}}>{ev.inLabel}</button> : <span style={{fontSize:"14px",color:"var(--muted)"}}>Hosting</span>}</div>
 </React.Fragment>))}
 <button onClick={v.newEventCircle} style={{alignSelf: "flex-start", height: "38px", borderRadius: "999px", border: "1.5px dashed #B9B1C8", background: "transparent", color: "var(--ink)", padding: "0 14px", fontSize: "14px", fontWeight: "500"}}>+ Plan an event in {v.cName}</button>
 </div>
@@ -1303,15 +1306,15 @@ class Bridge extends BridgeBase {
 <div className="today-divider">Today</div>
 <div className="chat-group">
 <PersonAvatar name={v.m1Name} size={28} tint="#F9DCE4" onClick={v.m1CanDm ? v.m1Dm : null} />
-<div><span style={{fontSize: "13px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m1Name}</span><div style={{background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "82%", fontSize: "17px", lineHeight: "1.45"}}>{v.m1Text}</div><div className="chat-meta">7:38 PM</div></div>
+<div><span style={{fontSize: "14px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m1Name}</span><div style={{background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "82%", fontSize: "17px", lineHeight: "1.45"}}>{v.m1Text}</div><div className="chat-meta">7:38 PM</div></div>
 </div>
 <div className="chat-group">
 <PersonAvatar name={v.m2Name} size={28} tint="#E3E0F8" onClick={v.m2CanDm ? v.m2Dm : null} />
-<div><span style={{fontSize: "13px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m2Name}</span><div style={{background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "82%", fontSize: "17px", lineHeight: "1.45"}}>{v.m2Text}</div><div className="chat-meta">7:42 PM</div></div>
+<div><span style={{fontSize: "14px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m2Name}</span><div style={{background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "82%", fontSize: "17px", lineHeight: "1.45"}}>{v.m2Text}</div><div className="chat-meta">7:42 PM</div></div>
 </div>
 {v.hasUnsafe && (<>
 <div style={{display: "flex", flexDirection: "column", gap: "10px"}}>
-<div className="chat-group"><PersonAvatar name={v.m3Name} size={28} tint="#FBE1D8" /><div><span style={{fontSize: "13px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m3Name} · new member</span><div style={{background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "82%", fontSize: "17px", lineHeight: "1.45"}}>{v.m3Text}</div><div className="chat-meta">7:43 PM</div></div>
+<div className="chat-group"><PersonAvatar name={v.m3Name} size={28} tint="#FBE1D8" /><div><span style={{fontSize: "14px", color: "var(--muted)", paddingLeft: "4px"}}>{v.m3Name} · new member</span><div style={{background: "rgba(255,255,255,0.8)", borderRadius: "24px 24px 24px 8px", padding: "13px 17px", maxWidth: "82%", fontSize: "17px", lineHeight: "1.45"}}>{v.m3Text}</div><div className="chat-meta">7:43 PM</div></div>
 </div>
 {v.showUnsafeCard && (<>
 <div className="rise" style={{background: "#FBEDEA", borderRadius: "24px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px"}}>
@@ -1320,8 +1323,8 @@ class Bridge extends BridgeBase {
 <span style={{fontSize: "16px", lineHeight: "1.4"}}>Only you can see this. {v.m3Name} is asking for money and to keep it secret. That's not safe.</span>
 </div>
 <div style={{display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px"}}>
-<button onClick={v.unsafeReport} style={{height: "46px", borderRadius: "16px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "15px", fontWeight: "500"}}>Report</button>
-<button onClick={v.unsafeBlock} style={{height: "46px", borderRadius: "16px", border: "none", background: "#FFFFFF", color: "var(--ink)", fontSize: "15px", fontWeight: "500"}}>Block</button>
+<button onClick={v.unsafeReport} style={{height: "46px", borderRadius: "16px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "15px", fontWeight: "500"}}>Report Alex</button>
+<button onClick={v.unsafeBlock} style={{height: "46px", borderRadius: "16px", border: "none", background: "#FFFFFF", color: "var(--ink)", fontSize: "15px", fontWeight: "500"}}>Block Alex</button>
 <button onClick={v.unsafeIgnore} style={{height: "46px", borderRadius: "16px", border: "none", background: "transparent", color: "var(--ink)", fontSize: "15px", fontWeight: "600"}}>Not now</button>
 </div>
 </div>
@@ -1378,7 +1381,7 @@ class Bridge extends BridgeBase {
 </>)}
 <div style={{display: "flex", gap: "10px", alignItems: "center"}}>
 <div style={{flex: "1", minHeight: "52px", borderRadius: "24px", background: "rgba(255,255,255,0.85)", boxShadow: v.draftRing, padding: "12px 18px", display: "flex", alignItems: "center", fontSize: "16px", color: v.draftColor, lineHeight: "1.35"}}>{v.draftShown}</div>
-<button onClick={v.send} aria-label="Send message" style={{width: "52px", height: "52px", flex: "0 0 auto", borderRadius: "50%", border: "none", background: v.sendBg, display: "flex", alignItems: "center", justifyContent: "center"}}>
+<button onClick={v.send} aria-label={"Send to " + v.cName + " chat"} style={{width: "52px", height: "52px", flex: "0 0 auto", borderRadius: "50%", border: "none", background: v.sendBg, display: "flex", alignItems: "center", justifyContent: "center"}}>
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{stroke: v.sendIcon}} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"></path></svg>
 </button>
 </div>
@@ -1440,8 +1443,8 @@ class Bridge extends BridgeBase {
 <span style={{fontSize:"14px",fontWeight:"600"}}>Remind me</span>
 <div className="segments">{v.remindOpts.map((o,i)=><button key={i} className={o.on?"on":""} onClick={o.pick}>{o.label}</button>)}</div>
 {v.evInPerson && <button className={"choice-pill "+(v.shareLabel.indexOf('✓')>=0?"on":"")} onClick={v.toggleShare}>{v.shareLabel}</button>}
-<span style={{fontSize:"13px",color:"var(--muted)",letterSpacing:"1px"}}>PREVIEW</span>
-<div className="event-row-card"><DateTile day={v.weekDays.filter(d=>d.on)[0].day} date={v.weekDays.filter(d=>d.on)[0].date}/><div className="event-copy"><strong>{v.evPreview.split(' · ')[0]}</strong><span>{v.evTimeRange}</span><span>{v.evPreviewWhere}</span></div></div>
+<span style={{fontSize:"14px",color:"var(--muted)",letterSpacing:"1px"}}>PREVIEW</span>
+<div className="event-row-card"><DateTile day={v.weekDays.filter(d=>d.on)[0].day} date={v.weekDays.filter(d=>d.on)[0].date}/><div className="event-copy"><strong>{v.evPreview.split(' · ')[0]}</strong><span>{v.evTimeRange}</span><span>{v.evPreviewWhere}</span><span className="meta-pill">1 hr · 3 people</span></div></div>
 </>}
 </div>
 <div className="sticky-cta"><button onClick={v.evStep === 3 ? v.createEvent : v.evNext}>{v.evStep === 3 ? 'Create event' : 'Next'}</button></div>
@@ -1455,7 +1458,7 @@ class Bridge extends BridgeBase {
 </button>
 <div style={{display: "flex", flexDirection: "column", textAlign:"center"}}>
 <span style={{fontSize: "18px", fontWeight: "600"}}>{v.dmName}</span>
-<span style={{fontSize: "13px", color: "var(--muted)"}}>{v.dmFrom}</span>
+<span style={{fontSize: "14px", color: "var(--muted)"}}>{v.dmFrom}</span>
 </div>
 <PersonAvatar name={v.dmName} tint={v.dmTint} size={40} />
 </div>
@@ -1489,7 +1492,7 @@ class Bridge extends BridgeBase {
 </>)}
 <div style={{display: "flex", gap: "10px", alignItems: "center"}}>
 <input value={v.dmDraft} onChange={v.setDmDraft} onKeyDown={v.dmKey} placeholder={"Message " + v.dmName} aria-label={"Message " + v.dmName} style={{flex: "1", minWidth: "0", height: "52px", borderRadius: "24px", border: "none", background: "rgba(255,255,255,0.9)", padding: "0 18px", fontSize: "16px", fontFamily: "inherit", color: "var(--ink)", outline: "none", boxSizing: "border-box"}} />
-<button onClick={v.sendDm} aria-label="Send message" style={{width: "52px", height: "52px", flex: "0 0 auto", borderRadius: "50%", border: "none", background: v.dmSendBg, display: "flex", alignItems: "center", justifyContent: "center"}}>
+<button onClick={v.sendDm} aria-label={"Send to " + v.dmName} style={{width: "52px", height: "52px", flex: "0 0 auto", borderRadius: "50%", border: "none", background: v.dmSendBg, display: "flex", alignItems: "center", justifyContent: "center"}}>
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"></path></svg>
 </button>
 </div>
@@ -1517,7 +1520,7 @@ class Bridge extends BridgeBase {
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={n.path}></path></svg>
 </span>
 <span style={{flex: "1", minWidth: "0", display: "flex", flexDirection: "column", gap: "3px"}}>
-<span style={{display: "flex", justifyContent: "space-between", gap: "8px"}}><span style={{fontSize: "16px", fontWeight: "600", lineHeight: "1.3"}}>{n.title}</span><span style={{flex: "0 0 auto", fontSize: "13px", color: "var(--muted)"}}>{n.time}</span></span>
+<span style={{display: "flex", justifyContent: "space-between", gap: "8px"}}><span style={{fontSize: "16px", fontWeight: "600", lineHeight: "1.3"}}>{n.title}</span><span style={{flex: "0 0 auto", fontSize: "14px", color: "var(--muted)"}}>{n.time}</span></span>
 <span style={{fontSize: "14px", lineHeight: "1.4", color: "var(--muted)"}}>{n.body}</span>
 </span>
 {n.isNew && (<><span aria-label="New" style={{flex: "0 0 auto", width: "10px", height: "10px", borderRadius: "50%", background: "#E0709A", marginTop: "6px"}}></span></>)}
@@ -1530,7 +1533,7 @@ class Bridge extends BridgeBase {
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={n.path}></path></svg>
 </span>
 <span style={{flex: "1", minWidth: "0", display: "flex", flexDirection: "column", gap: "3px"}}>
-<span style={{display: "flex", justifyContent: "space-between", gap: "8px"}}><span style={{fontSize: "16px", fontWeight: "600", lineHeight: "1.3"}}>{n.title}</span><span style={{flex: "0 0 auto", fontSize: "13px", color: "var(--muted)"}}>{n.time}</span></span>
+<span style={{display: "flex", justifyContent: "space-between", gap: "8px"}}><span style={{fontSize: "16px", fontWeight: "600", lineHeight: "1.3"}}>{n.title}</span><span style={{flex: "0 0 auto", fontSize: "14px", color: "var(--muted)"}}>{n.time}</span></span>
 <span style={{fontSize: "14px", lineHeight: "1.4", color: "var(--muted)"}}>{n.body}</span>
 </span>
 {n.isNew && (<><span aria-label="New" style={{flex: "0 0 auto", width: "10px", height: "10px", borderRadius: "50%", background: "#E0709A", marginTop: "6px"}}></span></>)}
@@ -1540,7 +1543,7 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.isEvent && (<>
-<div style={{padding: "20px 20px 28px", display: "flex", flexDirection: "column", gap: "14px"}}>
+<div style={{padding: "20px 20px 116px", display: "flex", flexDirection: "column", gap: "14px"}}>
 <div className="sticky-header inner-header" style={{display: "flex", alignItems: "center", gap: "12px"}}>
 <button onClick={v.edBack} aria-label="Back" style={{width: "44px", height: "44px", flex: "0 0 auto", borderRadius: "16px", border: "none", background: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", justifyContent: "center"}}>
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"></path></svg>
@@ -1550,10 +1553,10 @@ class Bridge extends BridgeBase {
 <div className="event-cover" style={{background:v.edTint}}><CircleGlyph kind={v.edIcon} tint="rgba(255,255,255,.65)" size={52}/><span><strong style={{display:"block",fontSize:"18px"}}>{v.edHost}</strong><small style={{color:"var(--muted)"}}>Bridge event</small></span></div>
 <div className="event-hero-card">
 <h1 style={{margin: "0", fontSize: "27px", fontWeight: "600", lineHeight: "1.2"}}>{v.edTitle}</h1>
+<span className="meta-pill">{v.edMeta}</span>
 <div className="event-fact"><DateTile day={v.edDateDay} date={v.edDateNum}/><div><strong>{v.edTimeRange}</strong><small>{v.edWhen}</small></div></div>
-{v.edInPerson ? <div className="venue-detail"><div><strong>{v.edVenue}</strong><span style={{fontSize:"13px",color:"var(--muted)"}}>{v.edAddress}</span></div><MapThumb/><div className="venue-actions"><button onClick={v.edDirections}>Directions</button><button onClick={v.edCopyAddress}>Copy address</button></div></div> : <div style={{background:"var(--soft)",borderRadius:"18px",padding:"14px"}}>Join link available 10 min before.</div>}
+{v.edInPerson ? <div className="venue-detail"><div><strong>{v.edVenue}</strong><span style={{fontSize:"14px",color:"var(--muted)"}}>{v.edAddress}</span></div><MapThumb/><div className="venue-actions"><button onClick={v.edDirections}>Directions</button><button onClick={v.edCopyAddress}>Copy address</button></div></div> : <div style={{background:"var(--soft)",borderRadius:"18px",padding:"14px"}}>Join link available 10 min before.</div>}
 <div style={{display:"flex",justifyContent:"space-between",gap:"8px",fontSize:"14px"}}><span>{v.edHostedBy}</span><span>{v.edSpots}</span></div>
-{v.edUpcoming && <div className="rsvp-control">{v.edRsvp.map((o,i)=><button key={i} className={o.on?"on":""} onClick={o.pick}>{o.label}</button>)}</div>}
 <div className="utility-buttons"><button onClick={v.edAddCalendar}>Add to calendar</button><button onClick={v.edShare}>Share</button></div>
 </div>
 
@@ -1563,7 +1566,7 @@ class Bridge extends BridgeBase {
 {v.edSense.map((x, $index) => (<React.Fragment key={$index}>
 <div style={{background: "var(--soft)", borderRadius: "18px", padding: "12px", display: "flex", flexDirection: "column", gap: "6px"}}>
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{stroke: "var(--ink)"}} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={x.path}></path></svg>
-<span style={{fontSize: "13px", color: "var(--muted)"}}>{x.label}</span>
+<span style={{fontSize: "14px", color: "var(--muted)"}}>{x.label}</span>
 <span style={{fontSize: "15px", fontWeight: "500", lineHeight: "1.3"}}>{x.value}</span>
 </div>
 </React.Fragment>))}
@@ -1586,13 +1589,13 @@ class Bridge extends BridgeBase {
 
 {v.edShowPrep && (<>
 <div style={{background: "rgba(255,255,255,0.9)", borderRadius: "24px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 12px 30px rgba(120,100,170,0.10)"}}>
-<div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline"}}><span style={{fontSize: "17px", fontWeight: "600"}}>Get ready with Mo</span><span style={{fontSize: "13px", color: "var(--muted)"}}>{v.edPrepCount}</span></div>
+<div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline"}}><span style={{fontSize: "17px", fontWeight: "600"}}>Get ready with Mo</span><span style={{fontSize: "14px", color: "var(--muted)"}}>{v.edPrepCount}</span></div>
 <button onClick={v.edPractice} style={{textAlign: "left", border: "none", display: "flex", gap: "12px", alignItems: "center", background: "var(--soft)", borderRadius: "20px", padding: "12px", color: "var(--ink)"}}>
 <Mo mood="happy" size={44} />
 <span style={{flex: "1", display: "flex", flexDirection: "column", gap: "2px"}}>
-<span style={{fontSize: "13px", color: "var(--muted)"}}>Practice first</span>
+<span style={{fontSize: "14px", color: "var(--muted)"}}>Practice first</span>
 <span style={{fontSize: "16px", fontWeight: "600"}}>{v.edPracticeTitle}</span>
-<span style={{fontSize: "13px", color: "var(--muted)"}}>{v.edPracticeWhy}</span>
+<span style={{fontSize: "14px", color: "var(--muted)"}}>{v.edPracticeWhy}</span>
 </span>
 <span aria-hidden="true" style={{fontSize: "20px"}}>›</span>
 </button>
@@ -1619,8 +1622,7 @@ class Bridge extends BridgeBase {
 <button onClick={w.pick} style={{minHeight: "42px", borderRadius: "999px", border: "none", padding: "8px 14px", fontSize: "14px", boxShadow: "0 0 0 1px rgba(0,0,0,0.05)", background: w.bg, color: w.fg}}>{w.label}</button>
 </React.Fragment>))}
 </div>
-<button onClick={v.edSaveRefl} style={{height: "48px", borderRadius: "18px", border: "none", background: v.edSaveBg, color: "#FFFFFF", fontSize: "16px", fontWeight: "500"}}>Save reflection</button>
-<span style={{fontSize: "13px", color: "var(--muted)"}}>Only you see this.</span>
+<span style={{fontSize: "14px", color: "var(--muted)"}}>Only you see this.</span>
 </div>
 </>)}
 
@@ -1643,17 +1645,19 @@ class Bridge extends BridgeBase {
 <div style={{display: "flex", alignItems: "center", gap: "12px"}}>
 <span style={{flex: "0 0 auto", width: "40px", height: "40px", borderRadius: "50%", background: "var(--soft)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: "600"}}>{c.initial}</span>
 <span style={{flex: "1", fontSize: "16px", fontWeight: "500"}}>{c.name}</span>
-{c.canDm && (<><button onClick={c.msg} style={{height: "40px", borderRadius: "14px", border: "none", background: "var(--ink)", color: "#FFFFFF", padding: "0 14px", fontSize: "14px", fontWeight: "500"}}>Message</button></>)}
+{c.canDm && (<><button onClick={c.msg} style={{height: "40px", borderRadius: "14px", border: "none", background: "var(--ink)", color: "#FFFFFF", padding: "0 14px", fontSize: "14px", fontWeight: "500"}}>Message {c.name}</button></>)}
 {c.noDm && (<>
 {c.notSent && (<><button onClick={c.hi} style={{height: "40px", borderRadius: "14px", border: "none", background: "var(--soft)", color: "var(--ink)", padding: "0 14px", fontSize: "14px", fontWeight: "500"}}>Say hi</button></>)}
 {c.sent && (<><span style={{fontSize: "14px", color: "#3E6B57"}}>Request sent ✓</span></>)}
 </>)}
 </div>
 </React.Fragment>))}
-<span style={{fontSize: "13px", color: "var(--muted)"}}>"Say hi" sends a message request. They choose whether to accept.</span>
+<span style={{fontSize: "14px", color: "var(--muted)"}}>"Say hi" sends a message request. They choose whether to accept.</span>
 </div>
 </>)}
 </div>
+{v.edUpcoming && <div className="sticky-cta rsvp-footer"><div className="rsvp-control">{v.edRsvp.map((o,i)=><button key={i} className={o.on?"on":""} onClick={o.pick}>{o.label}</button>)}</div></div>}
+{v.edReflOpen && <div className="sticky-cta"><button onClick={v.edSaveRefl} style={{background:v.edSaveBg}}>Save reflection</button></div>}
 </>)}
 
 {v.isPause && (<>
@@ -1663,7 +1667,7 @@ class Bridge extends BridgeBase {
 </button>
 <div style={{flex: "1", display: "flex", flexDirection: "column", justifyContent: "center", gap: "18px"}}>
 <div className="rise" style={{background: "rgba(255,255,255,0.85)", borderRadius: "24px", padding: "26px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px", textAlign: "center", boxShadow: "0 24px 60px rgba(120,100,170,0.2)"}}>
-<div className="floaty"><Mo mood="worried" size={120} /></div>
+<div><Mo mood="worried" size={120} /></div>
 <span style={{fontSize: "27px", fontWeight: "600", lineHeight: "1.2"}}>Let's take a breath together</span>
 <span style={{fontSize: "17px", lineHeight: "1.45", color: "var(--muted)"}}>This might hurt Jordan's feelings. You can still send it. You decide.</span>
 <div style={{width: "100%", background: "#FBEDEA", borderRadius: "20px", padding: "14px 16px", textAlign: "left", fontSize: "16px", lineHeight: "1.4"}}>"Zelda?? Seriously, that's the most overrated answer ever."</div>
@@ -1785,8 +1789,8 @@ class Bridge extends BridgeBase {
 </>)}
 
 {v.isFeedback && (<>
-<div style={{padding: "34px 20px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center", textAlign: "center"}}>
-<div className="floaty"><Mo mood="happy" size={120} /></div>
+<div style={{padding: "34px 20px 110px", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center", textAlign: "center"}}>
+<div><Mo mood="happy" size={120} /></div>
 <h1 style={{margin: "0", fontSize: "32px", fontWeight: "600"}}>{v.fbTitle}</h1>
 <div style={{width: "100%", background: "rgba(255,255,255,0.85)", borderRadius: "24px", padding: "18px", textAlign: "left", display: "flex", flexDirection: "column", gap: "4px"}}>
 <span style={{fontSize: "14px", color: "var(--muted)", letterSpacing: "1px"}}>WHAT WENT WELL</span>
@@ -1796,16 +1800,22 @@ class Bridge extends BridgeBase {
 <span style={{fontSize: "14px", color: "var(--muted)", letterSpacing: "1px"}}>ONE THING TO TRY</span>
 <span style={{fontSize: "17px", lineHeight: "1.45"}}>{v.fbSpark}</span>
 </div>
+{v.fbIsOwn && (<>
+<div style={{width: "100%", background: "rgba(255,255,255,0.6)", borderRadius: "24px", padding: "18px", textAlign: "left", display: "flex", flexDirection: "column", gap: "4px"}}>
+<span style={{fontSize: "14px", color: "var(--muted)", letterSpacing: "1px"}}>ANOTHER WAY TO SAY IT</span>
+<span style={{fontSize: "17px", lineHeight: "1.45"}}>"{v.fbExample}"</span>
+</div>
+</>)}
 <div style={{width: "100%", display: "flex", flexDirection: "column", gap: "10px", marginTop: "6px"}}>
-<button onClick={v.goGaming} style={{height: "54px", borderRadius: "20px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "17px", fontWeight: "500"}}>Try it for real</button>
 <button onClick={v.goPractice} style={{height: "54px", borderRadius: "20px", border: "none", background: "rgba(255,255,255,0.8)", color: "var(--ink)", fontSize: "17px", fontWeight: "500"}}>Practice again</button>
 </div>
 </div>
+<div className="sticky-cta"><button onClick={v.goGaming}>Try it for real</button></div>
 </>)}
 
 {v.isWin && (<>
 <div style={{width: "100%", minHeight: "100%", boxSizing: "border-box", padding: "50px 20px 30px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", textAlign: "center", background: "var(--bg)"}}>
-<span style={{fontSize: "15px", color: "var(--muted)", letterSpacing: "1px"}}>BRAVE STEP UNLOCKED</span>
+<span style={{fontSize: "15px", color: "var(--muted)", letterSpacing: "1px"}}>BRAVE STEP EARNED</span>
 <div className="rise" style={{width: "190px", height: "190px", borderRadius: "50%", background: "rgba(255,255,255,0.9)", boxShadow: "0 24px 60px rgba(120,100,170,0.22)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px"}}>
 <Mo mood="happy" size={110} />
 <span style={{fontSize: "18px", fontWeight: "600"}}>{v.winBadge}</span>
@@ -1817,7 +1827,7 @@ class Bridge extends BridgeBase {
 <span style={{width: "14px", height: "14px", borderRadius: "50%", background: "var(--ink)", display: "inline-block"}}></span>
 <span style={{width: "14px", height: "14px", borderRadius: "50%", background: "var(--ink)", display: "inline-block"}}></span>
 <span style={{width: "14px", height: "14px", borderRadius: "50%", background: "var(--ink)", display: "inline-block"}}></span>
-<span className="rise" style={{width: "14px", height: "14px", borderRadius: "50%", background: "#F29BAE", display: "inline-block"}}></span>
+<span className="rise" style={{width: "14px", height: "14px", borderRadius: "50%", background: "var(--ink)", display: "inline-block"}}></span>
 <span style={{fontSize: "15px", marginLeft: "6px"}}>5 this week</span>
 </div>
 <button onClick={v.finishWin} style={{width: "100%", height: "54px", borderRadius: "20px", border: "none", background: "var(--ink)", color: "#FFFFFF", fontSize: "17px", fontWeight: "500", marginTop: "auto"}}>Add to my collection</button>
