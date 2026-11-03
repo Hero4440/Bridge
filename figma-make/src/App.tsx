@@ -1653,7 +1653,7 @@ class Bridge extends BridgeBase {
 </div>
 </div>
 </div>
-<div style={{padding: "6px 20px 16px", display: "flex", flexDirection: "column", gap: "8px"}}>
+<div className="dm-composer" style={{padding: "6px 20px 16px", display: "flex", flexDirection: "column", gap: "8px"}}>
 {v.dmHarsh && (<>
 <div className="rise" style={{background: "#FBEDEA", borderRadius: "20px", padding: "10px 12px", display: "flex", flexDirection: "column", gap: "8px"}}>
 <div style={{display: "flex", gap: "8px", alignItems: "center"}}><Mo mood="worried" size={32} /><span style={{fontSize: "14px", lineHeight: "1.35"}}>This might sound harsh to {v.dmName}.</span></div>

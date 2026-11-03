@@ -150,3 +150,5 @@ button:active{transform:scale(.97)}
   .ios-status{display:none}
 }
 .no-streaks{display:block;margin-top:14px;font-size:14px;line-height:1.45}
+/* DM composer stays above the nav, so the tone warning never hides the input */
+.dm-composer{position:sticky;bottom:0;z-index:10;background:linear-gradient(to bottom,transparent,var(--bar) 18px)}
