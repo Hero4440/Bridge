@@ -16,8 +16,11 @@ import { tone } from './functions/tone/resource';
 import { preview } from './functions/preview/resource';
 import { reflectReply } from './functions/reflectReply/resource';
 import { dailyTopic } from './functions/dailyTopic/resource';
+import { sendDm } from './functions/sendDm/resource';
+import { respondToRequest } from './functions/respondToRequest/resource';
+import { sendHelpAlert } from './functions/sendHelpAlert/resource';
 
-const backend = defineBackend({ auth, data, preSignUp, classify, practice, tone, preview, reflectReply, dailyTopic });
+const backend = defineBackend({ auth, data, preSignUp, classify, practice, tone, preview, reflectReply, dailyTopic, sendDm, respondToRequest, sendHelpAlert });
 
 // D-05 / AUTH-03: 30-day refresh token so sessions survive a browser refresh.
 const { cfnUserPoolClient } = backend.auth.resources.cfnResources;
@@ -60,7 +63,8 @@ const BEDROCK_ARNS = [
   'arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0',
   'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0',
 ];
-const aiFunctions = [backend.classify, backend.practice, backend.tone, backend.preview, backend.reflectReply, backend.dailyTopic];
+// sendDm calls classify() (Bedrock); respondToRequest + sendHelpAlert are Data-only (not added here).
+const aiFunctions = [backend.classify, backend.practice, backend.tone, backend.preview, backend.reflectReply, backend.dailyTopic, backend.sendDm];
 for (const fn of aiFunctions) {
   fn.resources.lambda.addToRolePolicy(new PolicyStatement({ actions: ['bedrock:InvokeModel'], resources: BEDROCK_ARNS }));
 }

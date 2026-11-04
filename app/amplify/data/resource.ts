@@ -14,6 +14,9 @@ import { tone } from '../functions/tone/resource';
 import { preview } from '../functions/preview/resource';
 import { reflectReply } from '../functions/reflectReply/resource';
 import { dailyTopic } from '../functions/dailyTopic/resource';
+import { sendDm } from '../functions/sendDm/resource';
+import { respondToRequest } from '../functions/respondToRequest/resource';
+import { sendHelpAlert } from '../functions/sendHelpAlert/resource';
 
 const schema = a.schema({
   // DATA-01 — profile lives here (D-03), not in Cognito.
@@ -238,10 +241,40 @@ const schema = a.schema({
     .returns(a.ref('DailyTopicReply'))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(dailyTopic)),
+
+  // Phase 5: safety + DM custom mutations (server-side enforcement, SKILL §1.4).
+  SendDmReply: a.customType({ delivered: a.boolean(), held: a.boolean(), unsafe: a.boolean(), crisis: a.boolean() }),
+  sendDm: a
+    .mutation()
+    .arguments({ toUserId: a.string().required(), text: a.string().required() })
+    .returns(a.ref('SendDmReply'))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(sendDm)),
+  RespondReply: a.customType({ ok: a.boolean(), accepted: a.boolean(), reason: a.string() }),
+  respondToRequest: a
+    .mutation()
+    .arguments({ requestId: a.string().required(), accept: a.boolean().required() })
+    .returns(a.ref('RespondReply'))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(respondToRequest)),
+  HelpReply: a.customType({ notified: a.integer() }),
+  sendHelpAlert: a
+    .mutation()
+    .arguments({ note: a.string() })
+    .returns(a.ref('HelpReply'))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(sendHelpAlert)),
 })
   // Phase 3 (D-04): grant the practice Lambda Data-client access to persist PracticeRun.
   // Phase 4 (D-03): grant the dailyTopic Lambda access to read/write the Topic cache.
-  .authorization((allow) => [allow.resource(practice), allow.resource(dailyTopic)]);
+  // Phase 5: grant the DM/safety Lambdas Data access (hold/deliver, accept→Contact, help→Notification).
+  .authorization((allow) => [
+    allow.resource(practice),
+    allow.resource(dailyTopic),
+    allow.resource(sendDm),
+    allow.resource(respondToRequest),
+    allow.resource(sendHelpAlert),
+  ]);
 
 export type Schema = ClientSchema<typeof schema>;
 
