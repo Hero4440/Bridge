@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: AI Backend Infrastructure** - Lambda functions, Bedrock integration, structured outputs, rate limiting (completed 2026-11-04)
 - [x] **Phase 3: Events & Persistence** - Event CRUD, RSVP tracking, prep checklists, reflections (completed 2026-11-04)
 - [x] **Phase 4: Real-Time Chat** - Circle subscriptions, message history, reconnection logic, contact system (completed 2026-11-04)
-- [ ] **Phase 5: Safety & Direct Messages** - Classification, message requests, crisis detection, help notifications
+- [x] **Phase 5: Safety & Direct Messages** - Classification, message requests, crisis detection, help notifications (completed 2026-11-04)
 - [ ] **Phase 6: Profile & Frontend Integration** - Profile persistence, frontend API client, loading/error states
 - [ ] **Phase 7: Quality & Testing** - TypeScript strict mode, accessibility audit, bias probe, 2-account testing
 - [ ] **Phase 8: Production Deployment** - Production app, secrets config, deploy rehearsal, demo prep
@@ -162,7 +162,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 2. AI Backend Infrastructure | 5/5 | Complete   | 2026-11-04 |
 | 3. Events & Persistence | 5/5 | Complete   | 2026-11-04 |
 | 4. Real-Time Chat | 4/4 | Complete   | 2026-11-04 |
-| 5. Safety & Direct Messages | 0/4 | Planned | - |
+| 5. Safety & Direct Messages | 4/4 | Complete   | 2026-11-04 |
 | 6. Profile & Frontend Integration | 0/0 | Not started | - |
 | 7. Quality & Testing | 0/0 | Not started | - |
 | 8. Production Deployment | 0/0 | Not started | - |

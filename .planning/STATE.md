@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 complete
-last_updated: "2026-11-04T20:30:00.000Z"
-last_activity: 2026-11-04 -- Phase 4 execution complete (live-verified)
+stopped_at: Phase 5 complete
+last_updated: "2026-11-04T21:40:00.000Z"
+last_activity: 2026-11-04 -- Phase 5 execution complete (live-verified)
 progress:
   total_phases: 8
-  completed_phases: 4
-  total_plans: 19
-  completed_plans: 19
-  percent: 50
+  completed_phases: 5
+  total_plans: 23
+  completed_plans: 23
+  percent: 63
 ---
 
 # Project State
@@ -21,23 +21,24 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-03)
 
 **Core value:** Practice scenarios with real AI feedback must work reliably. Users get immediate, supportive coaching on conversation skills before facing real social situations.
-**Current focus:** Phase 5 — Safety & Direct Messages (next)
+**Current focus:** Phase 6 — Profile & Frontend Integration (next)
 
 ## Current Position
 
-Phase: 4 (Real-Time Chat) — ✅ COMPLETE
+Phase: 5 (Safety & Direct Messages) — ✅ COMPLETE
 Plan: 4 of 4 complete
-Status: Live-verified against real AWS (PHASE4 VERIFY: PASS)
-Last activity: 2026-11-04 -- Phase 4 execution complete
+Status: Live-verified against real AWS (PHASE5 VERIFY: PASS, 15/15)
+Last activity: 2026-11-04 -- Phase 5 execution complete
 
-Progress: [█████░░░░░] 50% (4/8 phases)
+Progress: [██████░░░░] 63% (5/8 phases)
 
-**Open items (not blocking Phase 5):**
+**Open items (not blocking Phase 6):**
 
 - Rotate the IAM access key shared in chat
 - backend.ts budget email is a personal gmail (public repo) — swap for a shared alias before merging to main
-- Phases 1-4 on `dev` (pushed to origin/dev), not merged to main
+- Phases 1-5 on `dev` (pushed to origin/dev), not merged to main
 - Pre-existing: `practice/__tests__/handler.test.ts` fails under vitest (`$amplify/env/practice` has no test alias) — add a vitest alias for `$amplify/env/*`
+- Owner-binding pattern: Lambda-written owner models must use `allow.ownerDefinedIn('userId')` (fixed for PracticeRun/Contact/Notification) — apply to any future Lambda-created owner rows
 - Optional: raise Lambda concurrency + Bedrock 500 RPM quota; re-add reserved concurrency
 
 ## Performance Metrics
@@ -99,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-04T20:30:00.000Z
-Stopped at: Phase 4 complete (live-verified)
-Resume file: .planning/phases/04-real-time-chat/04-04-SUMMARY.md
+Last session: 2026-11-04T21:40:00.000Z
+Stopped at: Phase 5 complete (live-verified)
+Resume file: .planning/phases/05-safety-direct-messages/05-04-SUMMARY.md
