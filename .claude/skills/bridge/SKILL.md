@@ -38,7 +38,7 @@ Real Cognito, AppSync/DynamoDB, Lambda, Bedrock (the Nov 3 decision: real accoun
 
 ### 1.4 AWS
 Amplify Gen 2 (TypeScript), Cognito, AppSync + DynamoDB, Lambda, Bedrock, EventBridge, CloudWatch, Budgets. Check the current Amplify and Bedrock docs for any API you are unsure of; don't guess.
-- **Account:** run `aws sts get-caller-identity` before any deploy. One region for everything (the Bedrock region); chosen region and model: **TBD**, then record them in `amplify/shared/config.ts`. Use SSO (`aws sso login`); never put keys in files, code, prompts or commits. Lambdas get access only through their IAM role.
+- **Account:** run `aws sts get-caller-identity` before any deploy. One region for everything (the Bedrock region); chosen region: **us-east-1**; model: **TBD** (`aws bedrock list-inference-profiles`), recorded in `app/amplify/shared/config.ts`. Use SSO (`aws sso login`); never put keys in files, code, prompts or commits. Lambdas get access only through their IAM role.
 - **Infra is code** under `amplify/`. Console clicks only for one-time setup (Bedrock access, Budgets), documented here. Each dev runs a personal sandbox (`npx ampx sandbox`), never pointed at prod. `main` deploys via Amplify Hosting (`amplify.yml`: `npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID`, then build). Protect `main`: PR plus one reviewer. Don't commit `amplify_outputs.json`.
 - **Auth and data:** Cognito email login, every account equal (no groups). Access is owner / participant / member / person-controlled. `Reflection` and `PracticeRun` use `allow.owner()`; messages are visible to circle members or DM participants; a guardian sees only what the person shares. A rule the schema can't express is enforced in a Lambda custom query, never in the client. `allow.resource(fn)` lets a Lambda use the Data client. Live chat uses AppSync subscriptions, never polling. No raw transcripts anywhere (tables or logs). Use TTL for ephemeral items and enable point-in-time recovery via a CDK override in `backend.ts` (check the docs for the property name).
 - **AI endpoints** are Lambdas behind Amplify custom queries (AppSync authorizes via Cognito first):
@@ -56,7 +56,7 @@ backend.practice.resources.lambda.addToRolePolicy(new PolicyStatement({
 - **Bedrock:** use the Converse API (`@aws-sdk/client-bedrock-runtime`). For structured output force a tool via `toolConfig` with a JSON schema and validate with zod; set `maxTokens` and a low `temperature`. Never guess the model ID: `aws bedrock list-inference-profiles --region <r>`. A cross-region inference profile needs IAM for the profile ARN plus the foundation-model ARNs in every region it routes to. Anthropic models may need a one-time use-case form in the console.
 - **Each turn:** validate, `classify()` the input (crisis, money/address), call the model with the `prompts.ts` system prompt, `classify()` the output, save the `PracticeRun`, reply. Send Bedrock only the text the feature needs, and keep the in-app wording about what Mo can see. On throttle or timeout: SDK retries, then the fallback.
 - **Logs and alarms:** log request id, scenario, level, latency, labels and `fallback` only, never message content. Tail with `aws logs tail /aws/lambda/<fn> --follow`. Email alarms on Lambda errors and Bedrock throttles.
-- **Cost guards** (set before the first Bedrock call): monthly Budgets alerts at 50/80/100% to the whole team, small model, capped `maxTokens` and input length, per-user rate limit (DynamoDB counter with TTL), reserved concurrency on AI functions.
+- **Cost guards** (set before the first Bedrock call): a **$50/month** budget with alerts at 50/80/100% to the whole team, small model, capped `maxTokens` and input length, per-user rate limit (DynamoDB counter with TTL), reserved concurrency on AI functions.
 - **Secrets:** non-AWS secrets use `secret('NAME')` from `@aws-amplify/backend`, set with `npx ampx sandbox secret set NAME` locally and in the Amplify console for prod. Never `.env`.
 - **Scheduled work (stretch):** `defineFunction({ schedule: 'every week' })` for quiet check-ins, which go to the person first. Web push via VAPID from a Lambda, keys in secrets.
 - **Done:** `npx tsc --noEmit` passes; the sandbox deploys; you called the endpoint as a signed-in test user; logs hold no message content; IAM has no `*`; cost guards exist; prompt logged; AI code attributed.
@@ -133,6 +133,8 @@ amplify/          auth/ (Cognito, no roles/groups) · data/ (User, Contact, Grou
 scripts/          hooks/ (team hooks) · seed/ (real seed data) · bias_probe.py
 AI_PROMPTS/       one prompt log per teammate
 ```
+Production code lives under `app/` (so the paths above are `app/src/...`, `app/amplify/...`); `figma-make/` stays the prototype.
+
 The Figma Make `App.tsx` (167 KB, `@ts-nocheck`) is being split into components. Add no new code to it.
 
 1. TypeScript, strict. No `@ts-nocheck`; no `any` in new code unless commented why.

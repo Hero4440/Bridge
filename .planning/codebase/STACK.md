@@ -70,8 +70,8 @@
 
 **Environment:**
 - Runtime: Node.js (version not specified in codebase; check `.nvmrc` if present)
-- AWS Region: TBD (recorded in `amplify/shared/config.ts` once chosen)
-- Bedrock Region: chosen region (same as all other AWS services per SKILL.md 1.4)
+- AWS Region: us-east-1 (recorded in `app/amplify/shared/config.ts`)
+- Bedrock Region: us-east-1 (same as all other AWS services per SKILL.md 1.4)
 - Bedrock Model: small Claude model (exact ID per `aws bedrock list-inference-profiles`)
 
 **Build:**
