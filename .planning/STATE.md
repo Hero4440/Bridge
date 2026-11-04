@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-11-04T06:04:34.303Z"
-last_activity: 2026-11-04 -- Phase 2 planning complete
+status: phase-complete
+stopped_at: Phase 2 complete (deployed + verified, real Claude output)
+last_updated: "2026-11-04T10:00:00.000Z"
+last_activity: 2026-11-04 -- Phase 2 complete (AI backend live; classify/practice/tone/preview real)
 progress:
   total_phases: 8
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 10
-  completed_plans: 5
-  percent: 50
+  completed_plans: 10
+  percent: 25
 ---
 
 # Project State
@@ -21,22 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-03)
 
 **Core value:** Practice scenarios with real AI feedback must work reliably. Users get immediate, supportive coaching on conversation skills before facing real social situations.
-**Current focus:** Phase 1 — Foundation & Authentication
+**Current focus:** Phase 2 — AI Backend Infrastructure
 
 ## Current Position
 
-Phase: 1 (Foundation & Authentication) — ✅ COMPLETE
+Phase: 2 (AI Backend Infrastructure) — ✅ COMPLETE
 Plan: 5 of 5 complete
-Status: Ready to execute
-Last activity: 2026-11-04 -- Phase 2 planning complete
+Status: AI backend deployed + verified with real Claude output; ready for Phase 3 (Events & Persistence)
+Last activity: 2026-11-04 -- Phase 2 complete (classify/practice/tone/preview live, all checks real)
 
-Progress: [█░░░░░░░░░] 13% (1/8 phases)
+Progress: [██░░░░░░░░] 25% (2/8 phases)
 
-**Residuals before/within Phase 2:**
+**Open items (not blocking Phase 3):**
 
-- Enable Bedrock Anthropic model access in us-east-1 console; record BEDROCK_MODEL_ID (INFRA-02)
-- Optional manual check: browser-refresh session persistence (AUTH-03)
 - Rotate the IAM access key shared in chat
+- backend.ts budget email is a personal gmail (public repo) — swap for a shared alias before merging to main
+- Phases 1 + 2 on `dev`, not merged to main
+- Optional: raise Lambda concurrency + Bedrock 500 RPM quota; re-add reserved concurrency
 
 ## Performance Metrics
 

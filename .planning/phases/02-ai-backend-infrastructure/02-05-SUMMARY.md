@@ -60,3 +60,14 @@ completed: 2026-11-03
 ---
 *Phase: 02-ai-backend-infrastructure*
 *Completed: 2026-11-03 (model output pending Anthropic form)*
+
+---
+
+## UPDATE 2026-11-04 — Anthropic form cleared, VERIFIED COMPLETE ✅
+The Anthropic use-case form was submitted and propagated for both models. `verify-phase2.ts` re-run against the live sandbox:
+- classify → crisis / money / address / safe all correct (real Haiku structured output + keyword net)
+- practice → real strength + tip for all 7 scenarios × 3 levels, **fallback=false on every call**
+- crisis gate → 988, role-play stopped
+- tone → real gentle rewrite + reasoned flagged words · preview → 3 real suggestions
+
+**Fix applied:** per-call Bedrock timeout — Sonnet practice calls were intermittently exceeding the shared 5s abort; raised practice to 15s (Haiku classify/tone/preview stay at 5s). After this, all practice calls return real feedback. Models in use: `claude-haiku-4-5` + `claude-sonnet-4-5`. All 5 Phase-2 success criteria met with real Claude output.
