@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 complete
-last_updated: "2026-11-04T18:24:11.220Z"
-last_activity: 2026-11-04 -- Phase 3 execution complete (live-verified)
+stopped_at: Phase 4 complete
+last_updated: "2026-11-04T20:30:00.000Z"
+last_activity: 2026-11-04 -- Phase 4 execution complete (live-verified)
 progress:
   total_phases: 8
-  completed_phases: 3
-  total_plans: 15
-  completed_plans: 15
-  percent: 38
+  completed_phases: 4
+  total_plans: 19
+  completed_plans: 19
+  percent: 50
 ---
 
 # Project State
@@ -21,22 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-03)
 
 **Core value:** Practice scenarios with real AI feedback must work reliably. Users get immediate, supportive coaching on conversation skills before facing real social situations.
-**Current focus:** Phase 4 — Real-Time Chat (next)
+**Current focus:** Phase 5 — Safety & Direct Messages (next)
 
 ## Current Position
 
-Phase: 3 (Events & Persistence) — ✅ COMPLETE
-Plan: 5 of 5 complete
-Status: Live-verified against real AWS (PHASE3 VERIFY: PASS)
-Last activity: 2026-11-04 -- Phase 3 execution complete
+Phase: 4 (Real-Time Chat) — ✅ COMPLETE
+Plan: 4 of 4 complete
+Status: Live-verified against real AWS (PHASE4 VERIFY: PASS)
+Last activity: 2026-11-04 -- Phase 4 execution complete
 
-Progress: [███░░░░░░░] 38% (3/8 phases)
+Progress: [█████░░░░░] 50% (4/8 phases)
 
-**Open items (not blocking Phase 4):**
+**Open items (not blocking Phase 5):**
 
 - Rotate the IAM access key shared in chat
 - backend.ts budget email is a personal gmail (public repo) — swap for a shared alias before merging to main
-- Phases 1 + 2 + 3 on `dev`, not merged to main
+- Phases 1-4 on `dev` (pushed to origin/dev), not merged to main
+- Pre-existing: `practice/__tests__/handler.test.ts` fails under vitest (`$amplify/env/practice` has no test alias) — add a vitest alias for `$amplify/env/*`
 - Optional: raise Lambda concurrency + Bedrock 500 RPM quota; re-add reserved concurrency
 
 ## Performance Metrics
@@ -98,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-04T18:24:11.220Z
-Stopped at: Phase 3 complete (live-verified)
-Resume file: .planning/phases/03-events-persistence/03-05-SUMMARY.md
+Last session: 2026-11-04T20:30:00.000Z
+Stopped at: Phase 4 complete (live-verified)
+Resume file: .planning/phases/04-real-time-chat/04-04-SUMMARY.md
