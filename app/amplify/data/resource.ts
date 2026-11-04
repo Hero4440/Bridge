@@ -42,16 +42,23 @@ const schema = a.schema({
     })
     .authorization((allow) => [allow.authenticated()]),
 
-  // DATA-03
+  // DATA-03 — reconciled with the 3-step create wizard (D-01, D-02, D-05)
   Event: a
     .model({
       what: a.string().required(),
       whenAt: a.datetime(),
+      durationMinutes: a.integer(),
       whereText: a.string(),
-      format: a.enum(['inPerson', 'online']),
+      venue: a.string(), // D-01: host free-text venue, no maps
+      usuallyQuiet: a.boolean(), // D-01: host-declared quiet venue
+      format: a.enum(['inPerson', 'voice', 'video', 'text']),
       comfortSound: a.string(),
       comfortLighting: a.string(),
-      comfortSize: a.integer(),
+      comfortSize: a.integer(), // group size / capacity
+      reminder: a.enum(['oneHour', 'oneDay', 'both']),
+      tellTrustedPerson: a.boolean(),
+      exitPlan: a.string(), // D-02: host "what to expect" break/exit field (not AI)
+      circleId: a.string(), // D-05: optional; events are standalone, circle scoping is Phase 4
       creatorId: a.string(),
       rsvps: a.hasMany('RSVP', 'eventId'),
     })
