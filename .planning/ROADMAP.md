@@ -96,10 +96,13 @@ Plans:
   3. Crisis keywords ("hurt myself", "end it") detected by classify() and show 988 hotline + trusted person alert
   4. "I need help" button creates Notification for trusted person and actually sends (in-app notification minimum)
   5. User can report any message (creates Report record) and block any contact (updates Contact status to blocked)
-**Plans**: TBD
+**Plans**: 4 (planned 2026-11-04)
 
 Plans:
-- TBD (populated during plan-phase)
+- 01: Schema — MessageRequest + Report models (DM-02, SAFE-04)
+- 02: Safety Lambdas — sendDm (classify+hold/deliver+crisis), respondToRequest, sendHelpAlert + mutations (DM-01..04, SAFE-01/02/03/06/07)
+- 03: Client libs — dm (threadId, send/observe/respond) + safety (report/block/help) + units (DM-01..05, SAFE-02/04/05/06)
+- 04: Live two-account verify harness — hold/accept/deliver, unsafe+crisis, guardian alert, report/block (DM-01..05, SAFE-01..07)
 
 ### Phase 6: Profile & Frontend Integration
 **Goal**: Frontend uses Amplify Data client for all features with proper loading/error states
@@ -159,7 +162,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 2. AI Backend Infrastructure | 5/5 | Complete   | 2026-11-04 |
 | 3. Events & Persistence | 5/5 | Complete   | 2026-11-04 |
 | 4. Real-Time Chat | 4/4 | Complete   | 2026-11-04 |
-| 5. Safety & Direct Messages | 0/0 | Not started | - |
+| 5. Safety & Direct Messages | 0/4 | Planned | - |
 | 6. Profile & Frontend Integration | 0/0 | Not started | - |
 | 7. Quality & Testing | 0/0 | Not started | - |
 | 8. Production Deployment | 0/0 | Not started | - |
