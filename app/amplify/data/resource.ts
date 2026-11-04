@@ -108,13 +108,15 @@ const schema = a.schema({
     .authorization((allow) => [allow.owner()]),
 
   // DATA-07
+  // Contact rows are created by the respondToRequest Lambda (accept), which sets userId; bind the
+  // owner to that field (like PracticeRun in Phase 3) so the owning user can block/update their row.
   Contact: a
     .model({
       userId: a.string(),
       contactId: a.string(),
       status: a.enum(['pending', 'accepted', 'blocked']),
     })
-    .authorization((allow) => [allow.owner(), allow.authenticated().to(['read'])]),
+    .authorization((allow) => [allow.ownerDefinedIn('userId').identityClaim('sub'), allow.authenticated().to(['read'])]),
 
   // DATA-08
   GuardianLink: a
@@ -127,6 +129,8 @@ const schema = a.schema({
     .authorization((allow) => [allow.owner(), allow.authenticated().to(['read'])]),
 
   // DATA-09
+  // Notifications are created both by the owner and by the sendHelpAlert Lambda (which sets userId
+  // to the guardian). Bind the owner to userId so a Lambda-written alert is readable by its recipient.
   Notification: a
     .model({
       userId: a.string(),
@@ -135,7 +139,7 @@ const schema = a.schema({
       read: a.boolean(),
       timestamp: a.datetime(),
     })
-    .authorization((allow) => [allow.owner()]),
+    .authorization((allow) => [allow.ownerDefinedIn('userId').identityClaim('sub')]),
 
   // --- Phase 4: circles as real data + cached daily topic ---
   // Group: the 6 circles (Gaming/Music/Anime/Cooking/Art/Tech) as real DynamoDB rows, not a
