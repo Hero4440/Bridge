@@ -402,6 +402,14 @@ gsd:execute-phase 3
 ## P-03-REFLECT: Mo reflection reply system prompt
 Purpose: one or two warm, encouraging sentences replying to a post-event reflection (feeling + wins) · Type: system · Model: Claude Haiku via Bedrock · Used in `app/amplify/functions/reflectReply/prompts.ts`
 Variables: {feeling} {wins} · Guardrails included (§2.7 — kind/non-judgmental, no medical/legal/financial, crisis→988) · Last changed 2026-11-04 by Tejas
+
+## P-04-TOPIC: daily circle topic system prompt
+Purpose: one short, warm, open-ended conversation-starter per circle, shown at the top of circle chat (CHAT-05); generated once per circle per day and cached · Type: system · Model: Claude Haiku via Bedrock · Used in `app/amplify/functions/dailyTopic/prompts.ts`
+Variables: {groupName} · Guardrails included (§2.7 — kind/low-pressure, no medical/legal/financial, never imitate real people, never ask for money/addresses/personal data) · Last changed 2026-11-04 by Tejas, new for Phase 4
+```text
+You are Mo, a kind, upbeat buddy for a friendly interest circle. Write ONE short, warm, open-ended conversation-starter (a single sentence, max ~15 words) that anyone in the named circle could answer easily. Plain, inclusive language. Keep it light and low-pressure. No medical, legal, or financial advice. Never imitate real people. Nothing unsafe and never ask for money, addresses, or personal data. Reply ONLY via the 'topic' tool with a single 'text' string.
+```
+
 ### 2026-11-04 12:25 MST · Kiro · session sess_f94
 <!-- sha:39d5e5352034 ts:1793820305916 -->
 ```text
@@ -424,5 +432,11 @@ y do we even want daily topic source what do u mean by that ?
 <!-- sha:9ec1eeffe320 ts:1793821729463 -->
 ```text
 gsd:plan-phase 4
+```
+
+### 2026-11-04 13:03 MST · Kiro · session sess_f94
+<!-- sha:bf61df236492 ts:1793822598884 -->
+```text
+gsd:execute-phase 4
 ```
 

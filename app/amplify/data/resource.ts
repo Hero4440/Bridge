@@ -13,6 +13,7 @@ import { practice } from '../functions/practice/resource';
 import { tone } from '../functions/tone/resource';
 import { preview } from '../functions/preview/resource';
 import { reflectReply } from '../functions/reflectReply/resource';
+import { dailyTopic } from '../functions/dailyTopic/resource';
 
 const schema = a.schema({
   // DATA-01 — profile lives here (D-03), not in Cognito.
@@ -202,9 +203,19 @@ const schema = a.schema({
     .returns(a.ref('ReflectReply'))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(reflectReply)),
+
+  // Phase 4 (CHAT-05 / D-03): AI-generated, cached daily circle topic.
+  DailyTopicReply: a.customType({ text: a.string(), fallback: a.boolean() }),
+  getDailyTopic: a
+    .query()
+    .arguments({ groupId: a.string().required(), groupName: a.string() })
+    .returns(a.ref('DailyTopicReply'))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(dailyTopic)),
 })
   // Phase 3 (D-04): grant the practice Lambda Data-client access to persist PracticeRun.
-  .authorization((allow) => [allow.resource(practice)]);
+  // Phase 4 (D-03): grant the dailyTopic Lambda access to read/write the Topic cache.
+  .authorization((allow) => [allow.resource(practice), allow.resource(dailyTopic)]);
 
 export type Schema = ClientSchema<typeof schema>;
 

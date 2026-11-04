@@ -15,8 +15,9 @@ import { practice } from './functions/practice/resource';
 import { tone } from './functions/tone/resource';
 import { preview } from './functions/preview/resource';
 import { reflectReply } from './functions/reflectReply/resource';
+import { dailyTopic } from './functions/dailyTopic/resource';
 
-const backend = defineBackend({ auth, data, preSignUp, classify, practice, tone, preview, reflectReply });
+const backend = defineBackend({ auth, data, preSignUp, classify, practice, tone, preview, reflectReply, dailyTopic });
 
 // D-05 / AUTH-03: 30-day refresh token so sessions survive a browser refresh.
 const { cfnUserPoolClient } = backend.auth.resources.cfnResources;
@@ -59,7 +60,7 @@ const BEDROCK_ARNS = [
   'arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0',
   'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0',
 ];
-const aiFunctions = [backend.classify, backend.practice, backend.tone, backend.preview, backend.reflectReply];
+const aiFunctions = [backend.classify, backend.practice, backend.tone, backend.preview, backend.reflectReply, backend.dailyTopic];
 for (const fn of aiFunctions) {
   fn.resources.lambda.addToRolePolicy(new PolicyStatement({ actions: ['bedrock:InvokeModel'], resources: BEDROCK_ARNS }));
 }
