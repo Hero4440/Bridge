@@ -154,7 +154,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 |-------|----------------|--------|-----------|
 | 1. Foundation & Authentication | 5/5 | Complete   | 2026-11-04 |
 | 2. AI Backend Infrastructure | 5/5 | Complete   | 2026-11-04 |
-| 3. Events & Persistence | 0/0 | Not started | - |
+| 3. Events & Persistence | 0/5 | Planned    |  |
 | 4. Real-Time Chat | 0/0 | Not started | - |
 | 5. Safety & Direct Messages | 0/0 | Not started | - |
 | 6. Profile & Frontend Integration | 0/0 | Not started | - |
