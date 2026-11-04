@@ -158,6 +158,32 @@ const schema = a.schema({
     .identifier(['groupId', 'date'])
     .authorization((allow) => [allow.authenticated()]),
 
+  // --- Phase 5: direct messages + safety ---
+  // MessageRequest: a first message from a NON-contact, held for accept/decline (DM-02 / SAFE-01).
+  // Writes happen only via the Plan 02 sendDm/respondToRequest Lambdas, which set `unsafe` from
+  // classify(); authenticated read lets both parties see it. DMs themselves reuse Message (groupId=dm#...).
+  MessageRequest: a
+    .model({
+      fromUserId: a.string().required(),
+      toUserId: a.string().required(),
+      firstMessage: a.string().required(),
+      status: a.enum(['pending', 'accepted', 'declined']),
+      unsafe: a.boolean(),
+      createdAt: a.datetime(),
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
+  // Report: an abuse report the team reviews (SAFE-04). No moderator role — the UI only promises review.
+  Report: a
+    .model({
+      reporterId: a.string(),
+      targetType: a.enum(['message', 'user']),
+      targetId: a.string(),
+      reason: a.string(),
+      createdAt: a.datetime(),
+    })
+    .authorization((allow) => [allow.owner(), allow.authenticated().to(['read'])]),
+
   // --- Phase 2: AI reply types + Cognito-authorized custom queries (handlers in functions/) ---
   PracticeReply: a.customType({
     partnerReply: a.string(),
