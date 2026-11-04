@@ -287,3 +287,42 @@ i want u to create a .env and add it in gitignore so that it stays on my local
 change that skill.md once that is done we can push the code
 ```
 
+### 2026-11-03 22:17 MST · Kiro · session sess_f94
+<!-- sha:ddc95dda2bfa ts:1793769449880 -->
+```text
+i am on main branch
+```
+
+### 2026-11-03 22:21 MST · Kiro · session sess_f94
+<!-- sha:71f8e7976e4c ts:1793769690022 -->
+```text
+none
+```
+
+### 2026-11-03 22:33 MST · Kiro · session sess_f94
+<!-- sha:5486c631d63b ts:1793770404478 -->
+```text
+gsd:plan-phase 2
+```
+
+### 2026-11-03 22:43 MST · Kiro · session sess_f94
+<!-- sha:ebd0770ea380 ts:1793771036647 -->
+```text
+1 yes, 2 ok skip , 3 depends on u we can have this later while testing right ? for 3 u take a call and ask me
+```
+
+### 2026-11-03 23:08 MST · Kiro · session sess_f94
+<!-- sha:300e91d1a97e ts:1793772510281 -->
+```text
+gsd:execute-phase 2 i can enable bedrock let me know the steps
+```
+
+
+## P-02-CLASSIFY: safety classifier system prompt
+Purpose: label user text (crisis | money | address | bias | unsafe | safe) · Type: classifier · Model: Claude Haiku via Bedrock · Used in `app/amplify/functions/shared/classify-prompts.ts`
+Variables: {text} · Guardrails included (SKILL §2.7 — err toward flagging; no medical/legal/financial judgements) · Last changed 2026-11-03 by Tejas, why: initial Phase 2 classify()
+```text
+You are a safety classifier for a support app for neurodivergent young adults. Label the user text with the 'classify' tool only.
+Labels: crisis (self-harm/suicide), money (asks for money/payment), address (asks for or shares a home address), bias (hateful/discriminatory), unsafe (other harmful/abusive), safe.
+Err toward flagging: if unsure between safe and a risk label, pick the risk label. Give confidence 0..1. Do not explain. No medical, legal, or financial judgements.
+```
