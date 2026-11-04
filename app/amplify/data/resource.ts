@@ -8,6 +8,10 @@
 // Field lists follow REQUIREMENTS DATA-01..09 + SKILL §2.2-2.4; reconcile against
 // `tech design/index.html` if it specifies additional fields.
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
+import { classify } from '../functions/classify/resource';
+import { practice } from '../functions/practice/resource';
+import { tone } from '../functions/tone/resource';
+import { preview } from '../functions/preview/resource';
 
 const schema = a.schema({
   // DATA-01 — profile lives here (D-03), not in Cognito.
@@ -74,6 +78,8 @@ const schema = a.schema({
       hintsUsed: a.integer(),
     })
     .authorization((allow) => [allow.owner()]),
+    // NOTE: PracticeRun persistence (practice Lambda → Data client) is deferred to Phase 3
+    // (Events & Persistence). Phase 2's practice() returns strength+tip without a DB write.
 
   // DATA-06
   Reflection: a
@@ -114,6 +120,43 @@ const schema = a.schema({
       timestamp: a.datetime(),
     })
     .authorization((allow) => [allow.owner()]),
+
+  // --- Phase 2: AI reply types + Cognito-authorized custom queries (handlers in functions/) ---
+  PracticeReply: a.customType({
+    partnerReply: a.string(),
+    strength: a.string(),
+    tip: a.string(),
+    fallback: a.boolean(),
+    crisis: a.boolean(),
+  }),
+  ClassifyReply: a.customType({ label: a.string(), confidence: a.float(), fallback: a.boolean() }),
+  ToneReply: a.customType({ gentle: a.string(), flaggedWords: a.string().array(), fallback: a.boolean() }),
+  PreviewReply: a.customType({ suggestions: a.string().array(), fallback: a.boolean() }),
+
+  practiceTurn: a
+    .query()
+    .arguments({ scenarioId: a.string().required(), level: a.integer().required(), goal: a.string().required(), message: a.string().required() })
+    .returns(a.ref('PracticeReply'))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(practice)),
+  classifyText: a
+    .query()
+    .arguments({ text: a.string().required() })
+    .returns(a.ref('ClassifyReply'))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(classify)),
+  toneCheck: a
+    .query()
+    .arguments({ text: a.string().required() })
+    .returns(a.ref('ToneReply'))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(tone)),
+  previewReplies: a
+    .query()
+    .arguments({ context: a.string().required() })
+    .returns(a.ref('PreviewReply'))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(preview)),
 });
 
 export type Schema = ClientSchema<typeof schema>;

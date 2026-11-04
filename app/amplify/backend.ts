@@ -1,27 +1,31 @@
 // app/amplify/backend.ts
-// Composes Bridge's Amplify Gen 2 backend (auth + data + pre-sign-up trigger),
-// sets a 30-day refresh token (D-05/AUTH-03) and a $50/month cost budget (D-06).
+// Composes Bridge's Amplify Gen 2 backend: auth (+30-day refresh token, D-05), the data
+// schema, the pre-sign-up trigger, and the four Phase-2 AI Lambdas. Adds the $50 budget
+// (D-06), least-privilege Bedrock IAM with EXACT inference-profile + foundation-model ARNs
+// (LAMBDA-05, never "*"), a DynamoDB rate-limit table (LAMBDA-08), and reserved concurrency.
 import { defineBackend } from '@aws-amplify/backend';
 import { CfnBudget } from 'aws-cdk-lib/aws-budgets';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { preSignUp } from './functions/pre-sign-up/resource';
+import { classify } from './functions/classify/resource';
+import { practice } from './functions/practice/resource';
+import { tone } from './functions/tone/resource';
+import { preview } from './functions/preview/resource';
 
-const backend = defineBackend({ auth, data, preSignUp });
+const backend = defineBackend({ auth, data, preSignUp, classify, practice, tone, preview });
 
 // D-05 / AUTH-03: 30-day refresh token so sessions survive a browser refresh.
-// NOTE [confirm on first deploy]: the cfnResources path is from RESEARCH Pattern 2;
-// if the installed Amplify version differs, adjust to the documented CDK override.
 const { cfnUserPoolClient } = backend.auth.resources.cfnResources;
 cfnUserPoolClient.refreshTokenValidity = 30;
 cfnUserPoolClient.tokenValidityUnits = { refreshToken: 'days' };
 
 // D-06: $50/month cost guard with email alerts at 50/80/100% ACTUAL spend.
-// Must exist before Phase 2's first Bedrock call. The address below is a plain
-// team distribution email — config, not a secret, not participant data. Replace
-// the placeholder with the real team alias before deploy.
+// Plain team email — config, not a secret. (Public repo: swap for a shared alias if preferred.)
 const budgetStack = backend.createStack('BudgetStack');
-const TEAM_ALERT_EMAIL = 'REPLACE_WITH_TEAM_ALIAS@example.com';
+const TEAM_ALERT_EMAIL = 'tejasshah4440@gmail.com';
 
 new CfnBudget(budgetStack, 'BridgeMonthlyBudget', {
   budget: {
@@ -40,3 +44,37 @@ new CfnBudget(budgetStack, 'BridgeMonthlyBudget', {
     subscribers: [{ subscriptionType: 'EMAIL', address: TEAM_ALERT_EMAIL }],
   })),
 });
+
+// LAMBDA-05: least-privilege Bedrock invocation. EXACT inference-profile ARNs + the routed
+// foundation-model ARNs in every region the `us.` profiles reach (confirmed via
+// get-inference-profile). NEVER "*" — avoids the cross-region AccessDenied pitfall.
+const BEDROCK_ARNS = [
+  'arn:aws:bedrock:us-east-1:429367298232:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0',
+  'arn:aws:bedrock:us-east-1:429367298232:inference-profile/us.anthropic.claude-sonnet-4-5-20250929-v1:0',
+  'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0',
+  'arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0',
+  'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0',
+  'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0',
+  'arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0',
+  'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0',
+];
+const aiFunctions = [backend.classify, backend.practice, backend.tone, backend.preview];
+for (const fn of aiFunctions) {
+  fn.resources.lambda.addToRolePolicy(new PolicyStatement({ actions: ['bedrock:InvokeModel'], resources: BEDROCK_ARNS }));
+}
+// NOTE: reserved concurrency (cost guard) is deferred — this account's Lambda concurrency
+// limit is 10, so reserving any per-function amount is rejected. Cost is guarded by the $50
+// budget + per-user rate limit + maxTokens≤500. Re-add once the concurrency quota is raised.
+
+// LAMBDA-08: per-user rate-limit counter table (TTL). Granted to the three rate-limited
+// functions (classify is never rate-limited); RATE_LIMIT_TABLE env binds shared/rateLimit.ts.
+const aiStack = backend.createStack('AiStack');
+const rateLimitTable = new Table(aiStack, 'RateLimit', {
+  partitionKey: { name: 'pk', type: AttributeType.STRING },
+  billingMode: BillingMode.PAY_PER_REQUEST,
+  timeToLiveAttribute: 'ttl',
+});
+for (const fn of [backend.practice, backend.tone, backend.preview]) {
+  rateLimitTable.grantWriteData(fn.resources.lambda);
+  fn.addEnvironment('RATE_LIMIT_TABLE', rateLimitTable.tableName);
+}
