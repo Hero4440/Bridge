@@ -338,3 +338,45 @@ Variables: {text} · Guardrails included (§2.7; user-initiated only, no auto-re
 ## P-02-PREVIEW: Mo reply-idea system prompt
 Purpose: offer 1-3 short opener/reply ideas for the current context; ideas only, never auto-sent · Type: system · Model: Claude Haiku via Bedrock · Used in `app/amplify/functions/preview/prompts.ts`
 Variables: {context} · Guardrails included (§2.7; no impersonation, no medical/legal/financial) · Last changed 2026-11-03 by Tejas
+### 2026-11-03 23:20 MST · Kiro · session sess_f94
+<!-- sha:c641f1ae57ae ts:1793773221281 -->
+```text
+Model access
+Model access page has been retired
+Serverless foundation models are now automatically enabled across all AWS commercial regions when first invoked in your account, so you can start using them instantly. You no longer need to manually activate model access through this page. Note that for Anthropic models, first-time users may need to submit use case details before they can access the model. For models served from AWS Marketplace, a user with AWS Marketplace permissions  must invoke the model once to enable it account-wide for all users.
+
+Account administrators retain full control over model access through IAM policies  and Service Control Policies  to restrict access as needed. Learn more 
+
+To get started, simply select a model from the Model catalog and open it in the playground or invoke the model using the InvokeModel  or Converse API  operations. Review our documentation  for the complete list of available models.
+```
+
+### 2026-11-04 08:14 MST · Kiro · session sess_f94
+<!-- sha:4925dabe8655 ts:1793805265577 -->
+```text
+what to do here
+```
+
+### 2026-11-04 09:06 MST · Kiro · session sess_f94
+<!-- sha:307106b5b845 ts:1793808364991 -->
+```text
+shows like this for all models
+```
+
+### 2026-11-04 09:29 MST · Kiro · session sess_f94
+<!-- sha:e6ef82de7ef5 ts:1793809788563 -->
+```text
+i see this it has been 15 mins since i have did the req
+```
+
+### 2026-11-04 10:13 MST · Kiro · session sess_f94
+<!-- sha:70e407a7ac68 ts:1793812403371 -->
+```text
+gsd:discuss-phase 3
+```
+
+### 2026-11-04 10:48 MST · Kiro · session sess_f94
+<!-- sha:7df3c6f28343 ts:1793814484921 -->
+```text
+go with recommended take a pull from main
+```
+
