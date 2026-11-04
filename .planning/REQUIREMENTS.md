@@ -194,13 +194,105 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (Populated during roadmap creation) | | |
+| INFRA-01 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Pending |
+| INFRA-03 | Phase 1 | Pending |
+| INFRA-04 | Phase 1 | Pending |
+| INFRA-05 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| AUTH-05 | Phase 1 | Pending |
+| DATA-01 | Phase 1 | Pending |
+| DATA-02 | Phase 1 | Pending |
+| DATA-03 | Phase 1 | Pending |
+| DATA-04 | Phase 1 | Pending |
+| DATA-05 | Phase 1 | Pending |
+| DATA-06 | Phase 1 | Pending |
+| DATA-07 | Phase 1 | Pending |
+| DATA-08 | Phase 1 | Pending |
+| DATA-09 | Phase 1 | Pending |
+| DATA-10 | Phase 1 | Pending |
+| LAMBDA-01 | Phase 2 | Pending |
+| LAMBDA-02 | Phase 2 | Pending |
+| LAMBDA-03 | Phase 2 | Pending |
+| LAMBDA-04 | Phase 2 | Pending |
+| LAMBDA-05 | Phase 2 | Pending |
+| LAMBDA-06 | Phase 2 | Pending |
+| LAMBDA-07 | Phase 2 | Pending |
+| LAMBDA-08 | Phase 2 | Pending |
+| BEDROCK-01 | Phase 2 | Pending |
+| BEDROCK-02 | Phase 2 | Pending |
+| BEDROCK-03 | Phase 2 | Pending |
+| BEDROCK-04 | Phase 2 | Pending |
+| BEDROCK-05 | Phase 2 | Pending |
+| AI-01 | Phase 2 | Pending |
+| AI-02 | Phase 2 | Pending |
+| AI-03 | Phase 2 | Pending |
+| AI-07 | Phase 2 | Pending |
+| AI-08 | Phase 2 | Pending |
+| EVENT-01 | Phase 3 | Pending |
+| EVENT-02 | Phase 3 | Pending |
+| EVENT-03 | Phase 3 | Pending |
+| EVENT-04 | Phase 3 | Pending |
+| EVENT-05 | Phase 3 | Pending |
+| EVENT-06 | Phase 3 | Pending |
+| EVENT-07 | Phase 3 | Pending |
+| CHAT-01 | Phase 4 | Pending |
+| CHAT-02 | Phase 4 | Pending |
+| CHAT-03 | Phase 4 | Pending |
+| CHAT-04 | Phase 4 | Pending |
+| CHAT-05 | Phase 4 | Pending |
+| CHAT-06 | Phase 4 | Pending |
+| CHAT-07 | Phase 4 | Pending |
+| DM-01 | Phase 5 | Pending |
+| DM-02 | Phase 5 | Pending |
+| DM-03 | Phase 5 | Pending |
+| DM-04 | Phase 5 | Pending |
+| DM-05 | Phase 5 | Pending |
+| SAFE-01 | Phase 5 | Pending |
+| SAFE-02 | Phase 5 | Pending |
+| SAFE-03 | Phase 5 | Pending |
+| SAFE-04 | Phase 5 | Pending |
+| SAFE-05 | Phase 5 | Pending |
+| SAFE-06 | Phase 5 | Pending |
+| SAFE-07 | Phase 5 | Pending |
+| PROFILE-01 | Phase 6 | Pending |
+| PROFILE-02 | Phase 6 | Pending |
+| PROFILE-03 | Phase 6 | Pending |
+| PROFILE-04 | Phase 6 | Pending |
+| FRONTEND-01 | Phase 6 | Pending |
+| FRONTEND-02 | Phase 6 | Pending |
+| FRONTEND-03 | Phase 6 | Pending |
+| FRONTEND-04 | Phase 6 | Pending |
+| FRONTEND-05 | Phase 6 | Pending |
+| FRONTEND-06 | Phase 6 | Pending |
+| FRONTEND-07 | Phase 6 | Pending |
+| FRONTEND-08 | Phase 6 | Pending |
+| TEST-01 | Phase 7 | Pending |
+| TEST-02 | Phase 7 | Pending |
+| TEST-03 | Phase 7 | Pending |
+| TEST-04 | Phase 7 | Pending |
+| TEST-05 | Phase 7 | Pending |
+| TEST-06 | Phase 7 | Pending |
+| TEST-07 | Phase 7 | Pending |
+| TEST-08 | Phase 7 | Pending |
+| TEST-09 | Phase 7 | Pending |
+| AI-04 | Phase 7 | Pending |
+| AI-05 | Phase 7 | Pending |
+| AI-06 | Phase 7 | Pending |
+| DEPLOY-01 | Phase 8 | Pending |
+| DEPLOY-02 | Phase 8 | Pending |
+| DEPLOY-03 | Phase 8 | Pending |
+| DEPLOY-04 | Phase 8 | Pending |
+| DEPLOY-05 | Phase 8 | Pending |
 
 **Coverage:**
-- v1 requirements: 72 total
-- Mapped to phases: (pending roadmap)
-- Unmapped: (pending roadmap)
+- v1 requirements: 83 total
+- Mapped to phases: 83/83 (100%)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-11-03*
-*Last updated: 2026-11-03 after initial definition*
+*Last updated: 2026-11-03 after roadmap creation*
