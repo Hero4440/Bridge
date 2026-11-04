@@ -32,15 +32,18 @@ const schema = a.schema({
     .authorization((allow) => [allow.owner(), allow.authenticated().to(['read'])]),
 
   // DATA-02
-  // TODO(phase-chat): custom-query membership check (D-08) — member visibility is a
-  // server-side Lambda, deferred to the chat phase, never a client-side guard.
+  // TODO(phase-5): member-only / DM-participant visibility check (D-08) — a server-side Lambda
+  // custom query, DEFERRED TO PHASE 5; never a client-side guard. Open circles (Phase 4 D-01)
+  // keep allow.authenticated() so group subscriptions deliver to every circle member.
   Message: a
     .model({
       content: a.string().required(),
-      groupId: a.string(),
+      groupId: a.string().required(),
       senderId: a.string(),
+      createdAtMs: a.integer(), // explicit sort value for the GSI (implicit createdAt can't be a GSI sort key)
       timestamp: a.datetime(),
     })
+    .secondaryIndexes((index) => [index('groupId').sortKeys(['createdAtMs']).queryField('messagesByGroup')])
     .authorization((allow) => [allow.authenticated()]),
 
   // DATA-03 — reconciled with the 3-step create wizard (D-01, D-02, D-05)
@@ -129,6 +132,30 @@ const schema = a.schema({
       timestamp: a.datetime(),
     })
     .authorization((allow) => [allow.owner()]),
+
+  // --- Phase 4: circles as real data + cached daily topic ---
+  // Group: the 6 circles (Gaming/Music/Anime/Cooking/Art/Tech) as real DynamoDB rows, not a
+  // constant array (§1.3). Seeded idempotently by scripts/seed/circles.ts; read by all users.
+  Group: a
+    .model({
+      name: a.string().required(),
+      slug: a.string(),
+      description: a.string(),
+      emoji: a.string(),
+    })
+    .authorization((allow) => [allow.authenticated()]),
+
+  // Topic: the cached daily topic. Composite id ['groupId','date'] makes get() a point read and
+  // create race-safe, so the dailyTopic Lambda calls Bedrock at most once per circle per day (D-03).
+  Topic: a
+    .model({
+      groupId: a.string().required(),
+      date: a.string().required(), // YYYY-MM-DD (UTC)
+      text: a.string().required(),
+      fallback: a.boolean(),
+    })
+    .identifier(['groupId', 'date'])
+    .authorization((allow) => [allow.authenticated()]),
 
   // --- Phase 2: AI reply types + Cognito-authorized custom queries (handlers in functions/) ---
   PracticeReply: a.customType({
