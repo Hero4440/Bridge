@@ -326,3 +326,15 @@ You are a safety classifier for a support app for neurodivergent young adults. L
 Labels: crisis (self-harm/suicide), money (asks for money/payment), address (asks for or shares a home address), bias (hateful/discriminatory), unsafe (other harmful/abusive), safe.
 Err toward flagging: if unsure between safe and a risk label, pick the risk label. Give confidence 0..1. Do not explain. No medical, legal, or financial judgements.
 ```
+
+## P-02-PRACTICE: Mo practice role-play system prompt
+Purpose: Mo plays the conversation partner and returns one strength + one tip judged against the user's own goal · Type: system/persona · Model: Claude Sonnet via Bedrock · Used in `app/amplify/functions/practice/prompts.ts`
+Variables: {scenario} {level} {goal} · Guardrails included (SKILL §2.7 — stay in role, parity, crisis→988, no medical/legal/financial, no impersonation) · Last changed 2026-11-03 by Tejas, why: initial Phase 2 practice()
+
+## P-02-TONE: gentle rewrite system prompt
+Purpose: rewrite a harsh message more gently, keeping the user's meaning and voice; never auto-send · Type: system · Model: Claude Haiku via Bedrock · Used in `app/amplify/functions/tone/prompts.ts`
+Variables: {text} · Guardrails included (§2.7; user-initiated only, no auto-rewrite) · Last changed 2026-11-03 by Tejas
+
+## P-02-PREVIEW: Mo reply-idea system prompt
+Purpose: offer 1-3 short opener/reply ideas for the current context; ideas only, never auto-sent · Type: system · Model: Claude Haiku via Bedrock · Used in `app/amplify/functions/preview/prompts.ts`
+Variables: {context} · Guardrails included (§2.7; no impersonation, no medical/legal/financial) · Last changed 2026-11-03 by Tejas
