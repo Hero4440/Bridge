@@ -275,3 +275,15 @@ part 1 done can u execute part 2 ?
 https://429367298232.signin.aws.amazon.com/console .,,, access key [REDACTED:aws-access-key] and [REDACTED:aws-secret-key] is the secret access key create a env to store all the secrects as well
 ```
 
+### 2026-11-03 21:55 MST · Kiro · session sess_f94
+<!-- sha:13fa64fe75f1 ts:1793768145010 -->
+```text
+i want u to create a .env and add it in gitignore so that it stays on my local
+```
+
+### 2026-11-03 22:01 MST · Kiro · session sess_f94
+<!-- sha:2ffc1e5c52d8 ts:1793768515940 -->
+```text
+change that skill.md once that is done we can push the code
+```
+

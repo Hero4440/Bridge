@@ -57,7 +57,7 @@ backend.practice.resources.lambda.addToRolePolicy(new PolicyStatement({
 - **Each turn:** validate, `classify()` the input (crisis, money/address), call the model with the `prompts.ts` system prompt, `classify()` the output, save the `PracticeRun`, reply. Send Bedrock only the text the feature needs, and keep the in-app wording about what Mo can see. On throttle or timeout: SDK retries, then the fallback.
 - **Logs and alarms:** log request id, scenario, level, latency, labels and `fallback` only, never message content. Tail with `aws logs tail /aws/lambda/<fn> --follow`. Email alarms on Lambda errors and Bedrock throttles.
 - **Cost guards** (set before the first Bedrock call): a **$50/month** budget with alerts at 50/80/100% to the whole team, small model, capped `maxTokens` and input length, per-user rate limit (DynamoDB counter with TTL), reserved concurrency on AI functions.
-- **Secrets:** non-AWS secrets use `secret('NAME')` from `@aws-amplify/backend`, set with `npx ampx sandbox secret set NAME` locally and in the Amplify console for prod. Never `.env`.
+- **Secrets:** non-AWS secrets use `secret('NAME')` from `@aws-amplify/backend`, set with `npx ampx sandbox secret set NAME` locally and in the Amplify console for prod. Deployed secrets never live in `.env`. A **local, gitignored `.env`** is allowed for local-only dev values (commit a `.env.example` template, never a real `.env`); AWS credentials stay in `~/.aws` (SSO or `aws configure`), not in the repo.
 - **Scheduled work (stretch):** `defineFunction({ schedule: 'every week' })` for quiet check-ins, which go to the person first. Web push via VAPID from a Lambda, keys in secrets.
 - **Done:** `npx tsc --noEmit` passes; the sandbox deploys; you called the endpoint as a signed-in test user; logs hold no message content; IAM has no `*`; cost guards exist; prompt logged; AI code attributed.
 
@@ -139,7 +139,7 @@ The Figma Make `App.tsx` (167 KB, `@ts-nocheck`) is being split into components.
 
 1. TypeScript, strict. No `@ts-nocheck`; no `any` in new code unless commented why.
 2. Every file starts with a short comment: what it does and why it exists. Comment the why.
-3. No secrets, ever: no keys, tokens or `.env` files. AWS access is via IAM roles. Check before every commit.
+3. No secrets in the repo, ever: no keys or tokens in committed files, and never commit a `.env` — a **local, gitignored `.env`** is fine for local-only values, commit only `.env.example`. AWS access is via IAM roles / `~/.aws`. Check before every commit.
 4. All labeling (safety, crisis, bias) goes through `classify(text, labels)` returning `{label, confidence 0..1}`. Never call the model for labels anywhere else.
 5. Prompts live in `prompts.ts` beside their function as named constants, each logged (Part 4).
 6. No roles, no coach/admin screens, no mock users. Access is owner / participant / member / person-controlled (guardian link). Seed accounts and circles with `scripts/seed/`, made-up names only.
