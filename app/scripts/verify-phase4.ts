@@ -99,7 +99,9 @@ async function main(): Promise<void> {
   await signOut().catch(() => undefined);
   console.log('\n=== Result ===');
   if (failures === 0) console.log('PHASE4 VERIFY: PASS');
-  else { console.error(`${failures} CHECK(S) FAILED \u274c`); process.exitCode = 1; }
+  else console.error(`${failures} CHECK(S) FAILED \u274c`);
+  // Open AppSync subscriptions keep Node's event loop alive; exit explicitly after flushing.
+  process.exit(failures === 0 ? 0 : 1);
 }
 
-main().catch((e) => { console.error('Harness error:', e); process.exitCode = 1; });
+main().catch((e) => { console.error('Harness error:', e); process.exit(1); });

@@ -41,7 +41,7 @@ const schema = a.schema({
       content: a.string().required(),
       groupId: a.string().required(),
       senderId: a.string(),
-      createdAtMs: a.integer(), // explicit sort value for the GSI (implicit createdAt can't be a GSI sort key)
+      createdAtMs: a.float(), // epoch ms sort value for the GSI (Int would overflow 32-bit; Float holds ms)
       timestamp: a.datetime(),
     })
     .secondaryIndexes((index) => [index('groupId').sortKeys(['createdAtMs']).queryField('messagesByGroup')])
