@@ -84,8 +84,9 @@ const schema = a.schema({
       level: a.integer(),
       feedback: a.string(),
       hintsUsed: a.integer(),
+      userId: a.string(), // owner key the practice Lambda sets explicitly (trusted write)
     })
-    .authorization((allow) => [allow.owner()]),
+    .authorization((allow) => [allow.ownerDefinedIn('userId').identityClaim('sub')]),
     // NOTE: PracticeRun persistence (practice Lambda → Data client) is deferred to Phase 3
     // (Events & Persistence). Phase 2's practice() returns strength+tip without a DB write.
 

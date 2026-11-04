@@ -69,7 +69,7 @@ export const handler = async (event: { arguments: PracticeArgs; identity?: { sub
   // 5. persist PracticeRun — feedback only (D-04 / §2.8): scenario, level, and the combined
   // strength+tip; never the user message or the partner reply (no raw conversation stored).
   try {
-    await dataClient.models.PracticeRun.create({ scenarioId, level, feedback: `${reply.strength} — ${reply.tip}` });
+    await dataClient.models.PracticeRun.create({ scenarioId, level, feedback: `${reply.strength} — ${reply.tip}`, userId });
   } catch {
     // persistence must never break the practice response; the turn still returns feedback
     logTurn({ fn: 'practice', scenario: scenarioId, level, latencyMs: Date.now() - started, labels: ['persist-error'], fallback: !res.ok });
