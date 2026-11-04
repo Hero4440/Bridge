@@ -30,14 +30,14 @@ Bridge is an AI social coach for autistic and neurodivergent young adults, built
 
 - **Research:** partner visits and a meeting with First Place AZ, the challenge kickoff, and a review of existing apps.
 - **Design:** information architecture and user flows in Figma, iterated with teammate comments.
-- **Prototype:** React (`figma-make/src/App.tsx`, `index.css`) built and previewed in Figma Make. Changes go in as small, reviewed commits.
+- **Prototype:** React (`figma-make/src/App.tsx`, `index.css`) built and previewed in Figma Make. Changes go in as small, reviewed commits. React (MIT) is the only third-party library so far; list new ones here with their license.
 - **AI in the product:** Mo's practice feedback and tone checks are rule-based in the prototype. [docs/AI_INTEGRATION.md](docs/AI_INTEGRATION.md) shows where live model calls connect and how the API key stays out of the app.
 
 ## AI disclosure
 
 We used AI tools while building Bridge, with a person reviewing every change:
 
-- **Claude (Anthropic):** research summaries, idea write-ups, user-flow drafts, and React code for the prototype. Commits it helped write carry a `Co-Authored-By: Claude` line.
+- **Claude (Anthropic):** research summaries, idea write-ups, user-flow drafts, and React code for the prototype, plus the repo tooling (`scripts/hooks/`, `.claude/`). Earlier commits it helped write carry a `Co-Authored-By: Claude` line; newer commits do not, and this section is the record.
 - **Figma Make AI:** applied code changes to the Figma Make prototype.
 
 The team chose the partner, the problem, the features and every design decision. Each teammate's prompts are in [AI_PROMPTS/](AI_PROMPTS/).
@@ -45,3 +45,7 @@ The team chose the partner, the problem, the features and every design decision.
 ## Run the prototype
 
 Open the [Figma Make file](https://www.figma.com/make/CmV9IOc2bubFxzcPJzz4Q7), or copy `figma-make/src/App.tsx` and `figma-make/src/index.css` into any Vite + React project and run `npm run dev`. No API keys are needed.
+
+## For AI assistants
+
+Read `.claude/skills/bridge/SKILL.md` before doing anything. Every prompt is logged to `AI_PROMPTS/<Name>.md`, `git pull --rebase --autostash` comes before every push, and nothing is mocked.

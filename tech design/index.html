@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bridge: Tech Design</title>
+<style>
+  :root{--bg:#FBF6F4;--card:#fff;--ink:#2E2750;--muted:#6B6585;--soft:#F1EAF7;--line:#E4DBEE;
+        --accent:#7B5FC7;--pink:#E9879D;--ok:#2F8F6B;--okbg:#DDF3E9;--mock:#B7791F;--mockbg:#FBEBCB;--str:#6B6585;--strbg:#ECE9F2;--red:#C0475F}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);background:linear-gradient(180deg,#FCEFEF 0,#F4EEFB 380px,var(--bg) 640px);
+       font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+  header{max-width:1040px;margin:0 auto;padding:48px 24px 16px}
+  .tag{display:inline-block;background:var(--soft);color:var(--accent);font-weight:700;font-size:13px;padding:4px 12px;border-radius:999px}
+  h1{font-size:42px;line-height:1.1;margin:12px 0 4px}
+  .sub{color:var(--muted);margin:0 0 18px;font-size:18px}
+  .chips{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:600;font-size:15px}
+  .chip b{color:var(--accent)}
+  nav{position:sticky;top:0;z-index:5;background:rgba(251,246,244,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);margin-top:18px}
+  nav div{max-width:1040px;margin:0 auto;padding:8px 24px;display:flex;gap:4px;flex-wrap:wrap}
+  nav a{color:var(--ink);text-decoration:none;font-size:14px;padding:6px 12px;border-radius:999px}
+  nav a:hover,nav a:focus{background:var(--soft);outline:none}
+  main{max-width:1040px;margin:0 auto;padding:0 24px 70px}
+  section{margin-top:40px}
+  h2{font-size:24px;margin:0 0 12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
+  svg{width:100%;height:auto;display:block}
+  svg text{font-family:inherit}
+  .grid{display:grid;gap:12px}
+  .feat{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+  .f{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;border-top-width:5px}
+  .f.real{border-top-color:var(--ok)} .f.mock{border-top-color:#E0A82E} .f.str{border-top-color:#A9A3BD}
+  .f .ic{font-size:26px;line-height:1}
+  .f h3{margin:6px 0 2px;font-size:16px}
+  .f small{display:block;color:var(--muted);font-size:13px;min-height:34px}
+  .pill{display:inline-block;margin-top:8px;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700}
+  .p-real{background:var(--okbg);color:var(--ok)} .p-mock{background:var(--mockbg);color:var(--mock)} .p-str{background:var(--strbg);color:var(--str)}
+  .bar{display:flex;height:34px;border-radius:12px;overflow:hidden;font-size:13px;font-weight:700;margin-bottom:14px}
+  .bar div{display:flex;align-items:center;justify-content:center}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+  .days{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .day{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;border-top:5px solid var(--accent)}
+  .day.fri{border-top-color:var(--pink)}
+  .day h3{margin:0 0 8px;font-size:15px;color:var(--accent)}
+  .day.fri h3{color:var(--pink)}
+  .day span{display:block;background:var(--soft);border-radius:10px;padding:5px 10px;margin-bottom:6px;font-size:13.5px}
+  .own{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .p{text-align:center}
+  .av{width:54px;height:54px;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;font-weight:700}
+  .p h3{margin:0;font-size:16px} .p small{color:var(--muted);font-size:13px}
+  .rules{display:flex;flex-wrap:wrap;gap:8px}
+  .r{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 14px;font-size:14px}
+  .r::before{content:"\2713";color:var(--ok);font-weight:700;margin-right:8px}
+  .open .r{background:#FFFDF6;border-color:#F3DFB0}
+  .open .r::before{content:"?";color:var(--mock)}
+  .safe .r::before{content:"\25CF";color:var(--red)}
+  footer{max-width:1040px;margin:0 auto;padding:0 24px 40px;color:var(--muted);font-size:13px}
+  @media(max-width:640px){h1{font-size:30px}}
+  @media print{nav{display:none}body{background:#fff}section{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header>
+  <span class="tag">Team Ctrl Alt Elite &middot; North American AI Challenge</span>
+  <h1>Bridge: Tech Design</h1>
+  <p class="sub">A WhatsApp-style social coach with Mo, the AI buddy. &nbsp;Launchpad: Fri Nov 6, 4 p.m.</p>
+  <div class="chips">
+    <span class="chip">Everyone is a <b>user</b>: no roles, no coach</span>
+    <span class="chip">Guardian = <b>linked user</b></span>
+    <span class="chip">Stack: <b>React PWA</b></span>
+    <span class="chip">Cloud: <b>AWS Amplify</b></span>
+    <span class="chip">DB: <b>DynamoDB</b></span>
+    <span class="chip">Chat: <b>live (AppSync)</b></span>
+    <span class="chip">AI: <b>Bedrock Claude</b></span>
+  </div>
+</header>
+
+<nav aria-label="Sections"><div>
+  <a href="#arch">Architecture</a><a href="#map">Features</a><a href="#flow">Mo flow</a><a href="#data">Data</a>
+  <a href="#safe">Safety</a><a href="#plan">Plan</a><a href="#ctx">Shared AI context</a><a href="#rules">Rules</a>
+</div></nav>
+
+<main>
+
+<section id="arch">
+  <h2>Architecture</h2>
+  <div class="card">
+  <svg viewBox="0 0 940 600" role="img" aria-label="Architecture: PWA, Amplify Hosting, Cognito, Amplify Data with DynamoDB and live subscriptions, Lambda, Bedrock, EventBridge and Web Push, CloudWatch and Budgets">
+    <defs><marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7B5FC7"/></marker></defs>
+    <rect x="270" y="20" width="400" height="64" rx="16" fill="#F1EAF7" stroke="#7B5FC7"/>
+    <text x="470" y="50" text-anchor="middle" font-size="18" font-weight="700" fill="#2E2750">Phone + laptop: React PWA</text>
+    <text x="470" y="70" text-anchor="middle" font-size="13" fill="#6B6585">one codebase, installable</text>
+
+    <rect x="40" y="130" width="300" height="70" rx="16" fill="#fff" stroke="#E4DBEE"/>
+    <text x="190" y="158" text-anchor="middle" font-size="16" font-weight="700" fill="#2E2750">Amplify Hosting + CloudFront</text>
+    <text x="190" y="180" text-anchor="middle" font-size="13" fill="#6B6585">push to GitHub = deploy</text>
+
+    <rect x="600" y="130" width="300" height="70" rx="16" fill="#fff" stroke="#7B5FC7" stroke-width="2"/>
+    <text x="750" y="158" text-anchor="middle" font-size="16" font-weight="700" fill="#2E2750">Cognito: sign up + login</text>
+    <text x="750" y="180" text-anchor="middle" font-size="13" fill="#6B6585">every account is a plain user</text>
+
+    <rect x="40" y="270" width="340" height="110" rx="16" fill="#fff" stroke="#7B5FC7" stroke-width="2"/>
+    <text x="210" y="302" text-anchor="middle" font-size="16" font-weight="700" fill="#2E2750">Amplify Data: AppSync + DynamoDB</text>
+    <text x="210" y="328" text-anchor="middle" font-size="14" fill="#2E2750">live chat via subscriptions</text>
+    <text x="210" y="354" text-anchor="middle" font-size="13" fill="#6B6585">access by owner / member / opt-in</text>
+
+    <rect x="420" y="270" width="480" height="110" rx="16" fill="#fff" stroke="#7B5FC7" stroke-width="2"/>
+    <text x="660" y="298" text-anchor="middle" font-size="16" font-weight="700" fill="#2E2750">Lambda (TypeScript): the AI endpoints</text>
+    <g font-size="14" fill="#2E2750">
+      <rect x="436" y="312" width="100" height="32" rx="10" fill="#F1EAF7"/><text x="486" y="333" text-anchor="middle">/practice</text>
+      <rect x="544" y="312" width="100" height="32" rx="10" fill="#F1EAF7"/><text x="594" y="333" text-anchor="middle">/preview</text>
+      <rect x="652" y="312" width="100" height="32" rx="10" fill="#F1EAF7"/><text x="702" y="333" text-anchor="middle">/tone</text>
+      <rect x="760" y="312" width="124" height="32" rx="10" fill="#FCE3EA"/><text x="822" y="333" text-anchor="middle">classify()</text>
+    </g>
+    <text x="660" y="366" text-anchor="middle" font-size="12" fill="#6B6585">practice, event pre-brief, tone + reply ideas, safety labels</text>
+
+    <rect x="470" y="450" width="360" height="70" rx="16" fill="#E9879D"/>
+    <text x="650" y="480" text-anchor="middle" font-size="17" font-weight="700" fill="#fff">Amazon Bedrock</text>
+    <text x="650" y="501" text-anchor="middle" font-size="13" fill="#fff">small Claude model, IAM role, no keys</text>
+
+    <rect x="40" y="450" width="340" height="70" rx="16" fill="#fff" stroke="#A9A3BD" stroke-dasharray="6 4"/>
+    <text x="210" y="478" text-anchor="middle" font-size="16" font-weight="700" fill="#2E2750">EventBridge + Web Push</text>
+    <text x="210" y="499" text-anchor="middle" font-size="13" fill="#6B6585">stretch: quiet check-ins, phone alerts</text>
+
+    <rect x="40" y="552" width="860" height="36" rx="12" fill="#F1EAF7"/>
+    <text x="470" y="575" text-anchor="middle" font-size="13" fill="#2E2750">CloudWatch logs  &middot;  AWS Budgets alert  &middot;  public GitHub repo, no secrets</text>
+
+    <path d="M370 84 L220 130" stroke="#7B5FC7" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+    <path d="M570 84 L720 130" stroke="#7B5FC7" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+    <path d="M440 84 L300 270" stroke="#7B5FC7" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+    <path d="M520 84 L600 270" stroke="#7B5FC7" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+    <path d="M420 325 L382 325" stroke="#7B5FC7" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+    <path d="M650 380 L650 450" stroke="#7B5FC7" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+    <path d="M210 450 L210 382" stroke="#7B5FC7" stroke-width="2" fill="none" marker-end="url(#ar)" stroke-dasharray="6 4"/>
+  </svg>
+  <div class="legend"><span><span class="dot" style="background:#7B5FC7"></span>core</span><span><span class="dot" style="background:#A9A3BD"></span>stretch</span></div>
+  </div>
+</section>
+
+<section id="map">
+  <h2>Features by priority</h2>
+  <div class="bar" aria-label="7 must, 4 should, 3 stretch">
+    <div style="width:50%;background:var(--okbg);color:var(--ok)">7 must work live</div>
+    <div style="width:28.6%;background:var(--mockbg);color:var(--mock)">4 should</div>
+    <div style="width:21.4%;background:var(--strbg);color:var(--str)">3 stretch</div>
+  </div>
+  <div class="grid feat">
+    <div class="f real"><div class="ic">🔐</div><h3>Sign up + login</h3><small>Real accounts, profile, interests</small><span class="pill p-real">Must</span></div>
+    <div class="f real"><div class="ic">💬</div><h3>Circles chat</h3><small>Join a group, live messages</small><span class="pill p-real">Must</span></div>
+    <div class="f real"><div class="ic">📅</div><h3>Create event + RSVP</h3><small>In a group or outside, sound/light/size</small><span class="pill p-real">Must</span></div>
+    <div class="f real"><div class="ic">👀</div><h3>Event preview</h3><small>What to expect, exit plan, AI pre-brief</small><span class="pill p-real">Must &middot; AI</span></div>
+    <div class="f real"><div class="ic">🎭</div><h3>Mo practice</h3><small>7 scenarios, hints fade L1&ndash;L3, feedback</small><span class="pill p-real">Must &middot; AI</span></div>
+    <div class="f real"><div class="ic">🛡️</div><h3>Safety flag</h3><small>Money/address request, crisis, report/block</small><span class="pill p-real">Must &middot; AI</span></div>
+    <div class="f real"><div class="ic">📝</div><h3>Reflect</h3><small>After an event, owner-only</small><span class="pill p-real">Must</span></div>
+    <div class="f mock"><div class="ic">✉️</div><h3>DMs + requests</h3><small>1:1 chat, accept or decline</small><span class="pill p-mock">Should</span></div>
+    <div class="f mock"><div class="ic">🌤️</div><h3>Tone check + ideas</h3><small>Mo explains why, pause before send</small><span class="pill p-mock">Should &middot; AI</span></div>
+    <div class="f mock"><div class="ic">🤍</div><h3>Guardian link</h3><small>A linked user; you choose what they see</small><span class="pill p-mock">Should</span></div>
+    <div class="f mock"><div class="ic">🫧</div><h3>Reset + help</h3><small>Breathe, text my trusted person, 988</small><span class="pill p-mock">Should</span></div>
+    <div class="f str"><div class="ic">🔔</div><h3>Web push</h3><small>Phone alerts beyond in-app</small><span class="pill p-str">Stretch</span></div>
+    <div class="f str"><div class="ic">🧪</div><h3>Bias probe</h3><small>Run before Friday, results on slide</small><span class="pill p-str">Script &middot; AI</span></div>
+    <div class="f str"><div class="ic">🎙️</div><h3>Voice</h3><small>Browser speech API</small><span class="pill p-str">Stretch</span></div>
+  </div>
+</section>
+
+<section id="flow">
+  <h2>One Mo turn</h2>
+  <div class="card">
+  <svg viewBox="0 0 940 280" role="img" aria-label="Mo request flow with three safety branches">
+    <defs><marker id="a2" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7B5FC7"/></marker>
+          <marker id="a3" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C0475F"/></marker></defs>
+    <g font-size="14" font-weight="700" fill="#2E2750" text-anchor="middle">
+      <rect x="10" y="30" width="130" height="64" rx="14" fill="#F1EAF7" stroke="#7B5FC7"/><text x="75" y="58">1 Message</text><text x="75" y="78" font-size="12" font-weight="400" fill="#6B6585">PWA to Lambda</text>
+      <rect x="164" y="30" width="130" height="64" rx="14" fill="#FCE3EA" stroke="#C0475F"/><text x="229" y="58">2 classify()</text><text x="229" y="78" font-size="12" font-weight="400" fill="#6B6585">safety first</text>
+      <rect x="318" y="30" width="130" height="64" rx="14" fill="#F1EAF7" stroke="#7B5FC7"/><text x="383" y="58">3 Prompt</text><text x="383" y="78" font-size="12" font-weight="400" fill="#6B6585">scenario + goal</text>
+      <rect x="472" y="30" width="130" height="64" rx="14" fill="#E9879D"/><text x="537" y="58" fill="#fff">4 Bedrock</text><text x="537" y="78" font-size="12" font-weight="400" fill="#fff">Mo or partner reply</text>
+      <rect x="626" y="30" width="130" height="64" rx="14" fill="#F1EAF7" stroke="#7B5FC7"/><text x="691" y="58">5 Save run</text><text x="691" y="78" font-size="12" font-weight="400" fill="#6B6585">no transcript</text>
+      <rect x="780" y="30" width="130" height="64" rx="14" fill="#DDF3E9" stroke="#2F8F6B"/><text x="845" y="58">6 Reply</text><text x="845" y="78" font-size="12" font-weight="400" fill="#6B6585">hints fade L1 to L3</text>
+    </g>
+    <g stroke="#7B5FC7" stroke-width="2" fill="none" marker-end="url(#a2)">
+      <path d="M140 62 L162 62"/><path d="M294 62 L316 62"/><path d="M448 62 L470 62"/><path d="M602 62 L624 62"/><path d="M756 62 L778 62"/>
+    </g>
+    <g stroke="#C0475F" stroke-width="2" fill="none" marker-end="url(#a3)">
+      <path d="M190 94 L120 164"/><path d="M229 94 L330 164"/><path d="M268 94 L540 164"/>
+    </g>
+    <g font-size="13" text-anchor="middle" fill="#2E2750">
+      <rect x="20" y="166" width="200" height="74" rx="14" fill="#fff" stroke="#C0475F"/>
+      <text x="120" y="194" font-weight="700" fill="#C0475F">crisis</text><text x="120" y="216">stop, show 988</text><text x="120" y="232" font-size="12" fill="#6B6585">+ trusted-person prompt</text>
+      <rect x="240" y="166" width="200" height="74" rx="14" fill="#fff" stroke="#C0475F"/>
+      <text x="340" y="194" font-weight="700" fill="#C0475F">asks money / address</text><text x="340" y="216">private warning</text><text x="340" y="232" font-size="12" fill="#6B6585">report / block</text>
+      <rect x="460" y="166" width="200" height="74" rx="14" fill="#fff" stroke="#C0475F"/>
+      <text x="560" y="194" font-weight="700" fill="#C0475F">harsh tone</text><text x="560" y="216">Mo explains why</text><text x="560" y="232" font-size="12" fill="#6B6585">say it gently / send anyway</text>
+    </g>
+  </svg>
+  </div>
+</section>
+
+<section id="data">
+  <h2>Data and who can see it</h2>
+  <div class="card">
+  <svg viewBox="0 0 940 420" role="img" aria-label="Data model with access levels. User at the centre linked to groups, messages, events, contacts, guardian links, reflections, practice runs and notifications">
+    <g stroke="#A9A3BD" stroke-width="2" fill="none">
+      <path d="M240 70 L370 70"/>
+      <path d="M400 170 L240 100"/>
+      <path d="M470 110 L470 170"/>
+      <path d="M700 110 L570 170"/>
+      <path d="M240 210 L370 210"/>
+      <path d="M570 210 L700 210"/>
+      <path d="M430 250 L260 310"/>
+      <path d="M470 250 L470 310"/>
+      <path d="M510 250 L740 310"/>
+    </g>
+    <g font-size="15" font-weight="700" fill="#2E2750" text-anchor="middle">
+      <rect x="40" y="30" width="200" height="80" rx="14" fill="#fff" stroke="#2F8F6B" stroke-width="2"/><text x="140" y="62">Group (circle)</text><text x="140" y="84" font-size="12" font-weight="400" fill="#2F8F6B">members only</text>
+      <rect x="370" y="30" width="200" height="80" rx="14" fill="#fff" stroke="#2F8F6B" stroke-width="2"/><text x="470" y="62">Message</text><text x="470" y="84" font-size="12" font-weight="400" fill="#2F8F6B">group or DM, participants only</text>
+      <rect x="700" y="30" width="200" height="80" rx="14" fill="#fff" stroke="#2F8F6B" stroke-width="2"/><text x="800" y="62">Event + RSVP</text><text x="800" y="84" font-size="12" font-weight="400" fill="#2F8F6B">in a group or outside</text>
+
+      <rect x="40" y="170" width="200" height="80" rx="14" fill="#fff" stroke="#2F8F6B" stroke-width="2"/><text x="140" y="202">Contact</text><text x="140" y="224" font-size="12" font-weight="400" fill="#2F8F6B">requested, accepted, blocked</text>
+      <rect x="370" y="170" width="200" height="80" rx="14" fill="#F1EAF7" stroke="#7B5FC7" stroke-width="3"/><text x="470" y="202">User</text><text x="470" y="224" font-size="12" font-weight="400" fill="#7B5FC7">everyone equal, no roles</text>
+      <rect x="700" y="170" width="200" height="80" rx="14" fill="#fff" stroke="#E0A82E" stroke-width="2"/><text x="800" y="202">Guardian link</text><text x="800" y="224" font-size="12" font-weight="400" fill="#B7791F">you choose what they see</text>
+
+      <rect x="130" y="310" width="200" height="80" rx="14" fill="#FCE3EA" stroke="#C0475F" stroke-width="2"/><text x="230" y="342">Reflection</text><text x="230" y="364" font-size="12" font-weight="400" fill="#C0475F">OWNER ONLY</text>
+      <rect x="370" y="310" width="200" height="80" rx="14" fill="#FCE3EA" stroke="#C0475F" stroke-width="2"/><text x="470" y="342">PracticeRun</text><text x="470" y="364" font-size="12" font-weight="400" fill="#C0475F">OWNER ONLY</text>
+      <rect x="700" y="310" width="200" height="80" rx="14" fill="#fff" stroke="#A9A3BD" stroke-width="2"/><text x="800" y="342">Notification</text><text x="800" y="364" font-size="12" font-weight="400" fill="#6B6585">recipient only</text>
+    </g>
+  </svg>
+  <div class="legend"><span><span class="dot" style="background:#C0475F"></span>owner only</span><span><span class="dot" style="background:#2F8F6B"></span>members / participants only</span><span><span class="dot" style="background:#E0A82E"></span>person-controlled sharing</span></div>
+  </div>
+</section>
+
+<section id="safe">
+  <h2>Safety with real users</h2>
+  <div class="rules safe">
+    <span class="r">Report + block on every message</span>
+    <span class="r">Private warnings: only you see them</span>
+    <span class="r">Join or "just read" in groups</span>
+    <span class="r">Guardian sees only what you pick</span>
+    <span class="r">Mo tells you what is sent to AI</span>
+    <span class="r">Public-place safety tip for events</span>
+    <span class="r">988 always one tap away</span>
+    <span class="r">Pilot: invite-only groups</span>
+  </div>
+</section>
+
+<section id="plan">
+  <h2>Plan to Friday</h2>
+  <div class="days">
+    <div class="day"><h3>Tue Nov 3</h3><span>Bedrock access + Budgets</span><span>Amplify + Cognito</span><span>Data models + seed groups</span><span>Split App.tsx</span></div>
+    <div class="day"><h3>Wed Nov 4</h3><span>Login + profile</span><span>Circle chat live + events</span><span>/practice + classify()</span><span>Event preview</span></div>
+    <div class="day"><h3>Thu Nov 5</h3><span>Reflect, DMs, guardian link</span><span>Tone check, Reset</span><span>Backup demo video</span><span>5 slides + BMC</span></div>
+    <div class="day fri"><h3>Fri Nov 6</h3><span>Scottsdale, 4 to 8 p.m.</span><span>5-min pitch + demo</span><span>Q&amp;A up to 5 min</span></div>
+  </div>
+  <div class="grid own" style="margin-top:14px">
+    <div class="card p"><div class="av" style="background:#7B5FC7">T</div><h3>Tejas</h3><small>Auth, data, live chat</small></div>
+    <div class="card p"><div class="av" style="background:#E9879D">D</div><h3>Dhyey</h3><small>AI endpoints, classify(), probe</small></div>
+    <div class="card p"><div class="av" style="background:#2F8F6B">S</div><h3>Shreeya</h3><small>UI components, wiring, a11y</small></div>
+    <div class="card p"><div class="av" style="background:#E0A82E">R</div><h3>Rishi</h3><small>Test accounts, demo, slides, video</small></div>
+  </div>
+</section>
+
+<section id="ctx">
+  <h2>Shared AI context</h2>
+  <div class="card">
+  <svg viewBox="0 0 940 250" role="img" aria-label="Repo skills feed every teammate's AI tool">
+    <defs><marker id="a5" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#7B5FC7"/></marker></defs>
+    <rect x="320" y="20" width="300" height="120" rx="18" fill="#F1EAF7" stroke="#7B5FC7" stroke-width="2"/>
+    <text x="470" y="52" text-anchor="middle" font-size="16" font-weight="700" fill="#2E2750">Git repo: single source of truth</text>
+    <g font-size="13" fill="#2E2750" text-anchor="middle">
+      <rect x="336" y="66" width="130" height="28" rx="8" fill="#fff"/><text x="401" y="85">bridge-context</text>
+      <rect x="474" y="66" width="130" height="28" rx="8" fill="#fff"/><text x="539" y="85">code-standards</text>
+      <rect x="336" y="100" width="130" height="28" rx="8" fill="#fff"/><text x="401" y="119">prompt-log</text>
+      <rect x="474" y="100" width="130" height="28" rx="8" fill="#fff"/><text x="539" y="119">tech design/</text>
+    </g>
+    <g stroke="#7B5FC7" stroke-width="2" fill="none" marker-end="url(#a5)">
+      <path d="M350 140 L130 190"/><path d="M420 140 L340 190"/><path d="M520 140 L600 190"/><path d="M590 140 L810 190"/>
+    </g>
+    <g font-size="14" font-weight="700" fill="#2E2750" text-anchor="middle">
+      <rect x="40" y="190" width="180" height="46" rx="12" fill="#fff" stroke="#E4DBEE"/><text x="130" y="218">Claude Code</text>
+      <rect x="250" y="190" width="180" height="46" rx="12" fill="#fff" stroke="#E4DBEE"/><text x="340" y="218">Copilot</text>
+      <rect x="510" y="190" width="180" height="46" rx="12" fill="#fff" stroke="#E4DBEE"/><text x="600" y="218">Cursor</text>
+      <rect x="720" y="190" width="180" height="46" rx="12" fill="#fff" stroke="#E4DBEE"/><text x="810" y="218">Codex / others</text>
+    </g>
+  </svg>
+  </div>
+</section>
+
+<section id="rules">
+  <h2>Handbook rules</h2>
+  <div class="rules">
+    <span class="r">Public repo, no keys</span>
+    <span class="r">Clean code + comments</span>
+    <span class="r">Cite AI-generated code</span>
+    <span class="r">AI prompts PDF</span>
+    <span class="r">Backup demo video</span>
+    <span class="r">5-slide template</span>
+    <span class="r">Business Model Canvas</span>
+    <span class="r">No real participant data in repo or demo</span>
+  </div>
+  <h2 style="margin-top:28px">Open items</h2>
+  <div class="rules open">
+    <span class="r">Bedrock model + region approved?</span>
+    <span class="r">Budgets alert set?</span>
+    <span class="r">Who can create groups?</span>
+    <span class="r">Guardian: what can they see?</span>
+    <span class="r">Jev free/student access?</span>
+  </div>
+</section>
+
+</main>
+<footer>Bridge &middot; Team Ctrl Alt Elite &middot; Arizona State University &middot; Nov 3, 2026</footer>
+</body>
+</html>
