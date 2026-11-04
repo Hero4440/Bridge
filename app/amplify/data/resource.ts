@@ -12,6 +12,7 @@ import { classify } from '../functions/classify/resource';
 import { practice } from '../functions/practice/resource';
 import { tone } from '../functions/tone/resource';
 import { preview } from '../functions/preview/resource';
+import { reflectReply } from '../functions/reflectReply/resource';
 
 const schema = a.schema({
   // DATA-01 — profile lives here (D-03), not in Cognito.
@@ -164,7 +165,18 @@ const schema = a.schema({
     .returns(a.ref('PreviewReply'))
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(preview)),
-});
+
+  // Phase 3 (D-03): warm Mo reflection reply
+  ReflectReply: a.customType({ reply: a.string(), fallback: a.boolean() }),
+  reflectReply: a
+    .query()
+    .arguments({ feeling: a.string().required(), wins: a.string().array() })
+    .returns(a.ref('ReflectReply'))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(reflectReply)),
+})
+  // Phase 3 (D-04): grant the practice Lambda Data-client access to persist PracticeRun.
+  .authorization((allow) => [allow.resource(practice)]);
 
 export type Schema = ClientSchema<typeof schema>;
 

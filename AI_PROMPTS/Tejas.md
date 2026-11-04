@@ -380,3 +380,25 @@ gsd:discuss-phase 3
 go with recommended take a pull from main
 ```
 
+### 2026-11-04 10:58 MST · Kiro · session sess_f94
+<!-- sha:8e7940c2fdf0 ts:1793815138463 -->
+```text
+gsd:plan-phase 3
+```
+
+### 2026-11-04 10:59 MST · Kiro · session sess_f94
+<!-- sha:13941e195495 ts:1793815197394 -->
+```text
+recommended
+```
+
+### 2026-11-04 11:23 MST · Kiro · session sess_f94
+<!-- sha:178817d29932 ts:1793816638822 -->
+```text
+gsd:execute-phase 3
+```
+
+
+## P-03-REFLECT: Mo reflection reply system prompt
+Purpose: one or two warm, encouraging sentences replying to a post-event reflection (feeling + wins) · Type: system · Model: Claude Haiku via Bedrock · Used in `app/amplify/functions/reflectReply/prompts.ts`
+Variables: {feeling} {wins} · Guardrails included (§2.7 — kind/non-judgmental, no medical/legal/financial, crisis→988) · Last changed 2026-11-04 by Tejas

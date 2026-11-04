@@ -1,6 +1,6 @@
 // app/amplify/functions/practice/handler.ts
 // Full guarded turn: validate → classify(input) → rate-limit → Sonnet Converse → classify(output)
-// → save PracticeRun (no transcript) → reply. Crisis stops the role-play with 988 and is NEVER
+// → save PracticeRun (feedback only, no message text) → reply. Crisis stops the role-play with 988 and is NEVER
 // rate-limited (D-02/D-04). Warm fallback on model failure (D-03 / AI-07).
 import { practiceInput, practiceOutput } from '../shared/schemas';
 import { classify } from '../shared/classify';
@@ -10,8 +10,17 @@ import { FALLBACKS } from '../shared/fallback';
 import { logTurn } from '../shared/log';
 import { PRACTICE_MODEL_ID } from '../../shared/config';
 import { PRACTICE_SYSTEM, PRACTICE_TOOL_SCHEMA, SCENARIOS } from './prompts';
-// PracticeRun Data client (env + schema authz) is wired in plan 05:
-// import { generateClient } from 'aws-amplify/data'; import { env } from '$amplify/env/practice';
+// D-04: persist PracticeRun via the runtime Data client. `$amplify/env/practice` resolves only
+// after deploy (generated into .amplify/) — isolated here; verified live in Plan 05.
+import { env } from '$amplify/env/practice';
+import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
+import { Amplify } from 'aws-amplify';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../../data/resource';
+
+const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
+Amplify.configure(resourceConfig, libraryOptions);
+const dataClient = generateClient<Schema>();
 
 type PracticeArgs = { scenarioId: keyof typeof SCENARIOS; level: number; goal: string; message: string };
 
@@ -57,8 +66,14 @@ export const handler = async (event: { arguments: PracticeArgs; identity?: { sub
   // 4. classify output (the model's own reply) before returning
   const outLabel = await classify(reply.partnerReply);
 
-  // 5. save PracticeRun — NO transcript (scenarioId/level/strength/tip/fallback only); wired in plan 05:
-  // await client.models.PracticeRun.create({ scenarioId, level, strengthGiven: reply.strength, tipGiven: reply.tip, fallback: !res.ok });
+  // 5. persist PracticeRun — feedback only (D-04 / §2.8): scenario, level, and the combined
+  // strength+tip; never the user message or the partner reply (no raw conversation stored).
+  try {
+    await dataClient.models.PracticeRun.create({ scenarioId, level, feedback: `${reply.strength} — ${reply.tip}` });
+  } catch {
+    // persistence must never break the practice response; the turn still returns feedback
+    logTurn({ fn: 'practice', scenario: scenarioId, level, latencyMs: Date.now() - started, labels: ['persist-error'], fallback: !res.ok });
+  }
   logTurn({ fn: 'practice', scenario: scenarioId, level, latencyMs: Date.now() - started, labels: [inLabel.label, outLabel.label], fallback: !res.ok });
   return { ...reply, fallback: !res.ok };
 };
