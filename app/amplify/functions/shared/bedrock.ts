@@ -19,9 +19,10 @@ export async function converseWithTool<T>(o: {
   inputSchema: Record<string, unknown>;
   validator: ZodSchema<T>;
   maxTokens?: number;
+  timeoutMs?: number;
 }): Promise<ToolResult<T>> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 5000); // D-03: 5s inside the 29s Lambda
+  const timer = setTimeout(() => controller.abort(), o.timeoutMs ?? 5000); // D-03 budget (per-call; Sonnet practice needs more than the Haiku default)
   try {
     const out = await client.send(
       new ConverseCommand({

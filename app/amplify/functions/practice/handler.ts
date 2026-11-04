@@ -50,6 +50,7 @@ export const handler = async (event: { arguments: PracticeArgs; identity?: { sub
     toolName: 'feedback',
     inputSchema: PRACTICE_TOOL_SCHEMA as unknown as Record<string, unknown>,
     validator: practiceOutput,
+    timeoutMs: 15000, // Sonnet feedback can take >5s; fallback is the safety net, not the norm
   });
   const reply = res.ok ? res.value : FALLBACKS.practice;
 
