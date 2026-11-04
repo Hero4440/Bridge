@@ -12,7 +12,7 @@ Bridge transforms from a working prototype to a production-ready AWS-backed app 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Authentication** - Amplify project, Cognito auth, schema definition, budget safeguards
+- [x] **Phase 1: Foundation & Authentication** - Amplify project, Cognito auth, schema definition, budget safeguards (completed 2026-11-04)
 - [ ] **Phase 2: AI Backend Infrastructure** - Lambda functions, Bedrock integration, structured outputs, rate limiting
 - [ ] **Phase 3: Events & Persistence** - Event CRUD, RSVP tracking, prep checklists, reflections
 - [ ] **Phase 4: Real-Time Chat** - Circle subscriptions, message history, reconnection logic, contact system
@@ -152,7 +152,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Authentication | 0/0 | Not started | - |
+| 1. Foundation & Authentication | 5/5 | Complete   | 2026-11-04 |
 | 2. AI Backend Infrastructure | 0/0 | Not started | - |
 | 3. Events & Persistence | 0/0 | Not started | - |
 | 4. Real-Time Chat | 0/0 | Not started | - |

@@ -233,3 +233,45 @@ gsd:execute-phase 1
 i am on tejas/phase-1-foundation continue
 ```
 
+### 2026-11-03 20:43 MST · Kiro · session sess_f94
+<!-- sha:ac156ff3da7e ts:1793763810556 -->
+```text
+give me detailed steps of what to do
+```
+
+### 2026-11-03 20:53 MST · Kiro · session sess_f94
+<!-- sha:a85ae717fbd4 ts:1793764387273 -->
+```text
+where do i find these details  Answer the prompts:
+  - SSO start URL: your org's https://<org>.awsapps.com/start
+  - SSO region: e.g. us-east-1
+  - Account / role: pick the Bridge team account + an admin-capable role
+  - CLI default region: us-east-1 (must match D-01)
+  - profile name: e.g. bridge
+```
+
+### 2026-11-03 21:01 MST · Kiro · session sess_f94
+<!-- sha:2d419e22d66b ts:1793764877041 -->
+```text
+aws configure sso
+SSO session name (Recommended):
+```
+
+### 2026-11-03 21:04 MST · Kiro · session sess_f94
+<!-- sha:4c4c0a4efcc5 ts:1793765064879 -->
+```text
+arn:aws:iam::429367298232:user/Tejas-123
+```
+
+### 2026-11-03 21:16 MST · Kiro · session sess_f94
+<!-- sha:3b208458a3ed ts:1793765789798 -->
+```text
+part 1 done can u execute part 2 ?
+```
+
+### 2026-11-03 21:39 MST · Kiro · session sess_f94 · 1 secret(s) redacted
+<!-- sha:d00ca811dff1 ts:1793767147283 -->
+```text
+https://429367298232.signin.aws.amazon.com/console .,,, access key [REDACTED:aws-access-key] and [REDACTED:aws-secret-key] is the secret access key create a env to store all the secrects as well
+```
+
