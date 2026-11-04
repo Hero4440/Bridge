@@ -1,2 +1,7 @@
 .DS_Store
 ~$*
+
+# Local secrets — gitignored everywhere, never committed. (.env.example is allowed.)
+.env
+.env.*
+!.env.example
