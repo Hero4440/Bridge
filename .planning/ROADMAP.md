@@ -78,10 +78,13 @@ Plans:
   3. Circle chat loads last 50 messages on open, filtered by groupId with authenticated access
   4. Daily topic displays at top of circle chat
   5. Starter chips (ask question, share story) generate suggested messages when tapped
-**Plans**: TBD
+**Plans**: 4 (planned 2026-11-04)
 
 Plans:
-- TBD (populated during plan-phase)
+- 01: Chat schema — Group + Topic models, Message groupId/createdAtMs GSI, seed 6 circles (CHAT-01/04/07)
+- 02: dailyTopic Lambda + getDailyTopic query + topic client, AI daily topic cached one row/circle/day (CHAT-05)
+- 03: Client libs — messages (observeQuery, last-50), connection-state mapper, starter chips + unit tests (CHAT-01/02/03/04/06/07)
+- 04: Live two-account verify harness — real-time delivery, isolation, cache, chips (CHAT-01..07)
 
 ### Phase 5: Safety & Direct Messages
 **Goal**: Message moderation protects users with AI classification and trusted person alerts
@@ -155,7 +158,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 1. Foundation & Authentication | 5/5 | Complete   | 2026-11-04 |
 | 2. AI Backend Infrastructure | 5/5 | Complete   | 2026-11-04 |
 | 3. Events & Persistence | 5/5 | Complete   | 2026-11-04 |
-| 4. Real-Time Chat | 0/0 | Not started | - |
+| 4. Real-Time Chat | 0/4 | Planned | - |
 | 5. Safety & Direct Messages | 0/0 | Not started | - |
 | 6. Profile & Frontend Integration | 0/0 | Not started | - |
 | 7. Quality & Testing | 0/0 | Not started | - |
