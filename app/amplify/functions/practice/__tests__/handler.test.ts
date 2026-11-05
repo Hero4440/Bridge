@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const { createPracticeRun, listPracticeRuns } = vi.hoisted(() => ({
-  createPracticeRun: vi.fn(async (_input: { feedback?: string; userId?: string; scenarioId?: string }) => ({ data: {} })),
+  createPracticeRun: vi.fn(async (_input: { feedback?: string; transcript?: string; goal?: string; userId?: string; scenarioId?: string }) => ({ data: {} })),
   listPracticeRuns: vi.fn(async (_input?: unknown): Promise<{ data: Array<{ createdAt?: string; feedback?: string }> }> => ({ data: [] })),
 }));
 
@@ -58,14 +58,15 @@ describe('practice handler', () => {
   it('generates goal-based feedback and saves exactly one run when finished', async () => {
     vi.mocked(classify).mockResolvedValue({ label: 'safe', confidence: 0.9, fallback: false });
     vi.mocked(converseWithTool).mockResolvedValueOnce({ ok: true, value: { partnerReply: 'Nice work.', strength: 'Clear hello', tip: 'Ask one question', memory: 'Tejas is practicing clear greetings and may benefit from asking one follow-up question.' } });
-    const r = (await handler({ arguments: { mode: 'finish', scenarioId: 'join', level: 1, goal: 'say hi', history: 'Practice partner: Hi\nUser: Hello' }, identity: { sub: 'user-1' } })) as Record<string, unknown>;
+    const r = (await handler({ arguments: { mode: 'finish', scenarioId: 'join', level: 1, goal: 'say hi', history: 'Practice partner: Hi\nUser: Hello', transcript: 'Practice partner: Hi\nUser: Hello' }, identity: { sub: 'user-1' } })) as Record<string, unknown>;
     expect(r).toMatchObject({ strength: 'Clear hello', tip: 'Ask one question', fallback: false });
     expect(createPracticeRun).toHaveBeenCalledOnce();
     expect(createPracticeRun).toHaveBeenCalledWith(expect.objectContaining({ userId: 'user-1', scenarioId: 'join' }));
-    const saved = createPracticeRun.mock.calls[0]?.[0]?.feedback ?? '';
-    expect(saved).toContain('clear greetings');
-    expect(saved).not.toContain('Practice partner: Hi');
-    expect(saved).not.toContain('User: Hello');
+    const saved = createPracticeRun.mock.calls[0]?.[0] ?? {};
+    expect(saved.goal).toBe('say hi');
+    expect(saved.transcript).toContain('Practice partner: Hi');
+    expect(saved.transcript).toContain('User: Hello');
+    expect(saved.feedback).toContain('clear greetings');
   });
 
   it('uses recent privacy-safe practice memories as context next time', async () => {

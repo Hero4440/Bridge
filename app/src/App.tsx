@@ -158,7 +158,7 @@ function MainApp({
   const [circleId, setCircleId] = useState<string>();
   const [practice, setPractice] = useState<{
     scenario: ScenarioId;
-    level: 1 | 2;
+    level: 1 | 2 | 3;
   }>();
   const [comfort, setComfort] = useState(false);
   const [moChat, setMoChat] = useState(false);

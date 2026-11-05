@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   buildPracticeHistory,
+  buildPracticeTranscript,
   finishPractice,
   practiceTurn,
   SCENARIOS,
@@ -52,7 +53,7 @@ function PracticeProgress({ current }: { current: 1 | 2 | 3 }) {
   </div>;
 }
 
-export function Practice({ initialScenario, initialLevel = 1, personalContext, onBack }: { initialScenario?: ScenarioId; initialLevel?: 1 | 2; personalContext?: string; onBack?: () => void } = {}) {
+export function Practice({ initialScenario, initialLevel = 1, personalContext, onBack }: { initialScenario?: ScenarioId; initialLevel?: 1 | 2 | 3; personalContext?: string; onBack?: () => void } = {}) {
   const [step, setStep] = useState<Step>(initialScenario ? 'setup' : 'picker');
   const [selectedScenario, setSelectedScenario] = useState<ScenarioId | null>(initialScenario ?? null);
   const [level, setLevel] = useState<1 | 2 | 3>(initialLevel);
@@ -150,7 +151,7 @@ export function Practice({ initialScenario, initialLevel = 1, personalContext, o
     setLoading(true);
     setError(null);
     try {
-      const result = await finishPractice(selectedScenario, level, goal.trim(), buildPracticeHistory(messages), personalContext);
+      const result = await finishPractice(selectedScenario, level, goal.trim(), buildPracticeHistory(messages), buildPracticeTranscript(messages), personalContext);
       if (result.crisis) return handleCrisis();
       if (result.rateLimited) return setError('Mo needs a short break. Please try again in a minute.');
       setStrength(result.strength);
@@ -209,7 +210,7 @@ export function Practice({ initialScenario, initialLevel = 1, personalContext, o
         <div className="practice-context"><span className="scenario-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={ICONS[scenario.id]} /></svg></span><div><strong>{scenario.title}</strong><p>{scenario.description}</p></div></div>
         <section className="practice-section practice-setup-prompt"><h2>What do you want to practice?</h2><p>Tell Mo what a good reply would feel like for you.</p><textarea id="practice-goal" className="goal-input" value={goal} onChange={(event) => setGoal(event.target.value)} placeholder="I want to be clear and friendly…" rows={3} maxLength={300} /><p className="practice-help">Mo checks your reply against your goal, not anyone else's.</p></section>
         <section className="practice-section"><h2>Pick a level</h2><div className="level-buttons">{LEVELS.map((item) => <button key={item.level} className={`level-btn ${level === item.level ? 'active' : ''}`} onClick={() => setLevel(item.level)} aria-pressed={level === item.level}><strong>Level {item.level}</strong><span>{item.title}</span></button>)}</div><p className="practice-help">{LEVELS.find((item) => item.level === level)?.description}</p></section>
-        <p className="practice-privacy">Your practice message is not saved as a transcript.</p>
+        <p className="practice-privacy">Your completed practice is saved privately so Mo can remember it later.</p>
       </div>
       <div className="practice-sticky-action"><button onClick={() => void handleStartPractice()} disabled={goal.trim().length < 5 || loading}>{loading ? 'Starting…' : 'Start practice'}</button></div>
     </div>;
