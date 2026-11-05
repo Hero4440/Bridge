@@ -5,6 +5,7 @@ import { currentUser } from '../lib/auth';
 import {
   createUserProfile,
   saveTrustedContact,
+  validateProfileName,
   validateTrustedContact,
   type UserRecord,
 } from '../lib/profile';
@@ -35,6 +36,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [customInterest, setCustomInterest] = useState('');
   const [trustedName, setTrustedName] = useState('');
@@ -60,6 +63,21 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       return;
     }
     if (step === 1) {
+      try {
+        const names = validateProfileName({ firstName, lastName });
+        setFirstName(names.firstName);
+        setLastName(names.lastName);
+        setStep(2);
+      } catch (validationError) {
+        setError(
+          validationError instanceof ZodError
+            ? validationError.issues[0]?.message || 'Check your name'
+            : validationError instanceof Error ? validationError.message : 'Check your name'
+        );
+      }
+      return;
+    }
+    if (step === 2) {
       if (selectedInterests.length === 0) {
         setError('Pick at least one interest');
         return;
@@ -68,7 +86,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         setError('Tell us what else you are into');
         return;
       }
-      setStep(2);
+      setStep(3);
       return;
     }
     try {
@@ -78,7 +96,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         email: trustedEmail,
         relation: trustedRelation,
       });
-      setStep(3);
+      setStep(4);
     } catch (validationError) {
       setError(
         validationError instanceof ZodError
@@ -93,6 +111,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       setLoading(true);
       setError(null);
       const user = await currentUser();
+      const names = validateProfileName({ firstName, lastName });
       await saveTrustedContact({
         name: trustedName,
         phone: trustedPhone,
@@ -104,8 +123,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         : selectedInterests;
       const profile = await createUserProfile({
         email: user.signInDetails?.loginId || '',
-        firstName: '',
-        lastName: '',
+        firstName: names.firstName,
+        lastName: names.lastName,
         interests,
         theme,
         comfortTextSize: textLarge ? 'large' : 'default',
@@ -146,12 +165,25 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 <path d="m14 6-6 6 6 6" />
               </svg>
             </button>
-            <div className="event-progress"><div><i style={{ width: `${(step / 3) * 100}%` }} /></div></div>
-            <span>Step {step} of 3</span>
+            <div className="event-progress"><div><i style={{ width: `${(step / 4) * 100}%` }} /></div></div>
+            <span>Step {step} of 4</span>
           </div>
 
           <div className="onb-body setup-body" key={step}>
             {step === 1 && (
+              <>
+                <h1 className="setup-title">What should we call you?</h1>
+                <p className="onb-sub">People in circles will only see your first name.</p>
+                <label className="onb-field">First name
+                  <input value={firstName} onChange={(event) => setFirstName(event.target.value)} autoComplete="given-name" maxLength={50} autoFocus />
+                </label>
+                <label className="onb-field">Last name
+                  <input value={lastName} onChange={(event) => setLastName(event.target.value)} autoComplete="family-name" maxLength={50} />
+                </label>
+              </>
+            )}
+
+            {step === 2 && (
               <>
                 <h1 className="setup-title">What are you into?</h1>
                 <p className="onb-sub">Pick at least one. Mo will suggest circles that match.</p>
@@ -190,7 +222,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               </>
             )}
 
-            {step === 2 && (
+            {step === 3 && (
               <>
                 <h1 className="setup-title">Who can you count on?</h1>
                 <p className="onb-sub">Save someone you can choose to contact when you need help. They never see your chats.</p>
@@ -220,7 +252,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               </>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <>
                 <h1 className="setup-title">Make Bridge yours</h1>
                 <p className="onb-sub">Your choices apply everywhere in the app.</p>
@@ -251,8 +283,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           </div>
 
           <div className="onb-foot setup-footer">
-            <button className="primary-action" onClick={step === 3 ? handleFinish : nextStep}>
-              {step === 3 ? 'I understand, let’s go' : 'Next'}
+            <button className="primary-action" onClick={step === 4 ? handleFinish : nextStep}>
+              {step === 4 ? 'I understand, let’s go' : 'Next'}
             </button>
           </div>
         </>

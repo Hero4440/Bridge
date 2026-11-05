@@ -7,7 +7,7 @@ import { currentUser } from './lib/auth';
 import { getCurrentUserProfile, type UserRecord } from './lib/profile';
 import { isThemeName, themeStyle } from './lib/theme';
 import { LoadingSpinner } from './components/LoadingSpinner';
-import { NavBar } from './components/NavBar';
+import { NavBar, type Screen } from './components/NavBar';
 import { Login } from './screens/Login';
 import { Signup } from './screens/Signup';
 import { Onboarding } from './screens/Onboarding';
@@ -64,7 +64,7 @@ function App() {
   } else if (!profile) {
     content = <Onboarding onComplete={setProfile} />;
   } else {
-    content = <MainApp onSignOut={() => { setProfile(null); setAuthState('signedOut'); }} />;
+    content = <MainApp profile={profile} onSignOut={() => { setProfile(null); setAuthState('signedOut'); }} />;
   }
 
   const selectedTheme = isThemeName(profile?.theme) ? profile.theme : 'dawn';
@@ -85,9 +85,7 @@ function App() {
   );
 }
 
-type Screen = 'home' | 'circles' | 'events' | 'dms' | 'practice' | 'me';
-
-function MainApp({ onSignOut }: { onSignOut: () => void }) {
+function MainApp({ profile, onSignOut }: { profile: UserRecord; onSignOut: () => void }) {
   const [screen, setScreen] = useState<Screen>('home');
   const [userId, setUserId] = useState<string>('');
 
@@ -98,15 +96,17 @@ function MainApp({ onSignOut }: { onSignOut: () => void }) {
   if (!userId) return <LoadingSpinner />;
 
   return (
-    <div className="bridge-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingBottom: '92px', boxSizing: 'border-box' }}>
-      {screen === 'home' && <Home onOpenEvents={() => setScreen('events')} />}
-      {screen === 'circles' && <Circles userId={userId} />}
-      {screen === 'events' && <Events />}
-      {screen === 'practice' && <Practice />}
-      {screen === 'dms' && <Dms userId={userId} />}
-      {screen === 'me' && <Me onSignOut={onSignOut} />}
+    <>
+      <div className="bridge-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingBottom: '92px', boxSizing: 'border-box' }}>
+        {screen === 'home' && <Home profile={profile} onOpenEvents={() => setScreen('events')} />}
+        {screen === 'circles' && <Circles userId={userId} onOpenDms={() => setScreen('dms')} />}
+        {screen === 'events' && <Events />}
+        {screen === 'practice' && <Practice />}
+        {screen === 'dms' && <Dms userId={userId} onOpenCircles={() => setScreen('circles')} />}
+        {screen === 'me' && <Me profile={profile} onSignOut={onSignOut} />}
+      </div>
       <NavBar currentScreen={screen} onNavigate={setScreen} />
-    </div>
+    </>
   );
 }
 

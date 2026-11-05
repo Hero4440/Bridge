@@ -39,7 +39,7 @@ Figma Make's automatic code import is blocked from Claude's cloud environment, s
   - Events: `event`, `newEvent`
   - Mo and practice: `practice`, `feedback`, `win`, `pause`, `reset` (breather), `help`
   - First screen: `checkin`
-- **Bottom nav:** hidden on pause, reset, win, checkin, help and newEvent.
+- **Bottom nav:** a fixed-width dark pill contains Home, Circles and Me; only the active label appears. Messages are the second view inside Circles. Mo is a separate floating button beside the pill and opens its Practice / Breathe / Help menu. Events open from Home. The nav is hidden on pause, reset, win, check-in, help and event-creation screens.
 - **Logic sections in `renderVals()`:** Events, Event detail (what to expect, prep, reflection, connect), Profile, DMs, Notifications, Themes. Each returns an object merged into the final `Object.assign(...)`.
 - **Themes:** colors are CSS variables set on `.bridge-app` from `state.theme`:
   - `--bg` (gradient), `--ink` (primary/dark), `--soft` (light chips), `--muted` (secondary text).
@@ -49,12 +49,13 @@ Figma Make's automatic code import is blocked from Claude's cloud environment, s
 - **Scroll reset:** `componentDidUpdate` scrolls `.bridge-scroll` back to the top when the screen changes.
 
 ## First-time setup
-Show Welcome once, followed by three steps:
-1. Interests, including a custom option.
-2. Trusted contact: name, phone, optional email and relationship.
-3. Theme, text size, calm mode, chat preference and safety acknowledgement.
+Show Welcome once, followed by four focused steps:
+1. Required first and last name. Other users see only the first name.
+2. Interests, including a custom option.
+3. Trusted contact: name, phone, optional email and relationship.
+4. Theme, text size, calm mode, chat preference and safety acknowledgement.
 
-In production, creating the owner's `User` row marks setup complete, so returning users skip it. Contact details live only in owner-authorized `TrustedContact`, not on the authenticated-readable profile, and saving them never sends an SMS.
+Email comes from Cognito; photo and gender remain optional profile settings. In production, creating the owner's `User` row marks setup complete, so returning users skip it. Contact details live only in owner-authorized `TrustedContact`, not on the authenticated-readable profile, and saving them never sends an SMS.
 
 ## Features by tab
 **Check-in (first screen).**
@@ -98,9 +99,10 @@ In production, creating the owner's `User` row marks setup complete, so returnin
 - **Theme picker:** small gradient circles in tiles (Dawn, Sage, Mist, Sand, Berry, Honey); the choice affects every screen.
 - **Comfort:** text size, calm mode and chatting preference, plus "Change my interests and trusted person".
 - **My journey:** brave steps per week (bar chart) and stats (demo numbers).
+- **Account:** after Settings, show Log out and Delete profile. Deletion requires confirmation and removes the profile, preferences, trusted contact and photo; the Cognito login, messages and events remain.
 - Also: badges, a support circle list (no toggles), and a 988 note.
 
-**Mo button in the nav.** Practice with me, Breathe with me (one-minute breather), I need help (choose a linked app user or 988; never auto-text a saved contact).
+**Floating Mo button beside the nav.** Practice with me, Breathe with me (one-minute breather), I need help (choose a linked app user or 988; never auto-text a saved contact).
 
 ## Production direction
 The current production UI is React + Vite. The planned target is a single Expo + React Native app for iOS and web, sharing Amplify and domain code and replacing Vite only after parity. Do not create a separate SwiftUI app or two permanent UI layers. The operating system owns status-bar time and icons; do not render fake system chrome.
