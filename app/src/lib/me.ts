@@ -2,7 +2,7 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { currentUser } from './auth';
-import { countBadgeSteps, isBraveStepBadge, listEarnedBadges, type EarnedBadge } from './badges';
+import { countBadgeSteps, listEarnedBadges, type EarnedBadge } from './badges';
 import { localDate } from './checkin';
 
 const client = generateClient<Schema>();
@@ -22,7 +22,6 @@ export interface MeActivityInput {
 export interface MeActivity {
   weeks: Array<{ label: string; value: number }>;
   stepsThisWeek: number;
-  dailyStreak: number;
   practices: number;
   eventsJoined: number;
   levelReached: number;
@@ -37,18 +36,6 @@ function weekStart(date: Date): number {
   return start.getTime();
 }
 
-function currentDailyStreak(dates: Array<string | null | undefined>, now: Date): number {
-  const activeDays = new Set(dates.flatMap((date) => date && !Number.isNaN(new Date(date).getTime()) ? [localDate(new Date(date))] : []));
-  const cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  if (!activeDays.has(localDate(cursor))) cursor.setDate(cursor.getDate() - 1);
-  let streak = 0;
-  while (activeDays.has(localDate(cursor))) {
-    streak += 1;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return streak;
-}
-
 export function summarizeMeActivity(input: MeActivityInput, now = new Date()): MeActivity {
   const currentWeek = weekStart(now);
   const weekMs = 7 * 24 * 60 * 60 * 1000;
@@ -61,11 +48,6 @@ export function summarizeMeActivity(input: MeActivityInput, now = new Date()): M
   }).length + input.goals.filter((goal) => goal.done && goal.week === localDate(new Date(start))).length
     + countBadgeSteps(input.earnedBadges ?? [], new Date(start), new Date(start + weekMs)));
   const earned = new Set((input.earnedBadges ?? []).map(({ key }) => key));
-  const dailyStreak = currentDailyStreak([
-    ...stepActivity.map((item) => item.timestamp ?? item.createdAt),
-    ...input.goals.filter((goal) => goal.done).map((goal) => goal.updatedAt),
-    ...(input.earnedBadges ?? []).filter((badge) => isBraveStepBadge(badge.key)).map((badge) => badge.earnedAt),
-  ], now);
 
   return {
     weeks: starts.map((start, index) => ({
@@ -73,7 +55,6 @@ export function summarizeMeActivity(input: MeActivityInput, now = new Date()): M
       value: counts[index],
     })),
     stepsThisWeek: counts[3],
-    dailyStreak,
     practices: input.practices.length,
     eventsJoined: input.rsvps.length,
     levelReached: Math.max(0, ...input.practices.map((run) => run.level ?? 0)),

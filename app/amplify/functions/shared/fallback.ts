@@ -6,6 +6,9 @@ export const FALLBACKS = {
     partnerReply: 'Thanks for telling me.',
     strength: 'You showed up and gave it a try — that matters.',
     tip: "When you're ready, try one short sentence about how you feel.",
+    memory: 'The person practiced taking a small social step and may benefit from one short, clear sentence next time.',
+    replyOptions: ['Thanks, I appreciate that.', 'I hear you.'],
+    hint: 'Try saying how you feel in one short sentence.',
   },
   tone: {
     gentle: "Here's a softer way: try leading with how you feel.",

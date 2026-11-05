@@ -23,8 +23,8 @@ import { DashboardNav, type SupportTool } from "./components/DashboardNav";
 import { ErrorRetry } from "./components/ErrorRetry";
 import { HomeSupport } from "./screens/HomeSupport";
 import { HomeComfort } from "./screens/HomeComfort";
-import { getTodayCheckIn, saveCheckIn } from "./lib/dashboard";
-import { localDate, type CheckInValues } from "./lib/checkin";
+import { saveCheckIn } from "./lib/dashboard";
+import type { CheckInValues } from "./lib/checkin";
 import type { ScenarioId } from "./lib/practice";
 import { BadgeCelebration } from "./components/BadgeCelebration";
 import { moContext } from "./lib/moContext";
@@ -142,8 +142,8 @@ function MainApp({
     new URLSearchParams(location.search).has("event") ? "events" : "home",
   );
   const [userId, setUserId] = useState("");
+  // MainApp mounts after sign-in, so every signed-in session starts with a fresh check-in.
   const [checkIn, setCheckIn] = useState<CheckInValues | null>(null);
-  const [day, setDay] = useState(localDate());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [eventTarget, setEventTarget] = useState<{
@@ -161,6 +161,8 @@ function MainApp({
   }>();
   const [comfort, setComfort] = useState(false);
   const [tool, setTool] = useState<SupportTool | null>(null);
+  const [toolOpenedAt, setToolOpenedAt] = useState(0);
+  const [lowDebrief, setLowDebrief] = useState(false);
   async function load(retry = false) {
     if (retry) {
       setLoading(true);
@@ -169,11 +171,9 @@ function MainApp({
     try {
       const user = await currentUser();
       setUserId(user.userId);
-      setCheckIn(await getTodayCheckIn(user.userId));
-      setDay(localDate());
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Your check-in could not be loaded.",
+        e instanceof Error ? e.message : "Your session could not be started.",
       );
     } finally {
       setLoading(false);
@@ -182,17 +182,6 @@ function MainApp({
   useEffect(() => {
     void load();
   }, []);
-  useEffect(() => {
-    const fresh = () => {
-      if (localDate() !== day) void load(true);
-    };
-    window.addEventListener("focus", fresh);
-    const timer = setInterval(fresh, 60000);
-    return () => {
-      window.removeEventListener("focus", fresh);
-      clearInterval(timer);
-    };
-  }, [day]);
   function navigate(next: Screen) {
     setTool(null);
     setScreen(next);
@@ -218,10 +207,10 @@ function MainApp({
     body = (
       <CheckIn
         firstName={profile.firstName ?? ""}
+        calmMode={!!profile.comfortCalmMode}
         onSave={async (values) => {
           const saved = await saveCheckIn(userId, values);
           setCheckIn(saved);
-          setDay(localDate());
         }}
       />
     );
@@ -238,8 +227,12 @@ function MainApp({
       <HomeSupport
         key={tool}
         tool={tool}
-        onTool={setTool}
+        openedAt={toolOpenedAt}
         onBack={() => setTool(null)}
+        onTalkLater={() => {
+          setLowDebrief(true);
+          setTool(null);
+        }}
       />
     );
   else
@@ -260,6 +253,8 @@ function MainApp({
               setScreen("circles");
             }}
             onComfort={() => setComfort(true)}
+            angryDebrief={lowDebrief}
+            onDebriefTalk={() => setLowDebrief(false)}
           />
         )}
         {screen === "circles" && (
@@ -299,6 +294,7 @@ function MainApp({
             initialScenario={practice?.scenario}
             initialLevel={practice?.level}
             personalContext={personalContext}
+            onBack={() => navigate("home")}
           />
         )}
         {screen === "dms" && (
@@ -325,12 +321,15 @@ function MainApp({
       <div className="main-scroll bridge-scroll" key={tool ?? screen}>
         {body}
       </div>
-      {!loading && !error && checkIn && !tool && !comfort && (
+      {!loading && !error && checkIn && !tool && !comfort && screen !== "practice" && (
         <DashboardNav
           currentScreen={screen}
           feeling={checkIn.feeling}
           onNavigate={navigate}
-          onTool={setTool}
+          onTool={(next) => {
+            setToolOpenedAt(Date.now());
+            setTool(next);
+          }}
         />
       )}
     </div>

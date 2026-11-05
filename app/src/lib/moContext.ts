@@ -1,4 +1,9 @@
-import type { CheckInValues } from "./checkin";
+import {
+  feelingLabels,
+  hardestLabels,
+  upcomingLabels,
+  type CheckInValues,
+} from "./checkin";
 import type { UserRecord } from "./profile";
 
 export type MoContextMessage = {
@@ -22,8 +27,8 @@ export function moContext(
     `Current screen: ${clean(screen, 40)}.`,
     `Person: ${clean(profile.firstName ?? "Bridge member", 60)}.`,
     interests.length ? `Interests: ${interests.slice(0, 6).map((item) => clean(item, 40)).join(", ")}.` : "",
-    `Preferences: Mo help ${clean(profile.comfortMoHelp ?? "some", 20)}; ${profile.comfortPlainWords ? "plain words" : "friendly words"}; ${profile.comfortTextFirst === false ? "voice is okay" : "text first"}; ${profile.comfortCalmMode ? "calm mode on" : "calm mode off"}.`,
-    `Today's check-in: feeling ${checkIn.feeling}; upcoming ${checkIn.upcoming}; hardest part ${checkIn.hardest}.`,
+    `Preferences: Mo help ${clean(profile.comfortMoHelp ?? "some", 20)}; ${profile.comfortPlainWords ? "plain words" : "friendly words"}; ${profile.comfortTextFirst === false ? "voice is okay" : "text first"}; ${profile.comfortCalmMode ? "calm mode on, preferring quieter and lower-pressure support" : "calm mode off"}.`,
+    `This session's check-in: feeling ${feelingLabels[checkIn.feeling]}; coming up ${upcomingLabels[checkIn.upcoming]}; hardest part ${hardestLabels[checkIn.hardest]}.`,
   ].filter(Boolean);
 
   return withMoMessages(lines.join("\n"), messages);

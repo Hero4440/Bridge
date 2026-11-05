@@ -22,7 +22,11 @@ describe("moContext", () => {
     );
     expect(result).toContain("Sam");
     expect(result).toContain("Gaming, Music");
-    expect(result).toContain("feeling okay");
+    expect(result).toContain("This session's check-in");
+    expect(result).toContain("feeling Okay");
+    expect(result).toContain("coming up Texting someone new");
+    expect(result).toContain("hardest part Reading tone");
+    expect(result).toContain("calm mode off");
     expect(result).not.toContain("Private");
     expect(result).not.toContain("private@example.com");
   });
@@ -42,5 +46,15 @@ describe("moContext", () => {
     expect(result).not.toContain("A: old");
     expect(result).toContain("B: one");
     expect(result.length).toBeLessThanOrEqual(1600);
+  });
+
+  it("explains the calm preference to Mo", () => {
+    const result = moContext(
+      { ...profile, comfortCalmMode: true },
+      { feeling: "over", upcoming: "hard", hardest: "leave" },
+      "practice",
+    );
+    expect(result).toContain("calm mode on, preferring quieter and lower-pressure support");
+    expect(result).toContain("feeling Overwhelmed");
   });
 });

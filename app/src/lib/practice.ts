@@ -12,9 +12,14 @@ export type PracticeReply = {
   partnerReply: string;
   strength: string;
   tip: string;
+  replyOptions: string[];
+  hint: string;
   fallback: boolean;
   crisis: boolean;
+  rateLimited: boolean;
 };
+
+export type PracticeMessage = { role: 'partner' | 'user'; text: string };
 
 // 7 scenarios from Phase 2 practice Lambda (prompts.ts)
 export const SCENARIOS = {
@@ -71,19 +76,27 @@ export const LEVELS = [
   { level: 3, title: 'On Your Own', description: 'No hints, realistic surprises' },
 ] as const;
 
-export async function practiceTurn(
-  scenarioId: ScenarioId,
-  level: 1 | 2 | 3,
-  goal: string,
-  message: string,
-  personalContext?: string,
-): Promise<PracticeReply> {
+type PracticeRequest = {
+  mode: 'start' | 'turn' | 'finish';
+  scenarioId: ScenarioId;
+  level: 1 | 2 | 3;
+  goal: string;
+  message?: string;
+  history?: string;
+  personalContext?: string;
+};
+
+export function buildPracticeHistory(messages: readonly PracticeMessage[]): string {
+  return messages
+    .slice(-7)
+    .map(({ role, text }) => `${role === 'partner' ? 'Practice partner' : 'User'}: ${text.slice(0, 500)}`)
+    .join('\n')
+    .slice(0, 3600);
+}
+
+async function requestPractice(args: PracticeRequest): Promise<PracticeReply> {
   const { data, errors } = await client.queries.practiceTurn({
-    scenarioId,
-    level,
-    goal,
-    message,
-    personalContext,
+    ...args,
   });
 
   if (errors?.length) {
@@ -98,11 +111,38 @@ export async function practiceTurn(
     partnerReply: data.partnerReply || '',
     strength: data.strength || '',
     tip: data.tip || '',
+    replyOptions: (data.replyOptions?.filter((s): s is string => !!s)) || [],
+    hint: data.hint || '',
     fallback: data.fallback || false,
     crisis: data.crisis || false,
+    rateLimited: data.rateLimited || false,
   };
-  if (!reply.crisis && (scenarioId === 'disagree' || scenarioId === 'repair')) {
-    awardBadgeAfter('kind');
-  }
+  return reply;
+}
+
+export function startPractice(scenarioId: ScenarioId, level: 1 | 2 | 3, goal: string, personalContext?: string) {
+  return requestPractice({ mode: 'start', scenarioId, level, goal, personalContext });
+}
+
+export function practiceTurn(
+  scenarioId: ScenarioId,
+  level: 1 | 2 | 3,
+  goal: string,
+  message: string,
+  history: string,
+  personalContext?: string,
+) {
+  return requestPractice({ mode: 'turn', scenarioId, level, goal, message, history, personalContext });
+}
+
+export async function finishPractice(
+  scenarioId: ScenarioId,
+  level: 1 | 2 | 3,
+  goal: string,
+  history: string,
+  personalContext?: string,
+) {
+  const reply = await requestPractice({ mode: 'finish', scenarioId, level, goal, history, personalContext });
+  if (!reply.crisis && (scenarioId === 'disagree' || scenarioId === 'repair')) awardBadgeAfter('kind');
   return reply;
 }

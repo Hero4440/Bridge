@@ -337,8 +337,11 @@ const schema = a
       partnerReply: a.string(),
       strength: a.string(),
       tip: a.string(),
+      replyOptions: a.string().array(),
+      hint: a.string(),
       fallback: a.boolean(),
       crisis: a.boolean(),
+      rateLimited: a.boolean(),
     }),
     ClassifyReply: a.customType({
       label: a.string(),
@@ -358,10 +361,12 @@ const schema = a
     practiceTurn: a
       .query()
       .arguments({
+        mode: a.string().required(),
         scenarioId: a.string().required(),
         level: a.integer().required(),
         goal: a.string().required(),
-        message: a.string().required(),
+        message: a.string(),
+        history: a.string(),
         personalContext: a.string(),
       })
       .returns(a.ref("PracticeReply"))

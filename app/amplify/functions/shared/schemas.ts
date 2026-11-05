@@ -4,17 +4,34 @@ import { z } from 'zod';
 
 export const SCENARIOS = ['join', 'left-on-read', 'cancel', 'leave', 'repair', 'invite', 'disagree'] as const;
 
-export const practiceInput = z.object({
+const practiceBaseInput = z.object({
   scenarioId: z.enum(SCENARIOS),
   level: z.number().int().min(1).max(3),
   goal: z.string().min(1).max(300),
-  message: z.string().min(1).max(1000),
   personalContext: z.string().max(1600).optional(),
+});
+export const practiceInput = z.discriminatedUnion('mode', [
+  practiceBaseInput.extend({ mode: z.literal('start') }),
+  practiceBaseInput.extend({
+    mode: z.literal('turn'),
+    message: z.string().min(1).max(1000),
+    history: z.string().min(1).max(3600),
+  }),
+  practiceBaseInput.extend({
+    mode: z.literal('finish'),
+    history: z.string().min(1).max(3600),
+  }),
+]);
+export const practicePartnerOutput = z.object({
+  partnerReply: z.string().min(1),
+  replyOptions: z.array(z.string()).min(1).max(3).default([]),
+  hint: z.string().default(''),
 });
 export const practiceOutput = z.object({
   partnerReply: z.string().min(1),
   strength: z.string().min(1),
   tip: z.string().min(1),
+  memory: z.string().min(1).max(500),
 });
 
 export const classifyInput = z.object({ text: z.string().min(1).max(2000) });
