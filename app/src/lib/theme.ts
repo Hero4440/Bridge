@@ -25,5 +25,13 @@ export function themeStyle(name: ThemeName): CSSProperties {
     '--ink': theme.ink,
     '--soft': theme.soft,
     '--muted': theme.muted,
+    '--subtext': theme.muted,
+    '--surface': '#FFFFFF',
+    '--accent': theme.swatch,
+    '--accent-dark': theme.ink,
+    '--tint': theme.swatch,
+    '--soft2': theme.bar,
+    '--hover': theme.bar,
+    '--border': 'rgba(30,27,46,0.08)',
   } as CSSProperties;
 }

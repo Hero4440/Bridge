@@ -22,9 +22,10 @@ const CIRCLES = [
 
 interface CirclesProps {
   userId: string;
+  onOpenDms: () => void;
 }
 
-export function Circles({ userId }: CirclesProps) {
+export function Circles({ userId, onOpenDms }: CirclesProps) {
   const [selectedCircle, setSelectedCircle] = useState<string | null>(null);
   const [messages, setMessages] = useState<MessageRecord[]>([]);
   const [dailyTopic, setDailyTopic] = useState<string>('');
@@ -98,6 +99,11 @@ export function Circles({ userId }: CirclesProps) {
         <div className="header">
           <h1>Circles</h1>
           <p className="subtext">Join conversations around what you love</p>
+        </div>
+
+        <div className="community-switch" aria-label="Community views">
+          <button aria-current="page">Circles</button>
+          <button onClick={onOpenDms}>Messages</button>
         </div>
         
         <div className="circles-list">

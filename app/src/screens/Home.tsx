@@ -3,13 +3,14 @@
 // the current user's real profile and DynamoDB events.
 import { useEffect, useState } from 'react';
 import { listEvents, type EventRecord } from '../lib/data';
-import { getCurrentUserProfile } from '../lib/profile';
+import type { UserRecord } from '../lib/profile';
 import { StatusBar } from '../components/StatusBar';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorRetry } from '../components/ErrorRetry';
 import { Mo } from '../components/Mo';
 
 interface HomeProps {
+  profile: UserRecord;
   onOpenEvents: () => void;
 }
 
@@ -24,9 +25,8 @@ function eventTime(event: EventRecord) {
   return event.whenAt ? new Date(event.whenAt).getTime() : Number.MAX_SAFE_INTEGER;
 }
 
-export function Home({ onOpenEvents }: HomeProps) {
+export function Home({ profile, onOpenEvents }: HomeProps) {
   const [events, setEvents] = useState<EventRecord[]>([]);
-  const [firstName, setFirstName] = useState('there');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,9 +34,8 @@ export function Home({ onOpenEvents }: HomeProps) {
     try {
       setLoading(true);
       setError(null);
-      const [eventData, profile] = await Promise.all([listEvents(), getCurrentUserProfile()]);
+      const eventData = await listEvents();
       setEvents([...eventData].sort((a, b) => eventTime(a) - eventTime(b)));
-      setFirstName(profile?.firstName?.trim() || 'there');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load events');
     } finally {
@@ -58,7 +57,7 @@ export function Home({ onOpenEvents }: HomeProps) {
       <StatusBar />
       <div className="tab-sticky-header home-header">
         <span className="home-greeting">{greeting()}</span>
-        <h1>{firstName}</h1>
+        <h1>{profile.firstName?.trim() || 'there'}</h1>
       </div>
       <div className="tab-screen-content">
         <section className="up-next-card" aria-labelledby="up-next-title">

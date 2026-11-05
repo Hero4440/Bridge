@@ -19,11 +19,12 @@ type ContactRecord = Schema['Contact']['type'];
 
 interface DmsProps {
   userId: string;
+  onOpenCircles: () => void;
 }
 
 type View = 'list' | 'thread' | 'requests';
 
-export function Dms({ userId }: DmsProps) {
+export function Dms({ userId, onOpenCircles }: DmsProps) {
   const [view, setView] = useState<View>('list');
   const [requests, setRequests] = useState<MessageRequestRecord[]>([]);
   const [contacts, setContacts] = useState<ContactRecord[]>([]);
@@ -290,6 +291,11 @@ export function Dms({ userId }: DmsProps) {
             {requests.length} {requests.length === 1 ? 'request' : 'requests'}
           </button>
         )}
+      </div>
+
+      <div className="community-switch" aria-label="Community views">
+        <button onClick={onOpenCircles}>Circles</button>
+        <button aria-current="page">Messages</button>
       </div>
 
       {contacts.length === 0 ? (

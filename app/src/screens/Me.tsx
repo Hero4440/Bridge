@@ -1,56 +1,81 @@
 // app/src/screens/Me.tsx
-// Profile screen showing current user's profile from DynamoDB.
+// Profile screen uses the authenticated profile already loaded by App.
 // Displays photo (if exists), name, email, interests, settings list.
-// Sign out button. Implements FRONTEND-04 (data persists).
-import { useEffect, useState } from 'react';
-import { getCurrentTrustedContact, getCurrentUserProfile, getPhotoUrl, type TrustedContactRecord, type UserRecord } from '../lib/profile';
+// Account actions sit after settings, matching the Figma Me hierarchy.
+import { useCallback, useEffect, useState } from 'react';
+import {
+  deleteUserProfile,
+  getCurrentTrustedContact,
+  getPhotoUrl,
+  type TrustedContactRecord,
+  type UserRecord,
+} from '../lib/profile';
 import { authSignOut } from '../lib/auth';
 import { StatusBar } from '../components/StatusBar';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorRetry } from '../components/ErrorRetry';
 
 interface MeProps {
+  profile: UserRecord;
   onSignOut: () => void;
 }
 
-export function Me({ onSignOut }: MeProps) {
-  const [profile, setProfile] = useState<UserRecord | null>(null);
+export function Me({ profile, onSignOut }: MeProps) {
   const [trustedContact, setTrustedContact] = useState<TrustedContactRecord | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [accountAction, setAccountAction] = useState<'logout' | 'delete' | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  async function loadProfile() {
+  const loadProfileDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const [data, contact] = await Promise.all([getCurrentUserProfile(), getCurrentTrustedContact()]);
-      setProfile(data);
+      const contact = await getCurrentTrustedContact();
       setTrustedContact(contact);
-      
-      if (data?.photoKey) {
-        const url = await getPhotoUrl(data.photoKey);
-        setPhotoUrl(url);
-      }
+      setPhotoUrl(profile.photoKey ? await getPhotoUrl(profile.photoKey) : null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load profile');
     } finally {
       setLoading(false);
     }
-  }
+  }, [profile.photoKey]);
 
   async function handleSignOut() {
-    await authSignOut();
-    onSignOut();
+    try {
+      setAccountAction('logout');
+      setActionError(null);
+      await authSignOut();
+      onSignOut();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Could not log out');
+    } finally {
+      setAccountAction(null);
+    }
+  }
+
+  async function handleDeleteProfile() {
+    try {
+      setAccountAction('delete');
+      setActionError(null);
+      await deleteUserProfile(profile, trustedContact);
+      await authSignOut();
+      onSignOut();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Could not delete profile');
+    } finally {
+      setAccountAction(null);
+    }
   }
 
   useEffect(() => {
-    loadProfile();
-  }, []);
+    loadProfileDetails();
+  }, [loadProfileDetails]);
 
   if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorRetry error={error} onRetry={loadProfile} />;
-  if (!profile) return <div>No profile found</div>;
+  if (error) return <ErrorRetry error={error} onRetry={loadProfileDetails} />;
 
   const initials = profile.firstName && profile.lastName
     ? `${profile.firstName[0]}${profile.lastName[0]}`
@@ -62,7 +87,7 @@ export function Me({ onSignOut }: MeProps) {
       <div className="tab-sticky-header">
         <h1 className="tab-page-title">Me</h1>
       </div>
-      <div className="me-content">
+      <div className="tab-screen-content me-content">
         {/* Identity header */}
         <div className="me-identity-header">
           <div className="me-avatar" style={{ position: 'relative' }}>
@@ -122,13 +147,46 @@ export function Me({ onSignOut }: MeProps) {
             </div>
           )}
 
-          <button className="me-list-row" onClick={handleSignOut} style={{ width: '100%', textAlign: 'left', cursor: 'pointer' }}>
-            <span className="setting-icon">🚪</span>
-            <span>
-              <strong style={{ color: '#A0503F' }}>Sign Out</strong>
-            </span>
-          </button>
         </div>
+
+        <section className="account-section" aria-labelledby="account-title">
+          <h2 className="section-title" id="account-title">Account</h2>
+          <div className="me-list-card">
+            <button className="me-list-row settings-row" onClick={handleSignOut} disabled={accountAction !== null}>
+              <span className="setting-icon" aria-hidden="true">↪</span>
+              <span><strong>{accountAction === 'logout' ? 'Logging out…' : 'Log out'}</strong></span>
+            </button>
+            <button
+              className="me-list-row settings-row account-danger"
+              onClick={() => { setActionError(null); setConfirmDelete(true); }}
+              disabled={accountAction !== null}
+              aria-expanded={confirmDelete}
+            >
+              <span className="setting-icon" aria-hidden="true">×</span>
+              <span>
+                <strong>Delete profile</strong>
+                <small>Remove your Bridge profile data</small>
+              </span>
+            </button>
+          </div>
+
+          {confirmDelete && (
+            <div className="account-confirm" role="alertdialog" aria-labelledby="delete-profile-title" aria-describedby="delete-profile-copy">
+              <strong id="delete-profile-title">Delete your Bridge profile?</strong>
+              <p id="delete-profile-copy">This removes your profile, preferences, trusted contact and photo. Your login, messages and events stay.</p>
+              <div>
+                <button className="secondary-action" onClick={() => setConfirmDelete(false)} disabled={accountAction !== null}>Keep profile</button>
+                <button className="danger-action" onClick={handleDeleteProfile} disabled={accountAction !== null}>
+                  {accountAction === 'delete' ? 'Deleting…' : 'Delete profile'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {actionError && <p className="account-error" role="alert">{actionError}</p>}
+        </section>
+
+        <div className="me-footer-card">Mo isn't a therapist. Need help now? <strong>Call 988.</strong></div>
       </div>
     </div>
   );

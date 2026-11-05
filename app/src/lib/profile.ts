@@ -5,7 +5,7 @@
 // getCurrentUserProfile() returns null if no row exists, createUserProfile() creates
 // the first row (onboarding complete), updateUserProfile() updates settings.
 import { generateClient } from 'aws-amplify/data';
-import { uploadData, getUrl } from 'aws-amplify/storage';
+import { uploadData, getUrl, remove } from 'aws-amplify/storage';
 import { z } from 'zod';
 import type { Schema } from '../../amplify/data/resource';
 import { currentUser } from './auth';
@@ -24,7 +24,17 @@ const trustedContactSchema = z.object({
   relation: z.enum(['Parent', 'Guardian', 'Sibling', 'Coach', 'Friend', 'Other']),
 });
 
+const profileNameSchema = z.object({
+  firstName: z.string().trim().min(1, 'Enter your first name').max(50, 'First name is too long'),
+  lastName: z.string().trim().min(1, 'Enter your last name').max(50, 'Last name is too long'),
+});
+
 export type TrustedContactInput = z.input<typeof trustedContactSchema>;
+export type ProfileNameInput = z.input<typeof profileNameSchema>;
+
+export function validateProfileName(input: ProfileNameInput) {
+  return profileNameSchema.parse(input);
+}
 
 export function validateTrustedContact(input: TrustedContactInput) {
   return trustedContactSchema.parse(input);
@@ -66,6 +76,21 @@ export async function updateUserProfile(input: UpdateUserInput): Promise<UserRec
   if (errors?.length) throw new Error(`updateUserProfile failed: ${JSON.stringify(errors)}`);
   if (!data) throw new Error('updateUserProfile returned no data');
   return data;
+}
+
+export async function deleteUserProfile(
+  profile: UserRecord,
+  trustedContact: TrustedContactRecord | null,
+): Promise<void> {
+  if (profile.photoKey) await remove({ key: profile.photoKey });
+
+  if (trustedContact) {
+    const { errors } = await client.models.TrustedContact.delete({ id: trustedContact.id });
+    if (errors?.length) throw new Error(`delete trusted contact failed: ${JSON.stringify(errors)}`);
+  }
+
+  const { errors } = await client.models.User.delete({ id: profile.id });
+  if (errors?.length) throw new Error(`delete profile failed: ${JSON.stringify(errors)}`);
 }
 
 export async function getCurrentTrustedContact(): Promise<TrustedContactRecord | null> {
