@@ -20,7 +20,6 @@ import { Dms } from "./screens/Dms";
 import { Practice } from "./screens/Practice";
 import { CheckIn } from "./screens/CheckIn";
 import { DashboardNav, type SupportTool } from "./components/DashboardNav";
-import { OnboardingStatusBar } from "./components/OnboardingStatusBar";
 import { ErrorRetry } from "./components/ErrorRetry";
 import { HomeSupport } from "./screens/HomeSupport";
 import { HomeComfort } from "./screens/HomeComfort";
@@ -323,7 +322,6 @@ function MainApp({
   return (
     <div className="matched-main">
       <BadgeCelebration />
-      <OnboardingStatusBar />
       <div className="main-scroll bridge-scroll" key={tool ?? screen}>
         {body}
       </div>

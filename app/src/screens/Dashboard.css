@@ -3,7 +3,7 @@
 .phone:has(.matched-main){transform:translateZ(0)}
 .stage:has(.matched-main){background:#F4E8DE}
 .matched-main{height:100%;min-height:0;position:relative;overflow:hidden;font:400 16px Outfit,system-ui,sans-serif}
-.main-scroll{height:100%;overflow-y:auto;overflow-x:hidden;box-sizing:border-box;padding:44px 0 calc(80px + env(safe-area-inset-bottom))}
+.main-scroll{height:100%;overflow-y:auto;overflow-x:hidden;box-sizing:border-box;padding:env(safe-area-inset-top) 0 calc(80px + env(safe-area-inset-bottom))}
 .main-scroll:has(.matched-home){padding-bottom:0}
 .daily-checkin{min-height:100%;box-sizing:border-box;padding:20px 20px 40px;display:flex;flex-direction:column;gap:12px}
 .checkin-progress{display:flex;align-items:center;justify-content:space-between;min-height:44px}

@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { CircleGlyph, type CircleKind } from '../components/CircleGlyph';
 import { OnboardingMo as Mo } from '../components/OnboardingMo';
-import { OnboardingStatusBar } from '../components/OnboardingStatusBar';
 import { onboardingThemes, onboardingThemeNames, onboardingThemeStyle, type OnboardingTheme } from '../lib/onboarding';
 import { blankTrustedContact, isBlankTrustedContact, trustedContactSchema, type TrustedContactInput } from '../lib/trustedContacts';
 import './Onboarding.css';
@@ -96,7 +95,6 @@ export function OnboardingFlow({ onSave }: { onSave: (values: OnboardingValues) 
   }
 
   return <div className={`setup-flow${calmMode ? ' calm-mode calm' : ''}${textLarge ? ' text-large' : ''}`} style={onboardingThemeStyle(theme)}>
-    <OnboardingStatusBar />
     <div className="setup-scroll" ref={scroll}>
       <form className="onb" onSubmit={(e) => void submit(e)} noValidate aria-busy={saving}>
         <fieldset disabled={saving} className="setup-fields">

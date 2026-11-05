@@ -2,6 +2,8 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { checkInSchema, localDate, weekStart, type CheckInValues } from './checkin';
+import { countBadgeSteps, listEarnedBadges } from './badges';
+import { currentUser } from './auth';
 export { activeCounts } from './presence';
 const client = generateClient<Schema>();
 export type Goal = Schema['WeeklyGoal']['type'];
@@ -33,15 +35,19 @@ export async function saveCheckIn(userId:string, values:CheckInValues) {
 export async function listCircles(){return pages(token=>client.models.Group.list({nextToken:token}));}
 export async function loadDashboard() {
   const week=weekStart();
-  const [circles,goals,runs,reflections]=await Promise.all([
+  const {userId}=await currentUser();
+  const [circles,goals,runs,reflections,rsvps,badges]=await Promise.all([
     pages(token=>client.models.Group.list({nextToken:token})),
     pages(token=>client.models.WeeklyGoal.list({filter:{week:{eq:week}},nextToken:token})),
     pages(token=>client.models.PracticeRun.list({nextToken:token})),
     pages(token=>client.models.Reflection.list({nextToken:token})),
+    pages(token=>client.models.RSVP.list({filter:{userId:{eq:userId},status:{eq:'going'}},nextToken:token})),
+    listEarnedBadges(),
   ]);
-  // A step is a completed practice, reflection, or checked intention this week.
+  // Every persisted practice, reflection, Going RSVP, checked intention, or milestone is one step.
   const inWeek=(date:string|null|undefined)=>!!date && localDate(new Date(date))>=week;
-  const steps=runs.filter(r=>inWeek(r.createdAt)).length+reflections.filter(r=>inWeek(r.timestamp??r.createdAt)).length+goals.filter(g=>g.done).length;
+  const start=new Date(`${week}T00:00:00`);const end=new Date(start);end.setDate(end.getDate()+7);
+  const steps=runs.filter(r=>inWeek(r.createdAt)).length+reflections.filter(r=>inWeek(r.timestamp??r.createdAt)).length+rsvps.filter(r=>inWeek(r.timestamp??r.createdAt)).length+goals.filter(g=>g.done).length+countBadgeSteps(badges,start,end);
   return {circles,goals:goals.sort((a,b)=>a.position-b.position),steps};
 }
 export async function saveGoal(input:{id:string;text:string;done:boolean;position:number}, create=false) {

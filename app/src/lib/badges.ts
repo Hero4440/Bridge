@@ -15,7 +15,13 @@ export const BADGE_NAMES = {
 } as const;
 
 export type BadgeKey = keyof typeof BADGE_NAMES;
+export type EarnedBadge = Pick<Schema['Badge']['type'], 'key' | 'earnedAt'>;
 export const BADGE_EARNED_EVENT = 'bridge:badge-earned';
+const BRAVE_STEP_BADGES = new Set<BadgeKey>(['hello', 'breather', 'circle']);
+
+export function isBraveStepBadge(key: string): key is BadgeKey {
+  return BRAVE_STEP_BADGES.has(key as BadgeKey);
+}
 
 export async function awardBadge(key: BadgeKey): Promise<boolean> {
   const { userId } = await currentUser();
@@ -43,8 +49,19 @@ export function awardBadgeAfter(key: BadgeKey): void {
   });
 }
 
+export async function listEarnedBadges(): Promise<Schema['Badge']['type'][]> {
+  return allPages((nextToken) => client.models.Badge.list({ nextToken }));
+}
+
+export function countBadgeSteps(badges: readonly EarnedBadge[], start: Date, end: Date): number {
+  return badges.filter((badge) => {
+    const earnedAt = new Date(badge.earnedAt).getTime();
+    return isBraveStepBadge(badge.key) && earnedAt >= start.getTime() && earnedAt < end.getTime();
+  }).length;
+}
+
 export async function listEarnedBadgeKeys(): Promise<BadgeKey[]> {
-  const rows = await allPages((nextToken) => client.models.Badge.list({ nextToken }));
+  const rows = await listEarnedBadges();
   return rows
     .map((badge) => badge.key)
     .filter((key): key is BadgeKey => key in BADGE_NAMES);

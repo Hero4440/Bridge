@@ -2,12 +2,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const contactApi = vi.hoisted(() => ({ list: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() }));
-const deleteProfileApi=vi.hoisted(()=>vi.fn());
+const userApi=vi.hoisted(()=>({list:vi.fn(),delete:vi.fn()}));
+const badgeApi=vi.hoisted(()=>({list:vi.fn(),delete:vi.fn()}));
 const storageApi=vi.hoisted(()=>({uploadData:vi.fn(),getUrl:vi.fn(),remove:vi.fn()}));
 const authApi = vi.hoisted(() => ({ currentUser: vi.fn() }));
 
 vi.mock('aws-amplify/data', () => ({
-  generateClient: () => ({ models: { User: {delete:deleteProfileApi}, TrustedContact: contactApi } }),
+  generateClient: () => ({ models: { User: userApi, TrustedContact: contactApi, Badge: badgeApi } }),
 }));
 vi.mock('aws-amplify/storage', () => storageApi);
 vi.mock('./auth', () => authApi);
@@ -40,6 +41,10 @@ describe('saving trusted people', () => {
     contactApi.create.mockResolvedValue({ data: { id: 'saved' } });
     contactApi.update.mockResolvedValue({ data: { id: 'saved' } });
     contactApi.delete.mockResolvedValue({ data: { id: 'deleted' } });
+    userApi.list.mockResolvedValue({ data: [] });
+    userApi.delete.mockResolvedValue({ data: { id: 'deleted' } });
+    badgeApi.list.mockResolvedValue({ data: [] });
+    badgeApi.delete.mockResolvedValue({ data: { id: 'deleted' } });
   });
   it('saves both people with separate stable IDs and preserves the custom relationship', async () => {
     await saveTrustedContacts([sam, jordan]);
@@ -92,11 +97,19 @@ describe('profile names and deletion from main',()=>{
   const input=storageApi.uploadData.mock.calls[0][0];
   expect(input.path({identityId:'identity-1'})).toMatch(/^profile-photos\/identity-1\/\d+-My-photo\.webp$/);
  });
- it('removes the photo and trusted contact before the profile',async()=>{
-  storageApi.remove.mockResolvedValue({});contactApi.delete.mockResolvedValue({data:{}});deleteProfileApi.mockResolvedValue({data:{}});
-  await deleteUserProfile({...profile('mine','my-sub'),photoKey:'profile-photos/mine.webp'}, [{id:'contact-1'} as import('./profile').TrustedContactRecord]);
+ it('removes legacy duplicate profiles, trusted contacts, photos, and badges',async()=>{
+  authApi.currentUser.mockResolvedValue({userId:'my-sub'});
+  storageApi.remove.mockResolvedValue({});
+  userApi.list.mockResolvedValue({data:[{...profile('mine','my-sub'),photoKey:'profile-photos/mine.webp'},profile('legacy','my-sub::tejas')]});
+  userApi.delete.mockResolvedValue({data:{id:'deleted'}});
+  contactApi.list.mockResolvedValue({data:[{id:'contact-1'}]});
+  contactApi.delete.mockResolvedValue({data:{id:'deleted'}});
+  badgeApi.list.mockResolvedValue({data:[{id:'my-sub#hello'}]});
+  badgeApi.delete.mockResolvedValue({data:{id:'deleted'}});
+  await deleteUserProfile({...profile('mine','my-sub'),photoKey:'profile-photos/mine.webp'});
   expect(storageApi.remove).toHaveBeenCalledWith({path:'profile-photos/mine.webp'});
   expect(contactApi.delete).toHaveBeenCalledWith({id:'contact-1'},{selectionSet:['id']});
-  expect(deleteProfileApi).toHaveBeenCalledWith({id:'mine'});
+  expect(badgeApi.delete).toHaveBeenCalledWith({id:'my-sub#hello'},{selectionSet:['id']});
+  expect(userApi.delete.mock.calls.map(([row])=>row.id)).toEqual(['mine','legacy']);
  });
 });

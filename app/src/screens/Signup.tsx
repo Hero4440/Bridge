@@ -3,7 +3,6 @@
 // Links back to Login and signs the new auto-confirmed Cognito account in before setup.
 import { useState } from 'react';
 import { authSignIn, authSignUp } from '../lib/auth';
-import { StatusBar } from '../components/StatusBar';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
 interface SignupProps {
@@ -43,7 +42,6 @@ export function Signup({ onSignedUp, onSwitchToLogin }: SignupProps) {
 
   return (
     <div className="onb onb-center">
-      <StatusBar />
       <div className="onb-body">
         <span className="onb-brand">BRIDGE</span>
         <h1 className="onb-title">Create your account</h1>
