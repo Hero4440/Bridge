@@ -9,6 +9,7 @@ import { converseWithTool } from '../shared/bedrock';
 import { FALLBACKS } from '../shared/fallback';
 import { logTurn } from '../shared/log';
 import { PRACTICE_MODEL_ID } from '../../shared/config';
+import { withPersonalContext } from '../shared/context';
 import { PRACTICE_SYSTEM, PRACTICE_TOOL_SCHEMA, SCENARIOS } from './prompts';
 // D-04: persist PracticeRun via the runtime Data client. `$amplify/env/practice` resolves only
 // after deploy (generated into .amplify/) — isolated here; verified live in Plan 05.
@@ -22,14 +23,14 @@ const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env)
 Amplify.configure(resourceConfig, libraryOptions);
 const dataClient = generateClient<Schema>();
 
-type PracticeArgs = { scenarioId: keyof typeof SCENARIOS; level: number; goal: string; message: string };
+type PracticeArgs = { scenarioId: keyof typeof SCENARIOS; level: number; goal: string; message: string; personalContext?: string };
 
 export const handler = async (event: { arguments: PracticeArgs; identity?: { sub?: string } }) => {
   const started = Date.now();
   const userId = event.identity?.sub ?? 'anon';
   const parsed = practiceInput.safeParse(event.arguments);
   if (!parsed.success) return { ...FALLBACKS.practice, fallback: true };
-  const { scenarioId, level, goal, message } = parsed.data;
+  const { scenarioId, level, goal, message, personalContext } = parsed.data;
 
   // 1. classify input — crisis stops the role-play and skips the rate limiter
   const inLabel = await classify(message);
@@ -55,7 +56,7 @@ export const handler = async (event: { arguments: PracticeArgs; identity?: { sub
   const res = await converseWithTool({
     modelId: PRACTICE_MODEL_ID,
     system: PRACTICE_SYSTEM(SCENARIOS[scenarioId], level as 1 | 2 | 3, goal),
-    message,
+    message: withPersonalContext(message, personalContext),
     toolName: 'feedback',
     inputSchema: PRACTICE_TOOL_SCHEMA as unknown as Record<string, unknown>,
     validator: practiceOutput,

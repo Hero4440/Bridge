@@ -55,7 +55,7 @@ function BadgeIcon({ kind, color }: { kind: BadgeKind; color: string }) {
 }
 
 function SubHeader({ title, onBack }: { title: string; onBack: () => void }) {
-  return <div className="tab-sticky-header inner-header"><button onClick={onBack} aria-label="Back to Me" className="inner-back">‹</button><span className="header-title">{title}</span><span /></div>;
+  return <div className="tab-sticky-header inner-header"><button onClick={onBack} aria-label="Back to Me" className="inner-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg></button><span className="header-title">{title}</span><span /></div>;
 }
 
 function Segments<T extends string | boolean>({ value, options, onChange, disabled }: { value: T; options: Array<[T, string]>; onChange: (value: T) => void; disabled?: boolean }) {
@@ -79,6 +79,12 @@ export function Me({ profile, onProfileChange, onSignOut }: MeProps) {
   const [lastName, setLastName] = useState(profile.lastName ?? '');
   const [gender, setGender] = useState(profile.gender ?? 'Prefer not to say');
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  useEffect(() => {
+    if (notice !== 'Saved ✓') return;
+    const timeout = window.setTimeout(() => setNotice(null), 1800);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
 
   const loadDetails = useCallback(async () => {
     try {
@@ -205,5 +211,5 @@ export function Me({ profile, onProfileChange, onSignOut }: MeProps) {
     content = <><SubHeader title="Privacy & safety" onBack={() => setView('overview')} /><div className="me-sub-content"><div className="calm-card me-sub-card privacy-card"><h2>Who sees what</h2><div><strong>{contacts.map((contact) => contact.name).join(' and ') || 'No trusted person'}</strong><span>Gets your I need help texts</span></div><p className="muted-copy">Your chats, check-ins and pauses are never shared.</p><h2>Blocked people</h2><div><strong>{activity.blockedCount ? `${activity.blockedCount} blocked ${activity.blockedCount === 1 ? 'person' : 'people'}` : 'No blocked people'}</strong></div><h2>Safety rules</h2>{['Never share your address, passwords or money.', 'If someone asks for secrets or money, Mo warns you privately.', 'You can leave, mute or block anyone, anytime.', 'Need help now? Tap Mo, then I need help, or call 988.'].map((rule, index) => <span className="safety-row" key={rule}><b>{index + 1}</b>{rule}</span>)}</div></div></>;
   }
 
-  return <div className="tab-screen"><StatusBar />{content}{notice && <div className="ui-toast" role="status"><span>{notice}</span><button className="toast-dismiss" onClick={() => setNotice(null)}>Dismiss</button></div>}</div>;
+  return <div className="tab-screen"><StatusBar />{content}{notice && <div className="ui-toast" role="status"><span>{notice}</span>{notice !== 'Saved ✓' && <button className="toast-dismiss" onClick={() => setNotice(null)}>Dismiss</button>}</div>}</div>;
 }

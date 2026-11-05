@@ -8,9 +8,9 @@ describe('trusted people validation', () => {
     expect(validateTrustedContact({ ...valid, name: ' Sam ' })).toMatchObject({ name: 'Sam', otherRole: 'Neighbor' });
   });
   it('rejects punctuation-only and fewer than ten digit phone numbers', () => {
-    for (const phone of ['----------', '(480) 12', 'abcdefghij']) {
-      expect(() => validateTrustedContact({ ...valid, phone })).toThrow();
-    }
+    expect(() => validateTrustedContact({ ...valid, phone: '12312312' })).toThrow('Add a 10-digit phone number');
+    expect(() => validateTrustedContact({ ...valid, phone: '----------' })).toThrow('Add a 10-digit phone number');
+    expect(() => validateTrustedContact({ ...valid, phone: 'abcdefghij' })).toThrow('Enter a valid phone number');
   });
   it('accepts an international number', () => {
     expect(validateTrustedContact({ ...valid, phone: '+44 7700 900123' }).phone).toBe('+44 7700 900123');

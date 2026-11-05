@@ -90,6 +90,14 @@ const schema = a
       })
       .authorization((allow) => [allow.owner()]),
 
+    // Badges are permanent, owner-only records. Their deterministic client IDs make awards idempotent.
+    Badge: a
+      .model({
+        key: a.string().required(),
+        earnedAt: a.datetime().required(),
+      })
+      .authorization((allow) => [allow.owner()]),
+
     // A heartbeat represents an actual open circle, never a fabricated activity count.
     CirclePresence: a
       .model({
@@ -354,6 +362,7 @@ const schema = a
         level: a.integer().required(),
         goal: a.string().required(),
         message: a.string().required(),
+        personalContext: a.string(),
       })
       .returns(a.ref("PracticeReply"))
       .authorization((allow) => [allow.authenticated()])
@@ -366,7 +375,7 @@ const schema = a
       .handler(a.handler.function(classify)),
     toneCheck: a
       .query()
-      .arguments({ text: a.string().required() })
+      .arguments({ text: a.string().required(), personalContext: a.string() })
       .returns(a.ref("ToneReply"))
       .authorization((allow) => [allow.authenticated()])
       .handler(a.handler.function(tone)),
@@ -381,7 +390,11 @@ const schema = a
     ReflectReply: a.customType({ reply: a.string(), fallback: a.boolean() }),
     reflectReply: a
       .query()
-      .arguments({ feeling: a.string().required(), wins: a.string().array() })
+      .arguments({
+        feeling: a.string().required(),
+        wins: a.string().array(),
+        personalContext: a.string(),
+      })
       .returns(a.ref("ReflectReply"))
       .authorization((allow) => [allow.authenticated()])
       .handler(a.handler.function(reflectReply)),

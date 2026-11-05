@@ -41,6 +41,7 @@ interface Props {
   onCircle: (groupId: string) => void;
   onMessage: (userId: string) => void;
   onBack: () => void;
+  personalContext: string;
 }
 function DateTile({ event }: { event: EventRecord }) {
   const date = event.whenAt ? new Date(event.whenAt) : null;
@@ -64,6 +65,7 @@ export function Events({
   onCircle,
   onMessage,
   onBack,
+  personalContext,
 }: Props) {
   const [planned, setPlanned] = useState<string[]>([]);
   const [events, setEvents] = useState<EventRecord[]>([]);
@@ -211,7 +213,19 @@ export function Events({
     setBusy(true);
     setError("");
     try {
-      const result = await reflectEvent(userId, selected, feeling, wins);
+      const currentEvent = events.find((event) => event.id === selected);
+      const context = `${personalContext}${
+        currentEvent
+          ? `\nCurrent event: ${currentEvent.what}; format ${currentEvent.format ?? "not set"}.`
+          : ""
+      }`.slice(0, 1600);
+      const result = await reflectEvent(
+        userId,
+        selected,
+        feeling,
+        wins,
+        context,
+      );
       setReflection(result.reflection);
       setReply(result.reply);
       setNotice("Your private reflection is saved.");

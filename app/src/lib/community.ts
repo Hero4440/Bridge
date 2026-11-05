@@ -3,6 +3,7 @@ import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 import { checked, allPages } from "./apiResults";
 import { lastN } from "./messages";
+import { awardBadgeAfter } from "./badges";
 const api = generateClient<Schema>();
 export type Member = { id: string; name: string; photoKey?: string | null };
 export type Group = Schema["Group"]["type"];
@@ -63,7 +64,7 @@ export async function loadCommunity() {
 export async function joinCircle(userId: string, groupId: string) {
   const id = `${userId}#${groupId}`;
   const row = checked(await api.models.CircleMembership.get({ id }));
-  return (
+  const membership = (
     row ??
     checked(
       await api.models.CircleMembership.create({
@@ -75,6 +76,8 @@ export async function joinCircle(userId: string, groupId: string) {
       }),
     )
   );
+  awardBadgeAfter("circle");
+  return membership;
 }
 export async function updateMembership(
   id: string,
@@ -106,12 +109,14 @@ export async function sendCircle(
   text: string,
   clientMessageId: string,
 ) {
-  return action({
+  const result = await action({
     action: "send-circle",
     targetId: groupId,
     text,
     clientMessageId,
   });
+  awardBadgeAfter("hello");
+  return result;
 }
 export function observeContacts(
   next: (rows: Contact[]) => void,
@@ -160,15 +165,24 @@ export async function report(
 ) {
   checked(await api.models.Report.create({ targetId, targetType, reason }));
 }
-export async function previewDrafts(context: string) {
-  const result = checked(await api.queries.previewReplies({ context }));
+export async function previewDrafts(context: string, personalContext?: string) {
+  const result = checked(
+    await api.queries.previewReplies({
+      context: [personalContext, context]
+        .filter(Boolean)
+        .join("\n\n")
+        .slice(0, 2000),
+    }),
+  );
   return {
     suggestions: (result?.suggestions ?? []).filter((s): s is string => !!s),
     fallback: !!result?.fallback,
   };
 }
-export async function gentleDraft(text: string) {
-  const result = checked(await api.queries.toneCheck({ text }));
+export async function gentleDraft(text: string, personalContext?: string) {
+  const result = checked(
+    await api.queries.toneCheck({ text, personalContext }),
+  );
   if (!result?.gentle)
     throw new Error(
       "Mo could not suggest a rewrite. Your own words are still here.",

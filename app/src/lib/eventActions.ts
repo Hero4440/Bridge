@@ -4,6 +4,7 @@ import type { Schema } from "../../amplify/data/resource";
 import { checked, allPages } from "./apiResults";
 import { action } from "./community";
 import type { Feeling } from "./reflection";
+import { awardBadgeAfter } from "./badges";
 const api = generateClient<Schema>();
 export async function loadEventState(userId: string, eventId: string) {
   const [rsvps, prep, reflections] = await Promise.all([
@@ -46,12 +47,14 @@ export async function rsvpEvent(
   status: "going" | "maybe" | "cant",
 ) {
   await action({ action: "rsvp", targetId: eventId, status });
+  if (status === "going") awardBadgeAfter("event");
 }
 export async function reflectEvent(
   userId: string,
   eventId: string,
   feeling: Feeling,
   wins: string[],
+  personalContext?: string,
 ) {
   const id = `${userId}#${eventId}`;
   const previous = checked(await api.models.Reflection.get({ id }));
@@ -67,7 +70,9 @@ export async function reflectEvent(
       ? await api.models.Reflection.update(input)
       : await api.models.Reflection.create(input),
   );
-  const reply = checked(await api.queries.reflectReply({ feeling, wins }));
+  const reply = checked(
+    await api.queries.reflectReply({ feeling, wins, personalContext }),
+  );
   return {
     reflection,
     reply: reply?.reply ?? "Thanks for taking a moment to reflect.",

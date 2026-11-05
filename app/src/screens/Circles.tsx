@@ -32,6 +32,7 @@ import {
 import { messageTime, dayLabel } from "../lib/chat";
 import { listEvents, type EventRecord } from "../lib/data";
 import { useOnline } from "../lib/useOnline";
+import { withMoMessages } from "../lib/moContext";
 import type { UserRecord } from "../lib/profile";
 import type { Schema } from "../../amplify/data/resource";
 import "./Community.css";
@@ -42,6 +43,7 @@ interface Props {
   initialCircleId?: string;
   onOpenDms: (peerId?: string) => void;
   onEvents: (eventId?: string, groupId?: string, create?: boolean) => void;
+  personalContext: string;
 }
 export function Circles({
   userId,
@@ -50,6 +52,7 @@ export function Circles({
   initialCircleId,
   onOpenDms,
   onEvents,
+  personalContext,
 }: Props) {
   const [groups, setGroups] = useState<Group[]>([]);
   const [members, setMembers] = useState<Record<string, Member>>({});
@@ -505,6 +508,16 @@ export function Circles({
           name={`${circle?.name ?? "circle"} chat`}
           online={online}
           context={CIRCLE_IDEAS_CONTEXT(circle?.name??'',topics[selected]??'')}
+          personalContext={withMoMessages(
+            personalContext,
+            messages.map((message) => ({
+              speaker:
+                message.senderId === userId
+                  ? "You"
+                  : members[message.senderId ?? ""]?.name ?? "Circle member",
+              text: message.content,
+            })),
+          )}
           onSend={async (text, id) => {
             await sendCircle(selected, text, id);
           }}

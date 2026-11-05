@@ -25,14 +25,16 @@ import {
 import { sendDm, respondToRequest, threadId } from "../lib/dm";
 import { messageTime, dayLabel } from "../lib/chat";
 import { useOnline } from "../lib/useOnline";
+import { withMoMessages } from "../lib/moContext";
 import "./Community.css";
 interface Props {
   userId: string;
   initialPeerId?: string;
   onOpenCircles: () => void;
   onEvents: () => void;
+  personalContext: string;
 }
-export function Dms({ userId, initialPeerId, onOpenCircles, onEvents }: Props) {
+export function Dms({ userId, initialPeerId, onOpenCircles, onEvents, personalContext }: Props) {
   const [members, setMembers] = useState<Record<string, Member>>({});
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [requests, setRequests] = useState<Request[]>([]);
@@ -298,6 +300,13 @@ export function Dms({ userId, initialPeerId, onOpenCircles, onEvents }: Props) {
         <MessageComposer
           name={name}
           context={DM_IDEAS_CONTEXT(messages.filter(m=>m.senderId!==userId).at(-1)?.content)}
+          personalContext={withMoMessages(
+            personalContext,
+            messages.map((message) => ({
+              speaker: message.senderId === userId ? "You" : name,
+              text: message.content,
+            })),
+          )}
           online={online}
           disabled={blocked.has(peer) || (pending && !accepted)}
           onSend={async (text, id) => {

@@ -191,19 +191,23 @@ export async function uploadPhoto(file: File): Promise<string> {
     throw new Error("Photo must be JPEG, PNG, or WebP");
   }
 
-  // Generate unique key with timestamp
-  const key = `profile-photos/${Date.now()}-${file.name}`;
-
-  // Upload to S3
-  const result = await uploadData({ key, data: file }).result;
-  return result.key;
+  const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
+  try {
+    const result = await uploadData({
+      path: ({ identityId }) => `profile-photos/${identityId}/${fileName}`,
+      data: file,
+    }).result;
+    return result.path;
+  } catch {
+    throw new Error("Your photo could not be uploaded. Please try again.");
+  }
 }
 
 /**
  * Get temporary signed URL for profile photo from S3 key.
  */
 export async function getPhotoUrl(key: string): Promise<string> {
-  const result = await getUrl({ key });
+  const result = await getUrl({ path: key });
   return result.url.toString();
 }
 
@@ -216,16 +220,16 @@ export async function replaceProfilePhoto(
   try {
     updated = await updateUserProfile({ id: profile.id, photoKey: key });
   } catch (error) {
-    await remove({ key });
+    await remove({ path: key });
     throw error;
   }
-  if (profile.photoKey) await remove({ key: profile.photoKey });
+  if (profile.photoKey) await remove({ path: profile.photoKey });
   return updated;
 }
 
 export async function removeProfilePhoto(profile: UserRecord): Promise<UserRecord> {
   const updated = await updateUserProfile({ id: profile.id, photoKey: null });
-  if (profile.photoKey) await remove({ key: profile.photoKey });
+  if (profile.photoKey) await remove({ path: profile.photoKey });
   return updated;
 }
 
@@ -252,7 +256,7 @@ export async function deleteUserProfile(
   profile: UserRecord,
   trustedContacts: readonly TrustedContactRecord[],
 ): Promise<void> {
-  if (profile.photoKey) await remove({ key: profile.photoKey });
+  if (profile.photoKey) await remove({ path: profile.photoKey });
 
   for (const trustedContact of trustedContacts) {
     const { errors } = await client.models.TrustedContact.delete(

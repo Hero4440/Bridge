@@ -10,8 +10,16 @@ import { signUp, signIn, signOut, getCurrentUser, fetchAuthSession } from 'aws-a
 export const authSignUp = (email: string, password: string) =>
   signUp({ username: email, password, options: { userAttributes: { email } } });
 
-export const authSignIn = (email: string, password: string) =>
-  signIn({ username: email, password });
+export async function authSignIn(email: string, password: string) {
+  const input = { username: email, password };
+  try {
+    return await signIn(input);
+  } catch (error) {
+    if (!(error instanceof Error) || error.name !== 'UserAlreadyAuthenticatedException') throw error;
+    await signOut();
+    return signIn(input);
+  }
+}
 
 export const authSignOut = () => signOut();
 

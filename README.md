@@ -48,6 +48,10 @@ The team chose the partner, the problem, the features and every design decision.
 
 Open the [Figma Make file](https://www.figma.com/make/CmV9IOc2bubFxzcPJzz4Q7), or copy `figma-make/src/App.tsx` and `figma-make/src/index.css` into any Vite + React project and run `npm run dev`. No API keys are needed.
 
+## Test on iPhone Simulator
+
+Run `cd app && npm run dev -- --host 0.0.0.0`, open an iPhone in Xcode Simulator, then run `xcrun simctl openurl booted http://127.0.0.1:5173`. Sign in and open **Me → Comfort** to check the selected-option styling, 44px tap targets, and the auto-closing “Saved ✓” message.
+
 ## For AI assistants
 
 Read `.claude/skills/bridge/SKILL.md` before doing anything. Every prompt is logged to `AI_PROMPTS/<Name>.md`, `git pull --rebase --autostash` comes before every push, and nothing is mocked.

@@ -10,7 +10,7 @@ import { ErrorRetry } from '../components/ErrorRetry';
 
 type Step = 'picker' | 'setup' | 'conversation' | 'feedback';
 
-export function Practice({initialScenario,initialLevel=1}:{initialScenario?:ScenarioId;initialLevel?:1|2} = {}) {
+export function Practice({initialScenario,initialLevel=1,personalContext}:{initialScenario?:ScenarioId;initialLevel?:1|2;personalContext?:string} = {}) {
   const [step, setStep] = useState<Step>(initialScenario?'setup':'picker');
   const [selectedScenario, setSelectedScenario] = useState<ScenarioId | null>(initialScenario??null);
   const [level, setLevel] = useState<1 | 2 | 3>(initialLevel);
@@ -42,7 +42,7 @@ export function Practice({initialScenario,initialLevel=1}:{initialScenario?:Scen
     setError(null);
 
     try {
-      const result = await practiceTurn(selectedScenario, level, goal, userMessage.trim());
+      const result = await practiceTurn(selectedScenario, level, goal, userMessage.trim(), personalContext);
 
       if (result.crisis) {
         // Crisis detected - show 988 alert and reset
@@ -118,7 +118,7 @@ export function Practice({initialScenario,initialLevel=1}:{initialScenario?:Scen
 
         <div className="practice-intro">
           <Mo mood="happy" size={56} />
-          <p>Pick something to practice. It's just between us.</p>
+          <p>Pick something to practice. Other Bridge members cannot see it.</p>
         </div>
 
         <div className="practice-scenarios">
@@ -174,6 +174,7 @@ export function Practice({initialScenario,initialLevel=1}:{initialScenario?:Scen
           <div className="setup-section">
             <h3>What's your goal?</h3>
             <p className="subtext">Mo will judge your practice against YOUR goal, not anyone else's.</p>
+            <p className="hint">Bridge sends Mo your preferences, today’s check-in, goal, and practice message. Practice messages are not saved as a transcript.</p>
             <textarea
               className="goal-input"
               value={goal}

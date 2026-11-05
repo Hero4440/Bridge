@@ -4,6 +4,7 @@
 // scenarios at 3 difficulty levels. Crisis detection and fallback handling built into Lambda.
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
+import { awardBadgeAfter } from './badges';
 
 const client = generateClient<Schema>();
 
@@ -74,13 +75,15 @@ export async function practiceTurn(
   scenarioId: ScenarioId,
   level: 1 | 2 | 3,
   goal: string,
-  message: string
+  message: string,
+  personalContext?: string,
 ): Promise<PracticeReply> {
   const { data, errors } = await client.queries.practiceTurn({
     scenarioId,
     level,
     goal,
     message,
+    personalContext,
   });
 
   if (errors?.length) {
@@ -91,11 +94,15 @@ export async function practiceTurn(
     throw new Error('practiceTurn returned no data');
   }
 
-  return {
+  const reply = {
     partnerReply: data.partnerReply || '',
     strength: data.strength || '',
     tip: data.tip || '',
     fallback: data.fallback || false,
     crisis: data.crisis || false,
   };
+  if (!reply.crisis && (scenarioId === 'disagree' || scenarioId === 'repair')) {
+    awardBadgeAfter('kind');
+  }
+  return reply;
 }
