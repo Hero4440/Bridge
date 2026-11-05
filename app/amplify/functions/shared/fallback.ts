@@ -18,4 +18,5 @@ export const FALLBACKS = {
     suggestions: ['Hi! Mind if I join?', 'Hey, this looks fun — can I say hi?'],
   },
   classify: { label: 'unsafe' as const, confidence: 0.5 },
+  moChat: { reply: "I'm here with you. Can you tell me a bit more?" },
 } as const;

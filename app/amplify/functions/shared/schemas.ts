@@ -48,3 +48,10 @@ export const toneOutput = z.object({ gentle: z.string().min(1), flaggedWords: z.
 
 export const previewInput = z.object({ context: z.string().min(1).max(2000) });
 export const previewOutput = z.object({ suggestions: z.array(z.string().min(1)).min(1).max(3) });
+
+export const moChatInput = z.object({
+  message: z.string().min(1).max(1000),
+  history: z.string().max(3600).optional(),
+  personalContext: z.string().max(1600).optional(),
+});
+export const moChatOutput = z.object({ reply: z.string().min(1) });

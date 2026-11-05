@@ -170,13 +170,6 @@ export function Practice({ initialScenario, initialLevel = 1, personalContext, o
     requestAnimationFrame(() => composerRef.current?.focus());
   };
 
-  const continuePractice = () => {
-    setComposing(true);
-    setShowComposer(true);
-    setError(null);
-    requestAnimationFrame(() => composerRef.current?.focus());
-  };
-
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();

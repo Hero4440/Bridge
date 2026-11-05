@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { authSignIn } from '../lib/auth';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { OnboardingMo } from '../components/OnboardingMo';
 
 interface LoginProps {
   onSignedIn: () => void;
@@ -36,6 +37,7 @@ export function Login({ onSignedIn, onSwitchToSignup }: LoginProps) {
   return (
     <div className="onb onb-center">
       <div className="onb-body">
+        <OnboardingMo mood="happy" size={92} />
         <span className="onb-brand">BRIDGE</span>
         <h1 className="onb-title">Welcome back</h1>
         <p className="onb-sub">Sign in to continue</p>

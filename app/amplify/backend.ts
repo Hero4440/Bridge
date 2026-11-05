@@ -24,6 +24,7 @@ import { eventReminders } from "./functions/eventReminders/resource";
 import { sendDm } from "./functions/sendDm/resource";
 import { respondToRequest } from "./functions/respondToRequest/resource";
 import { sendHelpAlert } from "./functions/sendHelpAlert/resource";
+import { moChat } from "./functions/moChat/resource";
 
 const backend = defineBackend({
   community,
@@ -41,6 +42,7 @@ const backend = defineBackend({
   sendDm,
   respondToRequest,
   sendHelpAlert,
+  moChat,
 });
 
 // Private daily state and intentions can be restored after an accidental write.
@@ -121,6 +123,7 @@ const aiFunctions = [
   backend.dailyTopic,
   backend.sendDm,
   backend.community,
+  backend.moChat,
 ];
 for (const fn of aiFunctions) {
   fn.resources.lambda.addToRolePolicy(
@@ -142,7 +145,7 @@ const rateLimitTable = new Table(aiStack, "RateLimit", {
   billingMode: BillingMode.PAY_PER_REQUEST,
   timeToLiveAttribute: "ttl",
 });
-for (const fn of [backend.practice, backend.tone, backend.preview, backend.community, backend.sendDm]) {
+for (const fn of [backend.practice, backend.tone, backend.preview, backend.community, backend.sendDm, backend.moChat]) {
   rateLimitTable.grantWriteData(fn.resources.lambda);
   fn.addEnvironment("RATE_LIMIT_TABLE", rateLimitTable.tableName);
 }
