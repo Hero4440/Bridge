@@ -42,14 +42,14 @@ export async function loadDashboard() {
     pages(token=>client.models.WeeklyGoal.list({filter:{week:{eq:week}},nextToken:token})),
     pages(token=>client.models.PracticeRun.list({nextToken:token})),
     pages(token=>client.models.Reflection.list({nextToken:token})),
-    pages(token=>client.models.RSVP.list({filter:{userId:{eq:userId},status:{eq:'going'}},nextToken:token})),
+    pages(token=>client.models.RSVP.list({filter:{userId:{eq:userId}},nextToken:token})),
     pages(token=>client.models.Event.list({nextToken:token})),
     listEarnedBadges(),
   ]);
   const [year,month,day]=week.split('-').map(Number);
   const start=new Date(year,month-1,day);
   const end=new Date(year,month-1,day+7);
-  const goingEventIds=new Set(rsvps.map(r=>r.eventId));
+  const goingEventIds=new Set(rsvps.filter(r=>r.status==='going').map(r=>r.eventId));
   const planEvents=events.filter(event=>{
     if(!event.whenAt || !Number.isFinite(Date.parse(event.whenAt))) return false;
     const when=Date.parse(event.whenAt);
