@@ -1,8 +1,6 @@
 // app/src/components/ErrorRetry.tsx
 // Error state component with retry button. Uses .why-box card styling.
 // Displayed when API calls fail (FRONTEND-08).
-import React from 'react';
-
 interface ErrorRetryProps {
   error: string;
   onRetry: () => void;

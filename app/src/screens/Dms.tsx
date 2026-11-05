@@ -159,7 +159,7 @@ export function Dms({ userId }: DmsProps) {
         <div className="header">
           <h1>Messages</h1>
         </div>
-        <ErrorRetry message={error} onRetry={loadData} />
+        <ErrorRetry error={error} onRetry={loadData} />
       </div>
     );
   }
@@ -244,10 +244,10 @@ export function Dms({ userId }: DmsProps) {
                   <div className="message-bubble">
                     <div className="message-content">{msg.content}</div>
                     <div className="message-time">
-                      {new Date(msg.timestamp).toLocaleTimeString([], { 
+                      {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], {
                         hour: 'numeric', 
                         minute: '2-digit' 
-                      })}
+                      }) : ''}
                     </div>
                   </div>
                 </div>

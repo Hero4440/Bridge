@@ -1,8 +1,6 @@
 // app/src/components/LoadingSpinner.tsx
 // Centered 24px circular loading spinner. Uses var(--ink) stroke color.
 // Displayed during async data fetches (FRONTEND-07).
-import React from 'react';
-
 export function LoadingSpinner() {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>

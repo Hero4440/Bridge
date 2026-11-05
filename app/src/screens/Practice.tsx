@@ -247,7 +247,7 @@ export function Practice() {
               <p>Mo is thinking...</p>
             </div>
           ) : error ? (
-            <ErrorRetry message={error} onRetry={() => setError(null)} />
+            <ErrorRetry error={error} onRetry={() => setError(null)} />
           ) : (
             <div className="message-composer">
               <textarea

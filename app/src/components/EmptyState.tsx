@@ -1,8 +1,6 @@
 // app/src/components/EmptyState.tsx
 // Empty state component with optional action button.
 // Displayed when lists are empty (no events, no messages, etc.).
-import React from 'react';
-
 interface EmptyStateProps {
   message: string;
   actionLabel?: string;

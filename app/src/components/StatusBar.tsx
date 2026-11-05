@@ -1,8 +1,6 @@
 // app/src/components/StatusBar.tsx
 // iOS-style status bar with time + signal/wifi/battery icons (32px height).
 // Extracted from figma-make prototype. Shows 9:41 (Apple keynote time).
-import React from 'react';
-
 export function StatusBar() {
   return (
     <div className="ios-status" aria-hidden="true">

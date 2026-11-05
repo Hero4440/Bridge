@@ -1,8 +1,6 @@
 // app/src/components/PersonAvatar.tsx
 // Circular avatar showing first initial of name.
 // Can be button (onClick) or span. Tint = background color.
-import React from 'react';
-
 interface PersonAvatarProps {
   name: string;
   tint?: string;

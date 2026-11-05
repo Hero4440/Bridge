@@ -1,9 +1,7 @@
 // app/src/components/CircleGlyph.tsx
 // Rounded square icon for interest circles (Gaming, Music, Anime, etc.).
 // SVG paths extracted from figma-make prototype.
-import React from 'react';
-
-type CircleKind = 'gaming' | 'music' | 'anime' | 'cooking' | 'art' | 'tech';
+export type CircleKind = 'gaming' | 'music' | 'anime' | 'cooking' | 'art' | 'tech';
 
 interface CircleGlyphProps {
   kind: CircleKind;

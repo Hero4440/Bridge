@@ -84,7 +84,7 @@ function MainApp({ onSignOut }: { onSignOut: () => void }) {
     <div className="bridge-app" style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '60px' }}>
       {screen === 'home' && <Home />}
       {screen === 'circles' && <Circles userId={userId} />}
-      {screen === 'events' && <Events userId={userId} />}
+      {screen === 'events' && <Events />}
       {screen === 'practice' && <Practice />}
       {screen === 'dms' && <Dms userId={userId} />}
       {screen === 'me' && <Me onSignOut={onSignOut} />}

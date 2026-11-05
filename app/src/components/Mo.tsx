@@ -3,8 +3,6 @@
 // Extracted from figma-make prototype, converted to TypeScript.
 // Moods: happy (smile), worried (concerned brows), calm (eyes closed).
 // Used in Practice, Reset, Onboarding screens. Animates with .breathe class.
-import React from 'react';
-
 type MoMood = 'happy' | 'worried' | 'calm';
 
 interface MoProps {

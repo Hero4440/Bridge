@@ -2,8 +2,6 @@
 // Bottom navigation bar with 5 tabs (Home, Circles, Events, DMs, Me).
 // 44px height, dark pill style, active state in var(--ink).
 // New component (not in prototype) designed from UI-SPEC (FRONTEND-06).
-import React from 'react';
-
 type Screen = 'home' | 'circles' | 'events' | 'practice' | 'dms' | 'me';
 
 interface NavBarProps {

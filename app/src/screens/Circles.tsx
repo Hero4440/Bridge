@@ -18,7 +18,7 @@ const CIRCLES = [
   { id: 'cooking', name: 'Cooking', tint: '#DDF1E6' },
   { id: 'art', name: 'Art', tint: '#F6E5C9' },
   { id: 'tech', name: 'Tech', tint: '#DCE4FA' },
-];
+] as const;
 
 interface CirclesProps {
   userId: string;
@@ -145,7 +145,7 @@ export function Circles({ userId }: CirclesProps) {
         
         {error && (
           <ErrorRetry
-            message={error}
+            error={error}
             onRetry={() => {
               setError(null);
               setLoading(true);
@@ -173,10 +173,10 @@ export function Circles({ userId }: CirclesProps) {
                 <div className="message-bubble">
                   <div className="message-content">{msg.content}</div>
                   <div className="message-time">
-                    {new Date(msg.timestamp).toLocaleTimeString([], { 
+                    {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], {
                       hour: 'numeric', 
                       minute: '2-digit' 
-                    })}
+                    }) : ''}
                   </div>
                 </div>
               </div>

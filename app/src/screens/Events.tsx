@@ -6,13 +6,8 @@ import { listEvents, type EventRecord } from '../lib/data';
 import { setRsvp, getRsvp, listRsvpsForEvent, countRsvps, type RsvpStatus } from '../lib/rsvp';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorRetry } from '../components/ErrorRetry';
-import { currentUser } from '../lib/auth';
 
-interface EventsProps {
-  userId: string;
-}
-
-export function Events({ userId }: EventsProps) {
+export function Events() {
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +19,6 @@ export function Events({ userId }: EventsProps) {
     setLoading(true);
     setError(null);
     try {
-      const user = await currentUser();
       const eventList = await listEvents();
       setEvents(eventList);
 
@@ -114,7 +108,7 @@ export function Events({ userId }: EventsProps) {
         <div className="header">
           <h1>Events</h1>
         </div>
-        <ErrorRetry message={error} onRetry={loadEvents} />
+        <ErrorRetry error={error} onRetry={loadEvents} />
       </div>
     );
   }
@@ -145,12 +139,13 @@ export function Events({ userId }: EventsProps) {
           const userRsvp = userRsvps[event.id];
           const counts = rsvpCounts[event.id] || { going: 0, maybe: 0, cant: 0 };
           const isUpdating = updatingRsvp === event.id;
+          const whenAt = event.whenAt ? new Date(event.whenAt) : null;
 
           return (
             <div key={event.id} className="event-card">
               <div className="event-date-tile">
-                <div className="month">{new Date(event.date).toLocaleDateString([], { month: 'short' })}</div>
-                <div className="day">{new Date(event.date).getDate()}</div>
+                <div className="month">{whenAt?.toLocaleDateString([], { month: 'short' }) ?? 'TBD'}</div>
+                <div className="day">{whenAt?.getDate() ?? '—'}</div>
               </div>
 
               <div className="event-details">
@@ -158,16 +153,16 @@ export function Events({ userId }: EventsProps) {
                 <div className="event-meta">
                   <div className="meta-row">
                     <span className="icon">📅</span>
-                    <span>{formatDate(event.date)} at {formatTime(event.date)}</span>
+                    <span>{event.whenAt ? `${formatDate(event.whenAt)} at ${formatTime(event.whenAt)}` : 'Date TBD'}</span>
                   </div>
                   <div className="meta-row">
                     <span className="icon">📍</span>
-                    <span>{event.where}</span>
+                    <span>{event.whereText || event.venue || 'Location TBD'}</span>
                   </div>
-                  {event.groupSize && (
+                  {event.comfortSize && (
                     <div className="meta-row">
                       <span className="icon">👥</span>
-                      <span>{counts.going} / {event.groupSize} going</span>
+                      <span>{counts.going} / {event.comfortSize} going</span>
                     </div>
                   )}
                 </div>
