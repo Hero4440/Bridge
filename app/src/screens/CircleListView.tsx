@@ -35,7 +35,6 @@ export function CircleListView(v: CircleListViewProps) {
         tab="circles"
         onCircles={() => {}}
         onMessages={() => v.onOpenDms()}
-        onEvents={v.onEvents}
       />
       <CommunityNotice online={v.online} error={v.error} onRetry={v.onRetry} />
       <div className="tab-screen-content circles-content">
@@ -67,6 +66,30 @@ export function CircleListView(v: CircleListViewProps) {
             </button>
           ))}
         </div>
+        <button className="circles-event-entry" onClick={v.onEvents}>
+          <span className="circles-event-icon" aria-hidden="true">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="4" y="5" width="16" height="15" rx="2" />
+              <path d="M8 3v4M16 3v4M4 9h16" />
+            </svg>
+          </span>
+          <span className="circles-event-copy">
+            <strong>Events</strong>
+            <small>See upcoming plans and create one</small>
+          </span>
+          <span className="circles-event-arrow" aria-hidden="true">
+            →
+          </span>
+        </button>
         <h2 className="your-circles-title">Your circles</h2>
         {v.notice && <p role="status">{v.notice}</p>}
         <div className="real-circle-list">
