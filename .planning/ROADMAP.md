@@ -18,6 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Real-Time Chat** - Circle subscriptions, message history, reconnection logic, contact system (completed 2026-11-04)
 - [x] **Phase 5: Safety & Direct Messages** - Classification, message requests, crisis detection, help notifications (completed 2026-11-04)
 - [x] **Phase 6: Profile & Frontend Integration** - Profile persistence, frontend API client, loading/error states (completed 2026-11-04)
+- [ ] **Phase 6.1: Practice & AI Features UI** - INSERTED - Practice scenarios, AI feedback display, Mo conversation UI
 - [ ] **Phase 7: Quality & Testing** - TypeScript strict mode, accessibility audit, bias probe, 2-account testing
 - [ ] **Phase 8: Production Deployment** - Production app, secrets config, deploy rehearsal, demo prep
 
@@ -124,6 +125,23 @@ Plans:
 - 05: Circles + Events screens — Live chat, RSVP functionality (FRONTEND-06/07/08)
 - 06: DMs screen + Final Integration — Message requests, threads, all navigation complete (FRONTEND-06)
 
+### Phase 6.1: Practice & AI Features UI (INSERTED)
+**Goal**: Core AI practice feature works end-to-end — user can practice conversations with real Bedrock feedback
+**Depends on**: Phase 2 (practice Lambda), Phase 6 (frontend framework)
+**Requirements**: AI-01, AI-02, AI-03
+**Success Criteria** (what must be TRUE):
+  1. User can pick from 7 practice scenarios (join, left-on-read, cancel, leave, repair, invite, disagree)
+  2. User can set difficulty level (1-3) and their own goal before practicing
+  3. User types a practice message and gets AI feedback (partner reply + strength + tip) from Bedrock
+  4. Crisis detection works — if user expresses self-harm, show 988 + trusted person alert
+  5. Loading state shows "Mo is thinking..." during Bedrock API call (2-5 seconds)
+  6. Fallback response shown if Bedrock times out
+  7. User can "Try Again" or "Done" after feedback
+**Plans**: TBD
+
+Plans:
+- TBD (populated during plan-phase)
+
 ### Phase 7: Quality & Testing
 **Goal**: App meets accessibility standards, TypeScript strict mode enabled, and bias validation complete
 **Depends on**: Phase 6 (all features integrated)
@@ -169,5 +187,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 4. Real-Time Chat | 4/4 | Complete   | 2026-11-04 |
 | 5. Safety & Direct Messages | 4/4 | Complete   | 2026-11-04 |
 | 6. Profile & Frontend Integration | 6/6 | Complete   | 2026-11-04 |
+| 6.1. Practice & AI Features UI | 0/0 | Not started | - |
 | 7. Quality & Testing | 0/0 | Not started | - |
 | 8. Production Deployment | 0/0 | Not started | - |
