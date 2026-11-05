@@ -28,13 +28,23 @@ const schema = a.schema({
       interests: a.string().array(),
       trustedPersonName: a.string(),
       trustedPersonRelation: a.enum(['Parent', 'Sibling', 'Friend', 'Other']),
-      theme: a.enum(['dawn', 'sage', 'mist', 'sand']),
+      theme: a.enum(['dawn', 'sage', 'mist', 'sand', 'berry', 'honey']),
       comfortTextSize: a.string(),
       comfortCalmMode: a.boolean(),
       comfortTextFirst: a.boolean(),
       photoKey: a.string(), // S3 key for profile photo (Phase 6 PROFILE-03)
     })
     .authorization((allow) => [allow.owner(), allow.authenticated().to(['read'])]),
+
+  // Trusted contact details are owner-only; phone/email must never ride on the public profile.
+  TrustedContact: a
+    .model({
+      name: a.string().required(),
+      phone: a.string().required(),
+      email: a.string(),
+      relation: a.enum(['Parent', 'Guardian', 'Sibling', 'Coach', 'Friend', 'Other']),
+    })
+    .authorization((allow) => [allow.owner()]),
 
   // DATA-02
   // TODO(phase-5): member-only / DM-participant visibility check (D-08) — a server-side Lambda
