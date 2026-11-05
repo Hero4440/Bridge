@@ -18,6 +18,20 @@
   font-weight: 600;
   margin: 0;
 }
+.community-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.community-events {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 0 0 12px;
+  min-height: 44px;
+}
 .community-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;

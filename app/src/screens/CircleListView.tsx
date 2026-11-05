@@ -9,6 +9,7 @@ import type { Schema } from "../../amplify/data/resource";
 import "./Community.css";
 export interface CircleListViewProps {
   onOpenDms: () => void;
+  onEvents: () => void;
   onRetry: () => void;
   onFilter: (filter: "for-you" | "all") => void;
   open: (id: string, reading?: boolean) => Promise<void>;
@@ -34,6 +35,7 @@ export function CircleListView(v: CircleListViewProps) {
         tab="circles"
         onCircles={() => {}}
         onMessages={() => v.onOpenDms()}
+        onEvents={v.onEvents}
       />
       <CommunityNotice online={v.online} error={v.error} onRetry={v.onRetry} />
       <div className="tab-screen-content circles-content">
