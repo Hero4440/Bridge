@@ -34,3 +34,25 @@ SKILL.md's `amplify/...` and `src/...` paths are rooted here (prefix with `app/`
 
 > Scaffolding happens during Phase 1 execution (`/gsd-plan-phase 1` → `/gsd-execute-phase 1`).
 > This folder is a placeholder until then.
+
+
+## Daily check-in and Home
+
+After onboarding, a three-question daily check-in saves to the owner-only `CheckIn`
+model. The Home practice card uses those answers to choose a supported scenario and
+hint level. The local calendar day controls when a new check-in is shown.
+
+Weekly intentions are owner-only `WeeklyGoal` rows, grouped by the local Monday.
+Home counts completed practices, reflections, and checked intentions for that week.
+Circles come from `Group` records. Activity counts use AppSync subscriptions to actual
+circle heartbeats, expire from the UI after 90 seconds, and are removed by DynamoDB
+TTL. Check-ins, goals, and presence tables have point-in-time recovery enabled.
+
+Home also connects to real notifications, practice, circles, comfort preferences,
+breathing/grounding tools, and the existing help-alert Lambda. An unconnected trusted
+person is never reported as notified. New accounts start with an empty weekly plan.
+
+Run `npm test`, `npm run lint`, and `npm run build` from this directory. After deploying
+the development sandbox and generating `amplify_outputs.json`, run
+`npx tsx scripts/verify-dashboard.ts` for live persistence and two-account access checks.
+It creates fictional accounts and deletes their records and accounts afterward.

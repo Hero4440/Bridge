@@ -5,28 +5,32 @@
 import { useEffect, useState } from 'react';
 import { observeMessages, sendMessage, type MessageRecord } from '../lib/messages';
 import { getDailyTopic } from '../lib/topics';
-import { CircleGlyph } from '../components/CircleGlyph';
+import { listCircles, heartbeat, leaveCircle, type Circle } from '../lib/dashboard';
+import { CircleGlyph, type CircleKind } from '../components/CircleGlyph';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorRetry } from '../components/ErrorRetry';
 import { currentUser } from '../lib/auth';
 
-// Hardcoded circles from prototype (matches figma-make circleData)
-const CIRCLES = [
-  { id: 'gaming', name: 'Gaming', tint: '#F9DCE4' },
-  { id: 'music', name: 'Music', tint: '#E3E0F8' },
-  { id: 'anime', name: 'Anime', tint: '#FBE1D8' },
-  { id: 'cooking', name: 'Cooking', tint: '#DDF1E6' },
-  { id: 'art', name: 'Art', tint: '#F6E5C9' },
-  { id: 'tech', name: 'Tech', tint: '#DCE4FA' },
-] as const;
-
 interface CirclesProps {
   userId: string;
-  onOpenDms: () => void;
+  initialCircleId?: string;
+  onOpenDms:()=>void;
 }
 
-export function Circles({ userId, onOpenDms }: CirclesProps) {
-  const [selectedCircle, setSelectedCircle] = useState<string | null>(null);
+export function Circles({ userId, initialCircleId, onOpenDms }: CirclesProps) {
+  const [selectedCircle, setSelectedCircle] = useState<string | null>(initialCircleId??null);
+  const [circles,setCircles]=useState<Circle[]>([]);
+  const [groupsLoading,setGroupsLoading]=useState(true);
+  const [groupsError,setGroupsError]=useState('');
+  async function loadGroups(retry=false){if(retry){setGroupsLoading(true);setGroupsError('');}try{setCircles(await listCircles());}catch{setGroupsError('Circles could not be loaded. Please try again.');}finally{setGroupsLoading(false);}}
+  useEffect(()=>{void loadGroups();},[]);
+  useEffect(()=>{
+    if(!selectedCircle)return;
+    let stopped=false;
+    const publish=()=>{if(!stopped&&navigator.onLine)void heartbeat(userId,selectedCircle).catch(()=>undefined);};
+    publish();const timer=setInterval(publish,30000);
+    return()=>{stopped=true;clearInterval(timer);void leaveCircle(userId).catch(()=>undefined);};
+  },[selectedCircle,userId]);
   const [messages, setMessages] = useState<MessageRecord[]>([]);
   const [dailyTopic, setDailyTopic] = useState<string>('');
   const [draft, setDraft] = useState('');
@@ -42,7 +46,7 @@ export function Circles({ userId, onOpenDms }: CirclesProps) {
     setError(null);
 
     // Fetch daily topic
-    const circle = CIRCLES.find(c => c.id === selectedCircle);
+    const circle = circles.find(c => c.id === selectedCircle);
     getDailyTopic(selectedCircle, circle?.name)
       .then(result => setDailyTopic(result.text))
       .catch(err => console.error('Failed to load topic:', err));
@@ -63,7 +67,7 @@ export function Circles({ userId, onOpenDms }: CirclesProps) {
 
     // Cleanup subscription on unmount or circle change
     return () => subscription.unsubscribe();
-  }, [selectedCircle]);
+  }, [selectedCircle, circles]);
 
   const handleSendMessage = async () => {
     if (!draft.trim() || !selectedCircle || sendingMessage) return;
@@ -93,6 +97,8 @@ export function Circles({ userId, onOpenDms }: CirclesProps) {
   };
 
   // Circle list view
+  if(groupsLoading)return <LoadingSpinner/>;
+  if(groupsError)return <ErrorRetry error={groupsError} onRetry={()=>void loadGroups(true)}/>;
   if (!selectedCircle) {
     return (
       <div className="screen">
@@ -100,20 +106,17 @@ export function Circles({ userId, onOpenDms }: CirclesProps) {
           <h1>Circles</h1>
           <p className="subtext">Join conversations around what you love</p>
         </div>
-
-        <div className="community-switch" aria-label="Community views">
-          <button aria-current="page">Circles</button>
-          <button onClick={onOpenDms}>Messages</button>
-        </div>
         
+        <div className="community-switch" aria-label="Community views"><button aria-current="page">Circles</button><button onClick={onOpenDms}>Messages</button></div>
         <div className="circles-list">
-          {CIRCLES.map(circle => (
+          {circles.length===0&&<p>No circles yet. Check back soon.</p>}
+          {circles.map(circle => (
             <button
               key={circle.id}
               className="circle-card"
               onClick={() => setSelectedCircle(circle.id)}
             >
-              <CircleGlyph kind={circle.id} tint={circle.tint} size={56} />
+              <CircleGlyph kind={(circle.slug??circle.name.toLowerCase()) as CircleKind} size={56} />
               <div className="circle-info">
                 <h3>{circle.name}</h3>
                 <p className="subtext">Tap to join</p>
@@ -126,7 +129,7 @@ export function Circles({ userId, onOpenDms }: CirclesProps) {
   }
 
   // Chat view
-  const circle = CIRCLES.find(c => c.id === selectedCircle);
+  const circle = circles.find(c => c.id === selectedCircle);
   
   return (
     <div className="screen circles-chat">
