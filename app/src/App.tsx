@@ -23,6 +23,7 @@ import { DashboardNav, type SupportTool } from "./components/DashboardNav";
 import { ErrorRetry } from "./components/ErrorRetry";
 import { HomeSupport } from "./screens/HomeSupport";
 import { HomeComfort } from "./screens/HomeComfort";
+import { MoChat } from "./screens/MoChat";
 import { saveCheckIn } from "./lib/dashboard";
 import type { CheckInValues } from "./lib/checkin";
 import type { ScenarioId } from "./lib/practice";
@@ -160,6 +161,7 @@ function MainApp({
     level: 1 | 2;
   }>();
   const [comfort, setComfort] = useState(false);
+  const [moChat, setMoChat] = useState(false);
   const [tool, setTool] = useState<SupportTool | null>(null);
   const [toolOpenedAt, setToolOpenedAt] = useState(0);
   const [lowDebrief, setLowDebrief] = useState(false);
@@ -214,6 +216,13 @@ function MainApp({
         }}
       />
     );
+  else if (moChat)
+    body = (
+      <MoChat
+        personalContext={personalContext}
+        onBack={() => setMoChat(false)}
+      />
+    );
   else if (comfort)
     body = (
       <HomeComfort
@@ -253,6 +262,7 @@ function MainApp({
               setScreen("circles");
             }}
             onComfort={() => setComfort(true)}
+            onMoChat={() => setMoChat(true)}
             angryDebrief={lowDebrief}
             onDebriefTalk={() => setLowDebrief(false)}
           />
@@ -321,7 +331,7 @@ function MainApp({
       <div className="main-scroll bridge-scroll" key={tool ?? screen}>
         {body}
       </div>
-      {!loading && !error && checkIn && !tool && !comfort && screen !== "practice" && (
+      {!loading && !error && checkIn && !tool && !comfort && !moChat && screen !== "practice" && (
         <DashboardNav
           currentScreen={screen}
           feeling={checkIn.feeling}

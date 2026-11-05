@@ -39,6 +39,7 @@ interface Props {
   onComfort: () => void;
   angryDebrief?: boolean;
   onDebriefTalk?: () => void;
+  onMoChat?: () => void;
 }
 export function Home({
   profile,
@@ -50,6 +51,7 @@ export function Home({
   onMessage,
   angryDebrief = false,
   onDebriefTalk,
+  onMoChat,
 }: Props) {
   const [circles, setCircles] = useState<Circle[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -439,11 +441,16 @@ export function Home({
         <div className="tab-screen-content home-content">
           <div
             className="home-card"
+            role={!v.angryDebrief ? "button" : undefined}
+            tabIndex={!v.angryDebrief ? 0 : undefined}
+            onClick={!v.angryDebrief ? onMoChat : undefined}
+            onKeyDown={!v.angryDebrief ? (e) => { if (e.key === 'Enter' || e.key === ' ') onMoChat?.(); } : undefined}
             style={{
               display: "flex",
               flexDirection: "row",
               alignItems: "flex-start",
               gap: "12px",
+              cursor: !v.angryDebrief ? "pointer" : undefined,
             }}
           >
             <div

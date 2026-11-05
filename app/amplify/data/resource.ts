@@ -19,6 +19,7 @@ import { eventReminders } from "../functions/eventReminders/resource";
 import { sendDm } from "../functions/sendDm/resource";
 import { respondToRequest } from "../functions/respondToRequest/resource";
 import { sendHelpAlert } from "../functions/sendHelpAlert/resource";
+import { moChat } from "../functions/moChat/resource";
 
 const schema = a
   .schema({
@@ -472,6 +473,24 @@ const schema = a
       .returns(a.ref("HelpReply"))
       .authorization((allow) => [allow.authenticated()])
       .handler(a.handler.function(sendHelpAlert)),
+
+    // Free-form chat with Mo
+    MoChatReply: a.customType({
+      reply: a.string(),
+      fallback: a.boolean(),
+      crisis: a.boolean(),
+      rateLimited: a.boolean(),
+    }),
+    moChatTurn: a
+      .query()
+      .arguments({
+        message: a.string().required(),
+        history: a.string(),
+        personalContext: a.string(),
+      })
+      .returns(a.ref("MoChatReply"))
+      .authorization((allow) => [allow.authenticated()])
+      .handler(a.handler.function(moChat)),
   })
   // Phase 3 (D-04): grant the practice Lambda Data-client access to persist PracticeRun.
   // Phase 4 (D-03): grant the dailyTopic Lambda access to read/write the Topic cache.
@@ -484,6 +503,7 @@ const schema = a
     allow.resource(sendDm),
     allow.resource(respondToRequest),
     allow.resource(sendHelpAlert),
+    allow.resource(moChat),
   ]);
 
 export type Schema = ClientSchema<typeof schema>;

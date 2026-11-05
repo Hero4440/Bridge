@@ -210,7 +210,7 @@ export const handler = async (event: {
     // Bootstrap legacy events exactly once before making atomic capacity changes.
     const current = await db.send(
       new GetCommand({
-        TableName: env.EVENT_TABLE,
+        TableName: process.env.EVENT_TABLE!,
         Key: { id: eventRow.id },
         ConsistentRead: true,
       }),
@@ -221,7 +221,7 @@ export const handler = async (event: {
       try {
         await db.send(
           new UpdateCommand({
-            TableName: env.EVENT_TABLE,
+            TableName: process.env.EVENT_TABLE!,
             Key: { id: eventRow.id },
             UpdateExpression: "SET goingCount=:count",
             ConditionExpression: "attribute_not_exists(goingCount)",
@@ -242,7 +242,7 @@ export const handler = async (event: {
     const id = previous?.id ?? `${eventRow.id}#${userId}`;
     const exact = await db.send(
       new GetCommand({
-        TableName: env.RSVP_TABLE,
+        TableName: process.env.RSVP_TABLE!,
         Key: { id },
         ConsistentRead: true,
       }),
@@ -274,7 +274,7 @@ export const handler = async (event: {
         TransactItems: [
           {
             Update: {
-              TableName: env.EVENT_TABLE,
+              TableName: process.env.EVENT_TABLE!,
               Key: { id: eventRow.id },
               UpdateExpression:
                 "SET goingCount=if_not_exists(goingCount,:zero)+:delta",
@@ -284,7 +284,7 @@ export const handler = async (event: {
           },
           {
             Put: {
-              TableName: env.RSVP_TABLE,
+              TableName: process.env.RSVP_TABLE!,
               Item: row,
               ConditionExpression: old
                 ? "#status=:previous"
