@@ -1,62 +1,120 @@
-// app/src/screens/Onboarding.tsx
-// Five-step onboarding flow: Welcome → Interests → Meet Mo → Trusted Person → Comfort.
-// Saves profile to DynamoDB on completion via createUserProfile().
+// One-time profile setup persists interests, an owner-only trusted contact, and comfort settings.
 import { useState } from 'react';
+import { ZodError } from 'zod';
 import { currentUser } from '../lib/auth';
-import { createUserProfile } from '../lib/profile';
+import {
+  createUserProfile,
+  saveTrustedContact,
+  validateTrustedContact,
+  type UserRecord,
+} from '../lib/profile';
+import { themeNames, themes, themeStyle, type ThemeName } from '../lib/theme';
 import { Mo } from '../components/Mo';
 import { StatusBar } from '../components/StatusBar';
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import { CircleGlyph } from '../components/CircleGlyph';
+import { CircleGlyph, type CircleKind } from '../components/CircleGlyph';
 
 interface OnboardingProps {
-  onComplete: () => void;
+  onComplete: (profile: UserRecord) => void;
 }
 
-const interests = ['gaming', 'music', 'anime', 'cooking', 'art', 'tech'] as const;
-const themes = ['dawn', 'sage', 'mist', 'sand'] as const;
+type Relation = 'Parent' | 'Guardian' | 'Sibling' | 'Coach' | 'Friend' | 'Other';
+
+const interestOptions: Array<{ id: CircleKind; label: string; tint: string }> = [
+  { id: 'gaming', label: 'Gaming', tint: '#F4D9E2' },
+  { id: 'music', label: 'Music', tint: '#E2E0F7' },
+  { id: 'anime', label: 'Anime', tint: '#F7DED3' },
+  { id: 'cooking', label: 'Cooking', tint: '#F6E3D5' },
+  { id: 'art', label: 'Art', tint: '#F4E7C9' },
+  { id: 'tech', label: 'Tech', tint: '#DDE3F6' },
+];
+
+const relations: Relation[] = ['Parent', 'Guardian', 'Sibling', 'Coach', 'Friend', 'Other'];
 
 export function Onboarding({ onComplete }: OnboardingProps) {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Form data
-  const [selectedInterests, setSelectedInterests] = useState<string[]>(['gaming', 'music']);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [customInterest, setCustomInterest] = useState('');
   const [trustedName, setTrustedName] = useState('');
-  const [trustedRelation, setTrustedRelation] = useState<'Parent' | 'Sibling' | 'Friend' | 'Other'>('Parent');
-  const [theme, setTheme] = useState<typeof themes[number]>('dawn');
+  const [trustedPhone, setTrustedPhone] = useState('');
+  const [trustedEmail, setTrustedEmail] = useState('');
+  const [trustedRelation, setTrustedRelation] = useState<Relation>('Parent');
+  const [theme, setTheme] = useState<ThemeName>('dawn');
   const [textLarge, setTextLarge] = useState(false);
   const [calmMode, setCalmMode] = useState(false);
+  const [textFirst, setTextFirst] = useState(true);
 
   function toggleInterest(interest: string) {
-    setSelectedInterests((prev) =>
-      prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest]
+    setSelectedInterests((current) =>
+      current.includes(interest) ? current.filter((item) => item !== interest) : [...current, interest]
     );
+    setError(null);
+  }
+
+  function nextStep() {
+    setError(null);
+    if (step === 0) {
+      setStep(1);
+      return;
+    }
+    if (step === 1) {
+      if (selectedInterests.length === 0) {
+        setError('Pick at least one interest');
+        return;
+      }
+      if (selectedInterests.includes('other') && !customInterest.trim()) {
+        setError('Tell us what else you are into');
+        return;
+      }
+      setStep(2);
+      return;
+    }
+    try {
+      validateTrustedContact({
+        name: trustedName,
+        phone: trustedPhone,
+        email: trustedEmail,
+        relation: trustedRelation,
+      });
+      setStep(3);
+    } catch (validationError) {
+      setError(
+        validationError instanceof ZodError
+          ? validationError.issues[0]?.message || 'Check the contact details'
+          : validationError instanceof Error ? validationError.message : 'Check the contact details'
+      );
+    }
   }
 
   async function handleFinish() {
     try {
       setLoading(true);
       setError(null);
-      
       const user = await currentUser();
-      await createUserProfile({
+      await saveTrustedContact({
+        name: trustedName,
+        phone: trustedPhone,
+        email: trustedEmail,
+        relation: trustedRelation,
+      });
+      const interests = selectedInterests.includes('other')
+        ? selectedInterests.filter((interest) => interest !== 'other').concat(customInterest.trim())
+        : selectedInterests;
+      const profile = await createUserProfile({
         email: user.signInDetails?.loginId || '',
         firstName: '',
         lastName: '',
-        interests: selectedInterests,
-        trustedPersonName: trustedName,
-        trustedPersonRelation: trustedRelation,
+        interests,
         theme,
         comfortTextSize: textLarge ? 'large' : 'default',
         comfortCalmMode: calmMode,
-        comfortTextFirst: true,
+        comfortTextFirst: textFirst,
       });
-      
-      onComplete();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save profile');
+      onComplete(profile);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Failed to save profile');
     } finally {
       setLoading(false);
     }
@@ -64,201 +122,141 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
   if (loading) return <LoadingSpinner />;
 
-  const progress = (step / 5) * 100;
+  const rootClass = ['onb', 'setup-flow', calmMode ? 'calm-mode' : '', textLarge ? 'text-large' : '']
+    .filter(Boolean)
+    .join(' ');
 
   return (
-    <div className="onb">
+    <div className={rootClass} style={themeStyle(theme)}>
       <StatusBar />
-      
-      {/* Progress bar */}
-      <div className="event-progress" style={{ margin: '16px 0' }}>
-        <span style={{ fontSize: '14px', color: 'var(--muted)' }}>Step {step} of 5</span>
-        <div>
-          <i style={{ width: `${progress}%` }}></i>
+
+      {step === 0 ? (
+        <div className="setup-welcome">
+          <div className="setup-welcome-copy">
+            <Mo mood="happy" size={112} className="floaty" />
+            <h1>Make friends at<br />your own pace.</h1>
+          </div>
+          <button className="primary-action" onClick={nextStep}>Get started</button>
         </div>
-      </div>
-
-      {step > 1 && (
-        <button className="onb-back" onClick={() => setStep(step - 1)} aria-label="Back">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ stroke: 'var(--ink)' }} strokeWidth="2">
-            <path d="m14 6-6 6 6 6" />
-          </svg>
-        </button>
-      )}
-
-      <div className="onb-body">
-        {/* Step 1: Welcome */}
-        {step === 1 && (
-          <div className="onb-center">
-            <span className="onb-brand">BRIDGE</span>
-            <h1 className="onb-title">Welcome to Bridge</h1>
-            <p className="onb-sub">Preview. Practice. Go.</p>
-            
-            <div className="onb-list" style={{ marginTop: '32px' }}>
-              <div>
-                <span className="onb-dot">👁</span>
-                <span>Preview events before you go</span>
-              </div>
-              <div>
-                <span className="onb-dot">💬</span>
-                <span>Practice conversations with Mo</span>
-              </div>
-              <div>
-                <span className="onb-dot">✨</span>
-                <span>Connect with groups that get you</span>
-              </div>
-            </div>
+      ) : (
+        <>
+          <div className="setup-progress">
+            <button className="onb-back" onClick={() => { setError(null); setStep(step - 1); }} aria-label="Back">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="m14 6-6 6 6 6" />
+              </svg>
+            </button>
+            <div className="event-progress"><div><i style={{ width: `${(step / 3) * 100}%` }} /></div></div>
+            <span>Step {step} of 3</span>
           </div>
-        )}
 
-        {/* Step 2: Interests */}
-        {step === 2 && (
-          <>
-            <h1 className="onb-title">What interests you?</h1>
-            <p className="onb-sub">Pick as many as you like. You can change these later.</p>
-            
-            <div className="interest-grid" style={{ marginTop: '24px' }}>
-              {interests.map((interest) => (
-                <button
-                  key={interest}
-                  className="interest-tile"
-                  onClick={() => toggleInterest(interest)}
-                  style={{
-                    border: selectedInterests.includes(interest) ? '2px solid var(--ink)' : '2px solid transparent',
-                  }}
-                >
-                  <CircleGlyph kind={interest} size={48} />
-                  <span style={{ flex: 1, textAlign: 'left', textTransform: 'capitalize' }}>{interest}</span>
-                  {selectedInterests.includes(interest) && (
-                    <span className="tick" style={{ fontSize: '12px' }}>✓</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+          <div className="onb-body setup-body" key={step}>
+            {step === 1 && (
+              <>
+                <h1 className="setup-title">What are you into?</h1>
+                <p className="onb-sub">Pick at least one. Mo will suggest circles that match.</p>
+                <div className="setup-interest-grid">
+                  {interestOptions.map((interest) => {
+                    const selected = selectedInterests.includes(interest.id);
+                    return (
+                      <button
+                        key={interest.id}
+                        className="setup-interest"
+                        aria-pressed={selected}
+                        onClick={() => toggleInterest(interest.id)}
+                      >
+                        <CircleGlyph kind={interest.id} tint={interest.tint} size={52} />
+                        <span>{interest.label}</span>
+                        {selected && <b>✓</b>}
+                      </button>
+                    );
+                  })}
+                  <button
+                    className="setup-interest"
+                    aria-pressed={selectedInterests.includes('other')}
+                    onClick={() => toggleInterest('other')}
+                  >
+                    <span className="setup-plus">＋</span><span>Something else</span>
+                    {selectedInterests.includes('other') && <b>✓</b>}
+                  </button>
+                </div>
+                {selectedInterests.includes('other') && (
+                  <label className="onb-field">
+                    What else?
+                    <input value={customInterest} onChange={(event) => setCustomInterest(event.target.value)} maxLength={60} />
+                  </label>
+                )}
+                <span className="setup-count">{selectedInterests.length} picked</span>
+              </>
+            )}
 
-        {/* Step 3: Meet Mo */}
-        {step === 3 && (
-          <div className="onb-center">
-            <Mo mood="happy" size={160} className="breathe" />
-            <h1 className="onb-title" style={{ marginTop: '24px' }}>Meet Mo</h1>
-            <p className="onb-sub">
-              Mo is your friendly AI buddy. Practice conversations, get reply ideas, and take breathers when you need them.
-            </p>
-            
-            <div className="onb-card" style={{ marginTop: '24px', textAlign: 'left' }}>
-              <strong>Mo can help you:</strong>
-              <ul style={{ marginTop: '8px', paddingLeft: '20px', lineHeight: '1.6' }}>
-                <li>Practice tricky conversations</li>
-                <li>Suggest reply ideas (you always decide)</li>
-                <li>Take a one-minute breather</li>
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {/* Step 4: Trusted Person */}
-        {step === 4 && (
-          <>
-            <h1 className="onb-title">Who do you trust?</h1>
-            <p className="onb-sub">Someone you can reach out to when things feel hard. Optional but recommended.</p>
-            
-            <div className="onb-field" style={{ marginTop: '24px' }}>
-              <label>Name</label>
-              <input
-                type="text"
-                value={trustedName}
-                onChange={(e) => setTrustedName(e.target.value)}
-                placeholder="e.g., Mom, Sarah, Coach"
-              />
-            </div>
-
-            <div className="onb-field" style={{ marginTop: '16px' }}>
-              <label>Relation</label>
-              <select
-                value={trustedRelation}
-                onChange={(e) => setTrustedRelation(e.target.value as typeof trustedRelation)}
-                style={{
-                  height: '52px',
-                  borderRadius: '16px',
-                  border: '1.5px solid #DCD3EA',
-                  background: '#fff',
-                  padding: '0 16px',
-                  fontSize: '17px',
-                  width: '100%',
-                }}
-              >
-                <option value="Parent">Parent</option>
-                <option value="Sibling">Sibling</option>
-                <option value="Friend">Friend</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-          </>
-        )}
-
-        {/* Step 5: Comfort Settings */}
-        {step === 5 && (
-          <>
-            <h1 className="onb-title">Make Bridge yours</h1>
-            <p className="onb-sub">These settings help Bridge feel comfortable for you.</p>
-            
-            <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block' }}>Theme</label>
-                <div className="theme-grid">
-                  {themes.map((t) => (
+            {step === 2 && (
+              <>
+                <h1 className="setup-title">Who can you count on?</h1>
+                <p className="onb-sub">Save someone you can choose to contact when you need help. They never see your chats.</p>
+                <label className="onb-field">Their name
+                  <input value={trustedName} onChange={(event) => setTrustedName(event.target.value)} autoComplete="name" maxLength={80} />
+                </label>
+                <label className="onb-field">Phone number
+                  <input type="tel" value={trustedPhone} onChange={(event) => setTrustedPhone(event.target.value)} autoComplete="tel" inputMode="tel" />
+                </label>
+                <label className="onb-field">Email (optional)
+                  <input type="email" value={trustedEmail} onChange={(event) => setTrustedEmail(event.target.value)} autoComplete="email" placeholder="Backup contact" />
+                </label>
+                <strong className="setup-label">They are my</strong>
+                <div className="setup-pills">
+                  {relations.map((relation) => (
                     <button
-                      key={t}
-                      onClick={() => setTheme(t)}
-                      style={{
-                        border: theme === t ? '2px solid var(--ink)' : '2px solid transparent',
-                        textTransform: 'capitalize',
-                      }}
+                      key={relation}
+                      className={trustedRelation === relation ? 'on' : ''}
+                      aria-pressed={trustedRelation === relation}
+                      onClick={() => setTrustedRelation(relation)}
                     >
-                      <i style={{ background: t === 'dawn' ? '#F9DCE4' : t === 'sage' ? '#DDF1E6' : t === 'mist' ? '#DCE4FA' : '#F6E5C9' }} />
-                      <span>{t}</span>
-                      {theme === t && <b>✓</b>}
+                      {relation}
                     </button>
                   ))}
                 </div>
-              </div>
+                <p className="onb-sub">You can change this anytime in Me.</p>
+              </>
+            )}
 
-              <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={textLarge}
-                    onChange={(e) => setTextLarge(e.target.checked)}
-                  />
-                  <span>Larger text</span>
-                </label>
-              </div>
+            {step === 3 && (
+              <>
+                <h1 className="setup-title">Make Bridge yours</h1>
+                <p className="onb-sub">Your choices apply everywhere in the app.</p>
+                <div className="setup-theme-grid">
+                  {themeNames.map((name) => (
+                    <button key={name} className={theme === name ? 'on' : ''} aria-pressed={theme === name} onClick={() => setTheme(name)}>
+                      <i style={{ background: themes[name].swatch }} /><span>{themes[name].label}</span>{theme === name && <b>✓</b>}
+                    </button>
+                  ))}
+                </div>
+                <div className="setup-comfort-card">
+                  <span>Text size</span><div><button className={!textLarge ? 'on' : ''} onClick={() => setTextLarge(false)}>Default</button><button className={textLarge ? 'on' : ''} onClick={() => setTextLarge(true)}>Large</button></div>
+                  <span>Calm mode</span><div><button className={!calmMode ? 'on' : ''} onClick={() => setCalmMode(false)}>Off</button><button className={calmMode ? 'on' : ''} onClick={() => setCalmMode(true)}>On</button></div>
+                  <span>Chatting</span><div><button className={textFirst ? 'on' : ''} onClick={() => setTextFirst(true)}>Text first</button><button className={!textFirst ? 'on' : ''} onClick={() => setTextFirst(false)}>Voice is okay</button></div>
+                </div>
+                <div className="setup-note"><Mo mood="calm" size={48} /><span>Calm mode turns off moving animations. Text and voice are always optional.</span></div>
+                <h2 className="setup-safety-title">A few safety rules</h2>
+                <div className="setup-safety-card">
+                  <span><b>1</b>Never share your address, passwords or money.</span>
+                  <span><b>2</b>If someone asks for secrets or money, Mo warns you privately.</span>
+                  <span><b>3</b>You can leave, mute or block anyone, anytime.</span>
+                  <span><b>4</b>Need help now? Choose your trusted person, or call 988.</span>
+                </div>
+              </>
+            )}
 
-              <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={calmMode}
-                    onChange={(e) => setCalmMode(e.target.checked)}
-                  />
-                  <span>Calm mode (no animations)</span>
-                </label>
-              </div>
-            </div>
+            {error && <p className="field-hint setup-error">{error}</p>}
+          </div>
 
-            {error && <p className="field-hint" style={{ marginTop: '16px' }}>{error}</p>}
-          </>
-        )}
-      </div>
-
-      {/* Footer button */}
-      <div className="onb-foot">
-        <button className="primary-action" onClick={step === 5 ? handleFinish : () => setStep(step + 1)}>
-          {step === 5 ? 'Finish' : 'Next'}
-        </button>
-      </div>
+          <div className="onb-foot setup-footer">
+            <button className="primary-action" onClick={step === 3 ? handleFinish : nextStep}>
+              {step === 3 ? 'I understand, let’s go' : 'Next'}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

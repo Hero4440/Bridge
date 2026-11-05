@@ -6,6 +6,7 @@
 // the first row (onboarding complete), updateUserProfile() updates settings.
 import { generateClient } from 'aws-amplify/data';
 import { uploadData, getUrl } from 'aws-amplify/storage';
+import { z } from 'zod';
 import type { Schema } from '../../amplify/data/resource';
 import { currentUser } from './auth';
 
@@ -14,6 +15,20 @@ const client = generateClient<Schema>();
 export type UserRecord = Schema['User']['type'];
 export type CreateUserInput = Parameters<typeof client.models.User.create>[0];
 export type UpdateUserInput = Parameters<typeof client.models.User.update>[0];
+export type TrustedContactRecord = Schema['TrustedContact']['type'];
+
+const trustedContactSchema = z.object({
+  name: z.string().trim().min(1, 'Enter the person’s name').max(80),
+  phone: z.string().trim().regex(/^[+()\d\s.-]{7,24}$/, 'Enter a valid phone number'),
+  email: z.union([z.literal(''), z.string().trim().email('Enter a valid email')]),
+  relation: z.enum(['Parent', 'Guardian', 'Sibling', 'Coach', 'Friend', 'Other']),
+});
+
+export type TrustedContactInput = z.input<typeof trustedContactSchema>;
+
+export function validateTrustedContact(input: TrustedContactInput) {
+  return trustedContactSchema.parse(input);
+}
 
 export function findOwnedProfile(profiles: readonly UserRecord[], userId: string): UserRecord | null {
   return profiles.find((profile) => profile.owner?.startsWith(`${userId}::`)) ?? null;
@@ -51,6 +66,24 @@ export async function updateUserProfile(input: UpdateUserInput): Promise<UserRec
   if (errors?.length) throw new Error(`updateUserProfile failed: ${JSON.stringify(errors)}`);
   if (!data) throw new Error('updateUserProfile returned no data');
   return data;
+}
+
+export async function getCurrentTrustedContact(): Promise<TrustedContactRecord | null> {
+  const { data, errors } = await client.models.TrustedContact.list();
+  if (errors?.length) throw new Error(`getCurrentTrustedContact failed: ${JSON.stringify(errors)}`);
+  return data[0] ?? null;
+}
+
+// Upsert makes a failed/retried final onboarding submission safe and avoids duplicate contacts.
+export async function saveTrustedContact(input: TrustedContactInput): Promise<TrustedContactRecord> {
+  const valid = validateTrustedContact(input);
+  const existing = await getCurrentTrustedContact();
+  const result = existing
+    ? await client.models.TrustedContact.update({ id: existing.id, ...valid })
+    : await client.models.TrustedContact.create(valid);
+  if (result.errors?.length) throw new Error(`saveTrustedContact failed: ${JSON.stringify(result.errors)}`);
+  if (!result.data) throw new Error('saveTrustedContact returned no data');
+  return result.data;
 }
 
 /**

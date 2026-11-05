@@ -1,8 +1,8 @@
 // app/src/screens/Signup.tsx
 // Signup screen for creating new Cognito accounts. Email + password + confirm.
-// Links back to Login. Calls authSignUp from lib/auth.ts.
+// Links back to Login and signs the new auto-confirmed Cognito account in before setup.
 import { useState } from 'react';
-import { authSignUp } from '../lib/auth';
+import { authSignIn, authSignUp } from '../lib/auth';
 import { StatusBar } from '../components/StatusBar';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
@@ -30,6 +30,7 @@ export function Signup({ onSignedUp, onSwitchToLogin }: SignupProps) {
       setLoading(true);
       setError(null);
       await authSignUp(email, password);
+      await authSignIn(email, password);
       onSignedUp();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed');

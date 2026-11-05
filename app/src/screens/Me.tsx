@@ -3,7 +3,7 @@
 // Displays photo (if exists), name, email, interests, settings list.
 // Sign out button. Implements FRONTEND-04 (data persists).
 import { useEffect, useState } from 'react';
-import { getCurrentUserProfile, getPhotoUrl, type UserRecord } from '../lib/profile';
+import { getCurrentTrustedContact, getCurrentUserProfile, getPhotoUrl, type TrustedContactRecord, type UserRecord } from '../lib/profile';
 import { authSignOut } from '../lib/auth';
 import { StatusBar } from '../components/StatusBar';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -15,6 +15,7 @@ interface MeProps {
 
 export function Me({ onSignOut }: MeProps) {
   const [profile, setProfile] = useState<UserRecord | null>(null);
+  const [trustedContact, setTrustedContact] = useState<TrustedContactRecord | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,8 +24,9 @@ export function Me({ onSignOut }: MeProps) {
     try {
       setLoading(true);
       setError(null);
-      const data = await getCurrentUserProfile();
+      const [data, contact] = await Promise.all([getCurrentUserProfile(), getCurrentTrustedContact()]);
       setProfile(data);
+      setTrustedContact(contact);
       
       if (data?.photoKey) {
         const url = await getPhotoUrl(data.photoKey);
@@ -108,12 +110,13 @@ export function Me({ onSignOut }: MeProps) {
             <b>›</b>
           </div>
 
-          {profile.trustedPersonName && (
+          {(trustedContact || profile.trustedPersonName) && (
             <div className="me-list-row">
               <span className="setting-icon">👤</span>
               <span>
                 <strong>Trusted Person</strong>
-                <small>{profile.trustedPersonName} ({profile.trustedPersonRelation})</small>
+                <small>{trustedContact ? `${trustedContact.name} (${trustedContact.relation})` : `${profile.trustedPersonName} (${profile.trustedPersonRelation})`}</small>
+                {trustedContact?.phone && <small>{trustedContact.phone}</small>}
               </span>
               <b>›</b>
             </div>
