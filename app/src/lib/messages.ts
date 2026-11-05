@@ -3,30 +3,38 @@
 // the Data client's observeQuery (a managed AppSync subscription — push-based, not request loops,
 // with auto-reconnect). observeQuery has no server-side sort/limit, so the newest-50 window (CHAT-07) is enforced
 // client-side by the pure `lastN` helper (unit-tested).
-import { generateClient } from 'aws-amplify/data';
-import type { Schema } from '../../amplify/data/resource';
+import { generateClient } from "aws-amplify/data";
+import type { Schema } from "../../amplify/data/resource";
 
 const client = generateClient<Schema>();
 
-export type MessageRecord = Schema['Message']['type'];
+export type MessageRecord = Schema["Message"]["type"];
 
 export async function sendMessage(input: {
   groupId: string;
   content: string;
   senderId: string;
 }): Promise<MessageRecord> {
-  const { data, errors } = await client.models.Message.create({
-    ...input,
-    createdAtMs: Date.now(), // explicit sort value for ordering + the messagesByGroup GSI
-    timestamp: new Date().toISOString(),
+  const { data: result, errors } = await client.mutations.communityAction({
+    action: "send-circle",
+    targetId: input.groupId,
+    text: input.content,
+    clientMessageId: crypto.randomUUID(),
   });
-  if (errors?.length) throw new Error(`sendMessage failed: ${JSON.stringify(errors)}`);
-  if (!data) throw new Error('sendMessage returned no data');
-  return data;
+  if (errors?.length || !result?.ok || !result.messageId)
+    throw new Error(result?.reason || "The message could not be sent");
+  const row = await client.models.Message.get({ id: result.messageId });
+  if (row.errors?.length || !row.data)
+    throw new Error("The sent message could not be loaded");
+  return row.data;
 }
 
 // Pure: return at most the newest `n` items (by keyFn) in ASCENDING order for display.
-export function lastN<T>(items: readonly T[], n: number, keyFn: (item: T) => number): T[] {
+export function lastN<T>(
+  items: readonly T[],
+  n: number,
+  keyFn: (item: T) => number,
+): T[] {
   return [...items]
     .sort((a, b) => keyFn(b) - keyFn(a)) // newest first
     .slice(0, n) // cap to the newest n
@@ -39,7 +47,9 @@ export function observeMessages(
   onItems: (items: MessageRecord[]) => void,
   onError?: (error: unknown) => void,
 ) {
-  return client.models.Message.observeQuery({ filter: { groupId: { eq: groupId } } }).subscribe({
+  return client.models.Message.observeQuery({
+    filter: { groupId: { eq: groupId } },
+  }).subscribe({
     next: ({ items }) => onItems(lastN(items, 50, (m) => m.createdAtMs ?? 0)),
     error: (error) => onError?.(error),
   });

@@ -7,3 +7,10 @@ export const PREVIEW_TOOL_SCHEMA = {
   properties: { suggestions: { type: 'array', items: { type: 'string' }, minItems: 1, maxItems: 3 } },
   required: ['suggestions'],
 } as const;
+
+// Client context templates sent only when the person explicitly asks for ideas.
+export const CIRCLE_IDEAS_CONTEXT = (circleName:string,topic:string) =>
+  `Give an optional conversation starter for the ${circleName} circle. Today’s topic: ${topic}`;
+export const DM_IDEAS_CONTEXT = (latestMessage?:string) => latestMessage
+  ? `Suggest optional short replies to this message. Do not invent shared experiences: ${latestMessage.slice(0,1600)}`
+  : 'Offer a short optional friendly opener for a private conversation. Do not assume facts about the other person.';
