@@ -7,6 +7,13 @@ vi.mock('../../shared/rateLimit', () => ({
   RATE_LIMIT_MESSAGE: 'take a breather',
 }));
 vi.mock('../../shared/bedrock', () => ({ converseWithTool: vi.fn() }));
+vi.mock('@aws-amplify/backend/function/runtime', () => ({
+  getAmplifyDataClientConfig: vi.fn(async () => ({ resourceConfig: {}, libraryOptions: {} })),
+}));
+vi.mock('aws-amplify', () => ({ Amplify: { configure: vi.fn() } }));
+vi.mock('aws-amplify/data', () => ({
+  generateClient: () => ({ models: { PracticeRun: { create: vi.fn(async () => ({ data: {} })) } } }),
+}));
 
 import { handler } from '../handler';
 import { classify } from '../../shared/classify';
