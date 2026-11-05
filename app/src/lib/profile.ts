@@ -7,6 +7,7 @@
 import { generateClient } from 'aws-amplify/data';
 import { uploadData, getUrl } from 'aws-amplify/storage';
 import type { Schema } from '../../amplify/data/resource';
+import { currentUser } from './auth';
 
 const client = generateClient<Schema>();
 
@@ -14,14 +15,21 @@ export type UserRecord = Schema['User']['type'];
 export type CreateUserInput = Parameters<typeof client.models.User.create>[0];
 export type UpdateUserInput = Parameters<typeof client.models.User.update>[0];
 
+export function findOwnedProfile(profiles: readonly UserRecord[], userId: string): UserRecord | null {
+  return profiles.find((profile) => profile.owner?.startsWith(`${userId}::`)) ?? null;
+}
+
 /**
  * Get current user's profile (owner query, max 1 result).
  * Returns null if no User row exists yet (onboarding not complete).
  */
 export async function getCurrentUserProfile(): Promise<UserRecord | null> {
-  const { data, errors } = await client.models.User.list();
+  const user = await currentUser();
+  const { data, errors } = await client.models.User.list({
+    filter: { owner: { beginsWith: `${user.userId}::` } },
+  });
   if (errors?.length) throw new Error(`getCurrentUserProfile failed: ${JSON.stringify(errors)}`);
-  return data[0] || null; // Owner filter returns max 1 row
+  return findOwnedProfile(data, user.userId);
 }
 
 /**
