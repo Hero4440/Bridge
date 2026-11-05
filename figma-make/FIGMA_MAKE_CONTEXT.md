@@ -4,7 +4,7 @@ This folder holds the code for the live Bridge prototype in Figma Make. Give thi
 
 - **Figma Make file:** https://www.figma.com/make/CmV9IOc2bubFxzcPJzz4Q7 ("Bridge Independence App")
 - **User flows (Figma design file):** https://www.figma.com/design/tipYMvE4FisuZCNeKZD8ZK, on the "User flows" page
-- **Last updated:** Nov 3, 2026
+- **Last updated:** Nov 4, 2026
 
 ## What Bridge is
 Bridge is an AI social coach for neurodivergent young adults, built for First Place AZ in the North American AI Challenge for Neurodiverse Learning. It helps users make and keep friends through interest-based Circles. **Mo**, a soft blob AI buddy, helps in three ways:
@@ -43,19 +43,18 @@ Figma Make's automatic code import is blocked from Claude's cloud environment, s
 - **Logic sections in `renderVals()`:** Events, Event detail (what to expect, prep, reflection, connect), Profile, DMs, Notifications, Themes. Each returns an object merged into the final `Object.assign(...)`.
 - **Themes:** colors are CSS variables set on `.bridge-app` from `state.theme`:
   - `--bg` (gradient), `--ink` (primary/dark), `--soft` (light chips), `--muted` (secondary text).
-  - Themes are dawn (default), sage, mist and sand. Use `var(--ink)` and the others instead of hex for themed colors.
+  - Production themes are Dawn (default), Sage, Mist, Sand, Berry and Honey. Apply the choice at the app root so every screen inherits it; use `var(--ink)` and the other variables instead of fixed theme colors.
   - SVG icons use `style={{stroke: "var(--ink)"}}`, because the `stroke` attribute doesn't read CSS variables.
 - **Screen fitting:** on screens 500px wide or narrower, the app fills the screen and keeps 50px clear at the top for the notch. On wider screens it shows as a centered 390×844 phone.
 - **Scroll reset:** `componentDidUpdate` scrolls `.bridge-scroll` back to the top when the screen changes.
 
-## First-time setup (new, Nov 3)
-Shown before the check-in on first open (`screen: 'onboard'`, `onbStep` 1–6):
-1. Welcome (Bridge, Mo, 3 promises)
-2. Interests: picks circles and sets the "For you" filter
-3. Meet Mo: what Mo can and won't do
-4. Trusted person: name and relationship, used for "I need help" and "Tell ___ where I'll be"
-5. Comfort: text size, calm mode (no animations), text first or voice is okay
-6. Safety rules, then the check-in
+## First-time setup
+Show Welcome once, followed by three steps:
+1. Interests, including a custom option.
+2. Trusted contact: name, phone, optional email and relationship.
+3. Theme, text size, calm mode, chat preference and safety acknowledgement.
+
+In production, creating the owner's `User` row marks setup complete, so returning users skip it. Contact details live only in owner-authorized `TrustedContact`, not on the authenticated-readable profile, and saving them never sends an SMS.
 
 ## Features by tab
 **Check-in (first screen).**
@@ -96,12 +95,15 @@ Shown before the check-in on first open (`screen: 'onboard'`, `onbStep` 1–6):
 **Me.**
 - **Profile:** photo upload, plus first name, last name, gender and email with Edit/Save. In circles, people see only the first name and photo.
 - **Coach Maria connect request:** the user accepts and chooses what she sees, or declines.
-- **Theme picker:** small gradient circles in tiles (Dawn, Sage, Mist, Sand).
+- **Theme picker:** small gradient circles in tiles (Dawn, Sage, Mist, Sand, Berry, Honey); the choice affects every screen.
 - **Comfort:** text size, calm mode and chatting preference, plus "Change my interests and trusted person".
 - **My journey:** brave steps per week (bar chart) and stats (demo numbers).
 - Also: badges, a support circle list (no toggles), and a 988 note.
 
-**Mo button in the nav.** Practice with me, Breathe with me (one-minute breather), I need help (text a trusted person, or 988).
+**Mo button in the nav.** Practice with me, Breathe with me (one-minute breather), I need help (choose a linked app user or 988; never auto-text a saved contact).
+
+## Production direction
+The current production UI is React + Vite. The planned target is a single Expo + React Native app for iOS and web, sharing Amplify and domain code and replacing Vite only after parity. Do not create a separate SwiftUI app or two permanent UI layers. The operating system owns status-bar time and icons; do not render fake system chrome.
 
 ## Demo data
 - **Circles:** Gaming, Music, Anime, Cooking, Art, Tech. Members include Maya, Jordan, Lee, Priya, Ava, Kai, Ben, Rosa, Mia, Theo, Raj and Zoe.
@@ -123,5 +125,5 @@ Shown before the check-in on first open (`screen: 'onboard'`, `onbStep` 1–6):
 - State (theme, RSVPs, messages) resets when the page reloads.
 - Safe message requests (accept/decline) aren't built. "Say hi" only shows "Request sent".
 - Notifications are fixed demo items.
-- The Home user flow in Figma still shows the older Home order. The setup flow isn't in Figma yet.
-- Mo's responses are scripted. The team plans to connect a real AI API later.
+- Older Figma user-flow screens may still show the previous Home and setup order; the decisions above take precedence.
+- Mo's responses are scripted only in this prototype; production uses the real AWS path and must not copy the scripted replies.

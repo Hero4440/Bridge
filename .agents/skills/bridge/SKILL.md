@@ -71,11 +71,11 @@ WhatsApp-style app (web + phone PWA) for neurodivergent young adults (16-30), wi
 **Loop:** Preview (what to expect, exit route) -> Practice (scripted AI role-play, user-set goal, one strength + one tip) -> Go (one-minute Reset) -> Reflect (3 taps). Support fades: L1 hints, L2 no hints + "I'm stuck", L3 realistic surprises. Success = the user needs Bridge less and attends more.
 
 ### 2.2 Users: no roles, no coach, no admin view, no mock users
-- Everyone is an equal user. Sign-up sets a profile (first and last name, photo, interests) and comfort settings (text size, calm mode, text-first).
+- Everyone is an equal user. The owner's `User` row is the setup-complete flag: new users see Welcome -> interests -> trusted contact -> theme/comfort/safety, while returning users skip setup. Profile, interests and comfort settings live on `User`.
 - **Contacts** are real: message request (accept or decline) or same circle. Block and report always available.
 - **Circles:** Gaming, Music, Anime, Cooking, Art, Tech. Join, or "just read". Live chat; members see only first name and photo.
 - **Events:** anyone creates one inside a circle or outside (what, when, where, sound, lighting, size, invites); others RSVP. Each has "what to expect" and a prep practice with Mo. In person adds a safety tip and "Tell <trusted person> where I'll be".
-- **Guardian / trusted person:** an ordinary user linked to a person, with no special powers; never describe a guardian as controlling a profile. Prototype flow ("Coach Maria wants to connect"): guardian requests, the person accepts and picks what is visible (brave steps, "I need help" texts, or nothing yet) or declines privately (guardian not told why). Build as `GuardianLink` between two users: pending / connected / declined + person-set permissions. The trusted person chosen at onboarding (name + Parent, Sibling, Friend, Other) is the same idea.
+- **Guardian / trusted person:** a linked guardian is an ordinary user with no special powers; never describe them as controlling a profile. Build that connection as `GuardianLink`: pending / connected / declined plus person-set permissions. The onboarding contact is separate: store name, phone, optional email and relationship in owner-only `TrustedContact`, never on the authenticated-readable `User` profile. Saving it does not send an SMS.
 - **DMs:** a first message to a non-contact is a request. Mo holds unsafe requests (e.g. asking for money) and warns privately.
 
 ### 2.3 Mo (kind, short, never judgmental)
@@ -86,7 +86,7 @@ WhatsApp-style app (web + phone PWA) for neurodivergent young adults (16-30), wi
 The Figma design reopens things the earlier brief removed (tone check, reply ideas, groups, badges First Hello / Kind Words / Breather, brave steps with a weekly journey chart). Keep the protections: the user sets their own goal, nothing is auto-sent or auto-rewritten, Mo explains why, "Send anyway" works (masking risk), badges stay gentle (no leaderboards or streak pressure), and practice stays scripted and bounded (no open-ended role-play).
 
 ### 2.4 Prototype behavior (from `figma-make/src/App.tsx`)
-- **First run:** onboarding (welcome, interests, meet Mo, trusted person, comfort, safety rules) -> check-in (feeling Overwhelmed / Okay / Ready; what's coming up; what's hardest) -> Home (summary, tonight's event, reflection nudge, plans, practice made for you). The check-in picks 1-3 practice cards and the level and sets Mo's line; Overwhelmed suggests "Just read".
+- **First run:** show Welcome once, then three setup steps: (1) interests, including a custom option; (2) trusted contact; (3) theme, comfort and safety acknowledgement. Creating the `User` profile completes setup, so never ask again. Then continue to check-in and Home.
 - **"What to expect"** comes from host-set fields (people, sound, lighting, break/exit plan), not AI. AI only adds openers and a prep checklist (Should).
 - **Create event, 3 steps:** (1) host: outside circles (invite contacts) or inside a circle, and what; (2) date, time, duration, in person (venue suggestions with distance and "usually quiet") or online (voice / video / text), group size; (3) comfort: sound Quiet / Soft music / Loud music, lighting Soft / Bright / Dim, reminder 1 hour / 1 day / both, tell trusted person; then preview and create.
 - **RSVP:** Going / Maybe / Can't go, with "x of y spots". Past events open a reflection (hard / okay / good + wins: said hi, asked a question, stayed as long as I wanted, left kindly), Mo replies, then "Stay in touch": Message or Say hi (sends a request).
@@ -95,12 +95,12 @@ The Figma design reopens things the earlier brief removed (tone check, reply ide
 - **Practice UI:** the prototype shows two reply choices (good / vague), then "You did it well / Good start" with a star and a spark. The real build keeps that shape: L1 hint chips, the user can type their own reply, the AI plays the partner and returns one strength + one tip.
 - **Tone check:** keyword layer first (whatever, stupid, shut up, annoying, hate, overrated, dumb; a reason per word), then the LLM `/tone` call only if needed. "Say it gently" is user-initiated. The pause screen offers a breather.
 - **Reports/blocks:** the UI says "a moderator will check this chat", but there is no moderator role. Write a `Report` record the team reviews and promise no more.
-- **"I need help":** pick a trusted person (or 988); it is an in-app notification to the linked guardian. No SMS.
-- **Profile:** names, email, optional gender (include "Prefer not to say"), photo upload (S3); others see only first name and photo. Themes: dawn, sage, mist, sand.
+- **"I need help":** pick a linked app user or call/text 988. A saved onboarding contact is not messaged automatically; no SMS without a separately reviewed, user-confirmed send flow.
+- **Profile:** names, email, optional gender (include "Prefer not to say"), photo upload (S3); others see only first name and photo. Themes are Dawn, Sage, Mist, Sand, Berry and Honey. Apply the selected theme and comfort classes at `.bridge-app` so every screen inherits them.
 - **Notifications:** message, event reminder ("Mo will remind you 1 hour before"), guardian request, daily topic, badge earned; New / Earlier; pause for 1 hour.
 
 ### 2.5 Tech
-React + Vite PWA, Amplify Gen 2, Cognito (all accounts equal), AppSync subscriptions for live chat, DynamoDB, Lambda (TypeScript), Bedrock Codex via IAM role. ONE `classify()` function does all labeling (LLM JSON + keyword rules now; Jev later). Details: `tech design/index.html`.
+The current frontend is a React + Vite PWA. The planned native direction is one Expo + React Native app targeting iOS and web: migrate screen by screen, share Amplify/domain modules, and retire Vite only after feature parity. Do not add SwiftUI or maintain two permanent UI implementations. Backend: Amplify Gen 2, Cognito (all accounts equal), AppSync subscriptions, DynamoDB, TypeScript Lambdas and Bedrock via IAM. ONE `classify()` function does all labeling. Details: `tech design/index.html`.
 
 ### 2.6 Priorities for Fri Nov 6
 - **Must work live:** sign up/login, circle chat, create event + RSVP, event preview, Mo practice, safety flag, Reflect.
@@ -114,7 +114,7 @@ Stay in role, plain friendly short language. Judge only against the user's chose
 Messages sent to Mo (tone check, reply ideas, practice) go to Amazon Bedrock; tell users plainly what Mo can see. No raw practice transcripts (hints used, level, feedback only). `Reflection` and `PracticeRun` are owner-only. A guardian sees only what the person chose. Quiet check-ins go to the person first. Report + block on every message; unsafe-request warnings are private.
 
 ### 2.9 Design
-Calm, soft, rounded. Tap targets 44px+. Safety warnings are private ("Only you can see this"). Avoid childish or loud styling, clutter, toggles in the support circle, and a nav that changes width. Look: Outfit font, dark pill nav, themes via CSS variables. Don't invent features without saying so, and keep Figma flows in sync with the prototype.
+Calm, soft, rounded. Tap targets 44px+. Safety warnings are private ("Only you can see this"). Avoid childish or loud styling, clutter, toggles in the support circle, and a nav that changes width. Look: Outfit font, dark pill nav, six themes via root CSS variables. Do not draw fake OS chrome such as a status-bar time; the browser or native shell owns it. Don't invent features without saying so, and keep Figma flows in sync with the prototype.
 
 ### 2.10 Evidence
 Mostly autism, mostly 2007-2015; no ADHD/dyslexia outcome data. Pitch Bridge as a testable hypothesis. Safe to cite: loneliness g=0.89 and depression r=0.48 (autistic adults); PEERS knowledge g=2.15 vs real get-togethers ~0.55-0.60. Do NOT quote "60-90% unemployed", "1 in 3 ADHD unemployed" or "four times more likely lonely".
@@ -128,7 +128,8 @@ src/components/   reusable UI (Mo, Card, NavBar...)
 src/screens/      Onboarding, CheckIn, Home, Circles, CircleChat, DMs, Events, Practice, Reset, Reflect, Me, Notifications
 src/lib/          api client, types
 amplify/          auth/ (Cognito, no roles/groups) · data/ (User, Contact, Group, Message, Event, Rsvp, GuardianLink,
-                  Reflection, PracticeRun, CheckIn, BraveStep, Badge, EventPrep, Topic, Invite, Notification, Report)
+                  TrustedContact, Reflection, PracticeRun, CheckIn, BraveStep, Badge, EventPrep, Topic, Invite,
+                  Notification, Report)
                   functions/ practice, preview, tone, classify (each with prompts.ts) · shared/config.ts
 scripts/          hooks/ (team hooks) · seed/ (real seed data) · bias_probe.py
 AI_PROMPTS/       one prompt log per teammate
