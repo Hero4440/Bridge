@@ -15,6 +15,7 @@ import { Me } from './screens/Me';
 import { Circles } from './screens/Circles';
 import { Events } from './screens/Events';
 import { Dms } from './screens/Dms';
+import { Practice } from './screens/Practice';
 
 type AuthState = 'loading' | 'signedOut' | 'signedIn';
 type AuthView = 'login' | 'signup';
@@ -67,7 +68,7 @@ function App() {
   return <MainApp onSignOut={() => setAuthState('signedOut')} />;
 }
 
-type Screen = 'home' | 'circles' | 'events' | 'dms' | 'me';
+type Screen = 'home' | 'circles' | 'events' | 'dms' | 'practice' | 'me';
 
 function MainApp({ onSignOut }: { onSignOut: () => void }) {
   const [screen, setScreen] = useState<Screen>('home');
@@ -84,6 +85,7 @@ function MainApp({ onSignOut }: { onSignOut: () => void }) {
       {screen === 'home' && <Home />}
       {screen === 'circles' && <Circles userId={userId} />}
       {screen === 'events' && <Events userId={userId} />}
+      {screen === 'practice' && <Practice />}
       {screen === 'dms' && <Dms userId={userId} />}
       {screen === 'me' && <Me onSignOut={onSignOut} />}
       <NavBar currentScreen={screen} onNavigate={setScreen} />

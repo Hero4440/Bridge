@@ -576,3 +576,349 @@ button:active{transform:scale(.97)}
 .requests-badge:hover {
   opacity: 0.9;
 }
+
+/* Practice screen styles */
+.practice-intro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 24px;
+  padding: 14px 16px;
+  margin: 0 20px 20px;
+}
+
+.practice-intro p {
+  font-size: 17px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.practice-scenarios {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 20px 20px;
+}
+
+.scenario-card {
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--soft);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.scenario-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(120, 100, 170, 0.15);
+}
+
+.scenario-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--soft);
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+}
+
+.scenario-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scenario-info strong {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.scenario-info p {
+  font-size: 14px;
+  color: var(--subtext);
+  margin: 0;
+}
+
+.scenario-time {
+  font-size: 13px;
+  color: var(--subtext);
+  padding: 4px 8px;
+  background: var(--soft);
+  border-radius: 12px;
+}
+
+/* Practice setup */
+.practice-setup {
+  padding: 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.setup-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.setup-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.level-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.level-btn {
+  min-height: 64px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 2px solid transparent;
+  border-radius: 18px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: all 0.2s;
+}
+
+.level-btn strong {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.level-btn span {
+  font-size: 14px;
+  color: var(--subtext);
+}
+
+.level-btn.active {
+  background: var(--tint);
+  color: white;
+  border-color: var(--tint);
+}
+
+.level-btn.active span {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.goal-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--soft);
+  border-radius: 16px;
+  font-size: 16px;
+  font-family: inherit;
+  resize: vertical;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ink);
+}
+
+.goal-input:focus {
+  outline: none;
+  border-color: var(--tint);
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--subtext);
+  margin: 0;
+  font-style: italic;
+}
+
+/* Practice conversation */
+.practice-conversation {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.practice-context {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 24px;
+  padding: 14px 16px;
+  margin: 0 20px 16px;
+}
+
+.practice-context strong {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.conversation-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.conversation-messages {
+  flex: 1;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.message.partner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.message-label {
+  font-size: 14px;
+  color: var(--subtext);
+  padding-left: 4px;
+  margin: 0;
+}
+
+.message-bubble {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 24px 24px 24px 8px;
+  padding: 13px 17px;
+  max-width: 80%;
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 20px;
+}
+
+.loading-container p {
+  font-size: 16px;
+  color: var(--subtext);
+  margin: 0;
+}
+
+/* Practice feedback */
+.practice-feedback {
+  display: flex;
+  flex-direction: column;
+}
+
+.feedback-content {
+  padding: 34px 20px 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  text-align: center;
+}
+
+.feedback-content h2 {
+  margin: 8px 0 0;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.feedback-card {
+  width: 100%;
+  border-radius: 24px;
+  padding: 18px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.feedback-card.strength {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.feedback-card.tip {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.feedback-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--subtext);
+  margin: 0;
+}
+
+.feedback-text {
+  font-size: 17px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.feedback-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.primary-btn,
+.secondary-btn {
+  width: 100%;
+  height: 54px;
+  border-radius: 20px;
+  border: none;
+  font-size: 17px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.primary-btn {
+  background: var(--tint);
+  color: white;
+}
+
+.primary-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--ink);
+  border: 1px solid var(--soft);
+}
+
+.secondary-btn:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+.level-badge {
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 600;
+}

@@ -4,7 +4,7 @@
 // New component (not in prototype) designed from UI-SPEC (FRONTEND-06).
 import React from 'react';
 
-type Screen = 'home' | 'circles' | 'events' | 'dms' | 'me';
+type Screen = 'home' | 'circles' | 'events' | 'practice' | 'dms' | 'me';
 
 interface NavBarProps {
   currentScreen: Screen;
@@ -16,6 +16,7 @@ export function NavBar({ currentScreen, onNavigate }: NavBarProps) {
     { id: 'home', label: 'Home', icon: '🏠' },
     { id: 'circles', label: 'Circles', icon: '◉' },
     { id: 'events', label: 'Events', icon: '📅' },
+    { id: 'practice', label: 'Practice', icon: '🎯' },
     { id: 'dms', label: 'DMs', icon: '💬' },
     { id: 'me', label: 'Me', icon: '👤' },
   ];
