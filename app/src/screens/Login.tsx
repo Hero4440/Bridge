@@ -9,9 +9,10 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 
 interface LoginProps {
   onSignedIn: () => void;
+  onSwitchToSignup: () => void;
 }
 
-export function Login({ onSignedIn }: LoginProps) {
+export function Login({ onSignedIn, onSwitchToSignup }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -72,7 +73,13 @@ export function Login({ onSignedIn }: LoginProps) {
         </form>
 
         <p style={{ marginTop: '16px', fontSize: '15px', color: 'var(--muted)' }}>
-          New here? <a href="#signup" style={{ color: 'var(--ink)', fontWeight: 600 }}>Sign up</a>
+          New here?{' '}
+          <button
+            onClick={onSwitchToSignup}
+            style={{ background: 'none', border: 'none', color: 'var(--ink)', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+          >
+            Sign up
+          </button>
         </p>
       </div>
     </div>

@@ -7,24 +7,29 @@ import { currentUser } from './lib/auth';
 import { getCurrentUserProfile } from './lib/profile';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { Login } from './screens/Login';
+import { Signup } from './screens/Signup';
+import { Onboarding } from './screens/Onboarding';
 
 type AuthState = 'loading' | 'signedOut' | 'signedIn';
+type AuthView = 'login' | 'signup';
 
 function App() {
   const [authState, setAuthState] = useState<AuthState>('loading');
+  const [authView, setAuthView] = useState<AuthView>('login');
   const [hasProfile, setHasProfile] = useState(false);
 
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        await currentUser();
-        const profile = await getCurrentUserProfile();
-        setHasProfile(!!profile);
-        setAuthState('signedIn');
-      } catch {
-        setAuthState('signedOut');
-      }
+  async function checkAuth() {
+    try {
+      await currentUser();
+      const profile = await getCurrentUserProfile();
+      setHasProfile(!!profile);
+      setAuthState('signedIn');
+    } catch {
+      setAuthState('signedOut');
     }
+  }
+
+  useEffect(() => {
     checkAuth();
   }, []);
 
@@ -33,16 +38,24 @@ function App() {
   }
 
   if (authState === 'signedOut') {
-    return <Login onSignedIn={() => setAuthState('signedIn')} />;
+    if (authView === 'signup') {
+      return (
+        <Signup
+          onSignedUp={() => setAuthState('signedIn')}
+          onSwitchToLogin={() => setAuthView('login')}
+        />
+      );
+    }
+    return (
+      <Login
+        onSignedIn={() => setAuthState('signedIn')}
+        onSwitchToSignup={() => setAuthView('signup')}
+      />
+    );
   }
 
   if (!hasProfile) {
-    return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <h1>Onboarding Coming Soon</h1>
-        <p>You're signed in! Onboarding screen will be added in next task.</p>
-      </div>
-    );
+    return <Onboarding onComplete={() => setHasProfile(true)} />;
   }
 
   return (
