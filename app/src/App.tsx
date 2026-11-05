@@ -6,9 +6,12 @@ import { useEffect, useState } from 'react';
 import { currentUser } from './lib/auth';
 import { getCurrentUserProfile } from './lib/profile';
 import { LoadingSpinner } from './components/LoadingSpinner';
+import { NavBar } from './components/NavBar';
 import { Login } from './screens/Login';
 import { Signup } from './screens/Signup';
 import { Onboarding } from './screens/Onboarding';
+import { Home } from './screens/Home';
+import { Me } from './screens/Me';
 
 type AuthState = 'loading' | 'signedOut' | 'signedIn';
 type AuthView = 'login' | 'signup';
@@ -58,10 +61,22 @@ function App() {
     return <Onboarding onComplete={() => setHasProfile(true)} />;
   }
 
+  return <MainApp onSignOut={() => setAuthState('signedOut')} />;
+}
+
+type Screen = 'home' | 'circles' | 'events' | 'dms' | 'me';
+
+function MainApp({ onSignOut }: { onSignOut: () => void }) {
+  const [screen, setScreen] = useState<Screen>('home');
+
   return (
-    <div style={{ padding: '40px', textAlign: 'center' }}>
-      <h1>Main App Coming Soon</h1>
-      <p>You're signed in with a profile! Main screens coming in Wave 3.</p>
+    <div className="bridge-app" style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '60px' }}>
+      {screen === 'home' && <Home />}
+      {screen === 'me' && <Me onSignOut={onSignOut} />}
+      {screen === 'circles' && <div style={{ padding: '40px', textAlign: 'center' }}><h2>Circles Coming Soon</h2></div>}
+      {screen === 'events' && <div style={{ padding: '40px', textAlign: 'center' }}><h2>Events Coming Soon</h2></div>}
+      {screen === 'dms' && <div style={{ padding: '40px', textAlign: 'center' }}><h2>DMs Coming Soon</h2></div>}
+      <NavBar currentScreen={screen} onNavigate={setScreen} />
     </div>
   );
 }
