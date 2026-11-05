@@ -311,7 +311,6 @@ function MainApp({
           <Dms
             userId={userId}
             initialPeerId={peerId}
-            onEvents={() => openEvents()}
             onOpenCircles={() => navigate("circles")}
             personalContext={personalContext}
           />

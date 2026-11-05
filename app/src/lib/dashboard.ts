@@ -9,6 +9,7 @@ const client = generateClient<Schema>();
 export type Goal = Schema['WeeklyGoal']['type'];
 export type Circle = Schema['Group']['type'];
 export type Notification = Schema['Notification']['type'];
+export type DashboardEvent = Schema['Event']['type'];
 function checked<T>(result: {data:T; errors?: readonly {message:string}[]}) {
   if(result.errors?.length) throw new Error(result.errors.map(e=>e.message).join('; '));
   return result.data;
@@ -36,19 +37,29 @@ export async function listCircles(){return pages(token=>client.models.Group.list
 export async function loadDashboard() {
   const week=weekStart();
   const {userId}=await currentUser();
-  const [circles,goals,runs,reflections,rsvps,badges]=await Promise.all([
+  const [circles,goals,runs,reflections,rsvps,events,badges]=await Promise.all([
     pages(token=>client.models.Group.list({nextToken:token})),
     pages(token=>client.models.WeeklyGoal.list({filter:{week:{eq:week}},nextToken:token})),
     pages(token=>client.models.PracticeRun.list({nextToken:token})),
     pages(token=>client.models.Reflection.list({nextToken:token})),
-    pages(token=>client.models.RSVP.list({filter:{userId:{eq:userId},status:{eq:'going'}},nextToken:token})),
+    pages(token=>client.models.RSVP.list({filter:{userId:{eq:userId}},nextToken:token})),
+    pages(token=>client.models.Event.list({nextToken:token})),
     listEarnedBadges(),
   ]);
+  const [year,month,day]=week.split('-').map(Number);
+  const start=new Date(year,month-1,day);
+  const end=new Date(year,month-1,day+7);
+  const goingEventIds=new Set(rsvps.filter(r=>r.status==='going').map(r=>r.eventId));
+  const planEvents=events.filter(event=>{
+    if(!event.whenAt || !Number.isFinite(Date.parse(event.whenAt))) return false;
+    const when=Date.parse(event.whenAt);
+    return when>=Date.now() && when<end.getTime() &&
+      (event.creatorId===userId || goingEventIds.has(event.id));
+  }).sort((a,b)=>Date.parse(a.whenAt ?? '')-Date.parse(b.whenAt ?? ''));
   // Every persisted practice, reflection, Going RSVP, checked intention, or milestone is one step.
   const inWeek=(date:string|null|undefined)=>!!date && localDate(new Date(date))>=week;
-  const start=new Date(`${week}T00:00:00`);const end=new Date(start);end.setDate(end.getDate()+7);
   const steps=runs.filter(r=>inWeek(r.createdAt)).length+reflections.filter(r=>inWeek(r.timestamp??r.createdAt)).length+rsvps.filter(r=>inWeek(r.timestamp??r.createdAt)).length+goals.filter(g=>g.done).length+countBadgeSteps(badges,start,end);
-  return {circles,goals:goals.sort((a,b)=>a.position-b.position),steps};
+  return {circles,goals:goals.sort((a,b)=>a.position-b.position),steps,events:planEvents};
 }
 export async function saveGoal(input:{id:string;text:string;done:boolean;position:number}, create=false) {
   const text=input.text.trim();if(!text || text.length>160) throw new Error('Write a goal with 1–160 characters.');

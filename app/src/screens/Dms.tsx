@@ -31,10 +31,9 @@ interface Props {
   userId: string;
   initialPeerId?: string;
   onOpenCircles: () => void;
-  onEvents: () => void;
   personalContext: string;
 }
-export function Dms({ userId, initialPeerId, onOpenCircles, onEvents, personalContext }: Props) {
+export function Dms({ userId, initialPeerId, onOpenCircles, personalContext }: Props) {
   const [members, setMembers] = useState<Record<string, Member>>({});
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [requests, setRequests] = useState<Request[]>([]);
@@ -333,7 +332,6 @@ export function Dms({ userId, initialPeerId, onOpenCircles, onEvents, personalCo
         tab="dms"
         onCircles={onOpenCircles}
         onMessages={() => {}}
-        onEvents={onEvents}
       />
       <CommunityNotice
         online={online}

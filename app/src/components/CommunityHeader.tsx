@@ -3,21 +3,14 @@ export function CommunityHeader({
   tab,
   onCircles,
   onMessages,
-  onEvents,
 }: {
   tab: "circles" | "dms";
   onCircles: () => void;
   onMessages: () => void;
-  onEvents: () => void;
 }) {
   return (
     <div className="tab-sticky-header">
-      <div className="community-title">
-        <h1 className="tab-page-title">Circles</h1>
-        <button className="community-events" onClick={onEvents}>
-          Events →
-        </button>
-      </div>
+      <h1 className="tab-page-title">Circles</h1>
       <div
         className="community-tabs"
         role="tablist"

@@ -4,7 +4,7 @@ import { OnboardingMo as Mo } from "../components/OnboardingMo";
 import { PersonAvatar } from "../components/PersonAvatar";
 import { CommunityHeader } from "../components/CommunityHeader";
 import { CommunityNotice } from "../components/CommunityNotice";
-import { circleStyle, type Group, type Member } from "../lib/community";
+import { circleStyle, type Group, type Member, type Membership } from "../lib/community";
 import type { Schema } from "../../amplify/data/resource";
 import "./Community.css";
 export interface CircleListViewProps {
@@ -25,6 +25,7 @@ export interface CircleListViewProps {
   presences: Schema["CirclePresence"]["type"][];
   counts: Record<string, number>;
   members: Record<string, Member>;
+  memberships: Membership[];
   topics: Record<string, string>;
 }
 export function CircleListView(v: CircleListViewProps) {
@@ -34,7 +35,6 @@ export function CircleListView(v: CircleListViewProps) {
         tab="circles"
         onCircles={() => {}}
         onMessages={() => v.onOpenDms()}
-        onEvents={() => v.onEvents()}
       />
       <CommunityNotice online={v.online} error={v.error} onRetry={v.onRetry} />
       <div className="tab-screen-content circles-content">
@@ -66,6 +66,30 @@ export function CircleListView(v: CircleListViewProps) {
             </button>
           ))}
         </div>
+        <button className="circles-event-entry" onClick={v.onEvents}>
+          <span className="circles-event-icon" aria-hidden="true">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="4" y="5" width="16" height="15" rx="2" />
+              <path d="M8 3v4M16 3v4M4 9h16" />
+            </svg>
+          </span>
+          <span className="circles-event-copy">
+            <strong>Events</strong>
+            <small>See upcoming plans and create one</small>
+          </span>
+          <span className="circles-event-arrow" aria-hidden="true">
+            →
+          </span>
+        </button>
         <h2 className="your-circles-title">Your circles</h2>
         {v.notice && <p role="status">{v.notice}</p>}
         <div className="real-circle-list">
@@ -79,9 +103,10 @@ export function CircleListView(v: CircleListViewProps) {
           {v.shown.map((group) => {
             const slug = group.slug ?? group.name.toLowerCase();
             const style = circleStyle(slug);
-            const active = v.presences.filter(
-              (p) => p.groupId === group.id && p.lastSeen > Date.now() - 90000,
-            );
+            const circlePeople = v.memberships
+              .filter((membership) => membership.groupId === group.id && membership.userId)
+              .filter((membership, index, rows) => rows.findIndex((item) => item.userId === membership.userId) === index)
+              .slice(0, 3);
             return (
               <article key={group.id} className="real-circle-card">
                 <div className="circle-top">
@@ -92,10 +117,10 @@ export function CircleListView(v: CircleListViewProps) {
                     size={48}
                   />
                   <div className="avatar-stack">
-                    {active.slice(0, 3).map((p, i) => (
+                    {circlePeople.map((person, i) => (
                       <PersonAvatar
-                        key={p.id}
-                        name={v.members[p.userId]?.name ?? "Bridge member"}
+                        key={person.id}
+                        name={v.members[person.userId!]?.name ?? "Bridge member"}
                         size={24}
                         tint={
                           i === 0
