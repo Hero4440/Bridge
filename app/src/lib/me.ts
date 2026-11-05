@@ -2,6 +2,7 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { currentUser } from './auth';
+import { listEarnedBadgeKeys, type BadgeKey } from './badges';
 
 const client = generateClient<Schema>();
 
@@ -13,6 +14,7 @@ export interface MeActivityInput {
   reflections: Dated[];
   messages: Array<Dated & { groupId?: string | null }>;
   blockedCount: number;
+  earnedBadgeKeys?: BadgeKey[];
 }
 
 export interface MeActivity {
@@ -41,6 +43,7 @@ export function summarizeMeActivity(input: MeActivityInput, now = new Date()): M
     const time = item.createdAt ? new Date(item.createdAt).getTime() : NaN;
     return time >= start && time < start + weekMs;
   }).length);
+  const earned = new Set(input.earnedBadgeKeys ?? []);
 
   return {
     weeks: starts.map((start, index) => ({
@@ -53,23 +56,24 @@ export function summarizeMeActivity(input: MeActivityInput, now = new Date()): M
     levelReached: Math.max(0, ...input.practices.map((run) => run.level ?? 0)),
     blockedCount: input.blockedCount,
     badges: {
-      hello: input.messages.length > 0,
-      kind: input.practices.some((run) => /disagree|kind|repair/i.test(run.scenarioId ?? '')),
-      breather: false,
-      circle: input.messages.some((message) => !message.groupId?.startsWith('dm#')),
-      event: input.rsvps.length > 0,
+      hello: earned.has('hello') || input.messages.length > 0,
+      kind: earned.has('kind') || input.practices.some((run) => /disagree|kind|repair/i.test(run.scenarioId ?? '')),
+      breather: earned.has('breather'),
+      circle: earned.has('circle') || input.messages.some((message) => !message.groupId?.startsWith('dm#')),
+      event: earned.has('event') || input.rsvps.length > 0,
     },
   };
 }
 
 export async function loadMeActivity(): Promise<MeActivity> {
   const { userId } = await currentUser();
-  const [practices, rsvps, reflections, messages, blocked] = await Promise.all([
+  const [practices, rsvps, reflections, messages, blocked, earnedBadgeKeys] = await Promise.all([
     client.models.PracticeRun.list(),
     client.models.RSVP.list({ filter: { userId: { eq: userId }, status: { eq: 'going' } } }),
     client.models.Reflection.list(),
     client.models.Message.list({ filter: { senderId: { eq: userId } } }),
     client.models.Contact.list({ filter: { userId: { eq: userId }, status: { eq: 'blocked' } } }),
+    listEarnedBadgeKeys(),
   ]);
   const errors = [...(practices.errors ?? []), ...(rsvps.errors ?? []), ...(reflections.errors ?? []), ...(messages.errors ?? []), ...(blocked.errors ?? [])];
   if (errors.length) throw new Error(`loadMeActivity failed: ${JSON.stringify(errors)}`);
@@ -79,5 +83,6 @@ export async function loadMeActivity(): Promise<MeActivity> {
     reflections: reflections.data,
     messages: messages.data,
     blockedCount: blocked.data.length,
+    earnedBadgeKeys,
   });
 }

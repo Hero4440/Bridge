@@ -6,6 +6,7 @@
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "../../amplify/data/resource";
 import { observePrivateThread, type DirectMessage } from "./community";
+import { awardBadgeAfter } from "./badges";
 
 const client = generateClient<Schema>();
 
@@ -39,13 +40,15 @@ export async function sendDm(
   });
   if (errors?.length)
     throw new Error(`sendDm failed: ${JSON.stringify(errors)}`);
-  return {
+  const result = {
     reason: data?.reason ?? "",
     delivered: data?.delivered ?? false,
     held: data?.held ?? false,
     unsafe: data?.unsafe ?? false,
     crisis: data?.crisis ?? false,
   };
+  if (result.delivered || result.held) awardBadgeAfter("hello");
+  return result;
 }
 
 export async function respondToRequest(

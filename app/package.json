@@ -8,9 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run",
-    "seed:demo": "tsx scripts/seed/demo-data.ts",
-    "seed:demo:check": "tsx scripts/seed/demo-data.ts --check"
+    "test": "vitest run"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1161.0",

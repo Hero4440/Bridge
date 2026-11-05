@@ -3,8 +3,9 @@
 // routes to Login/Signup (signedOut), Onboarding (no profile), or Main app.
 // Implements FRONTEND-01, FRONTEND-02 (auth flow gating).
 import { type ReactNode, useEffect, useState } from "react";
-import { currentUser } from "./lib/auth";
+import { authSignOut, currentUser } from "./lib/auth";
 import { getCurrentUserProfile, type UserRecord } from "./lib/profile";
+import { loadAppSession } from "./lib/session";
 import { isThemeName, themeStyle } from "./lib/theme";
 import { LoadingSpinner } from "./components/LoadingSpinner";
 import { type Screen } from "./components/NavBar";
@@ -26,6 +27,8 @@ import { HomeComfort } from "./screens/HomeComfort";
 import { getTodayCheckIn, saveCheckIn } from "./lib/dashboard";
 import { localDate, type CheckInValues } from "./lib/checkin";
 import type { ScenarioId } from "./lib/practice";
+import { BadgeCelebration } from "./components/BadgeCelebration";
+import { moContext } from "./lib/moContext";
 
 type AuthState = "loading" | "signedOut" | "signedIn";
 type AuthView = "login" | "signup";
@@ -34,16 +37,30 @@ function App() {
   const [authState, setAuthState] = useState<AuthState>("loading");
   const [authView, setAuthView] = useState<AuthView>("login");
   const [profile, setProfile] = useState<UserRecord | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   async function checkAuth() {
     setAuthState("loading");
-    try {
-      await currentUser();
-      setProfile(await getCurrentUserProfile());
-      setAuthState("signedIn");
-    } catch {
+    setProfileError(null);
+    const session = await loadAppSession(currentUser, getCurrentUserProfile);
+    if (session.status === "signedOut") {
+      setProfile(null);
       setAuthState("signedOut");
+    } else if (session.status === "profileError") {
+      setProfile(null);
+      setProfileError(session.error);
+      setAuthState("signedIn");
+    } else {
+      setProfile(session.profile);
+      setAuthState("signedIn");
     }
+  }
+
+  async function handleSignOut() {
+    await authSignOut();
+    setProfile(null);
+    setProfileError(null);
+    setAuthState("signedOut");
   }
 
   useEffect(() => {
@@ -70,6 +87,13 @@ function App() {
         />
       );
     }
+  } else if (profileError) {
+    content = (
+      <div>
+        <ErrorRetry error={`You're signed in, but your profile couldn't load. ${profileError}`} onRetry={() => void checkAuth()} />
+        <button className="quiet-action" style={{ display: "block", margin: "0 auto" }} onClick={() => void handleSignOut()}>Log out and try again</button>
+      </div>
+    );
   } else if (!profile) {
     content = <Onboarding onComplete={setProfile} />;
   } else {
@@ -79,6 +103,7 @@ function App() {
         onProfileChange={setProfile}
         onSignOut={() => {
           setProfile(null);
+          setProfileError(null);
           setAuthState("signedOut");
         }}
       />
@@ -184,6 +209,9 @@ function MainApp({
     setScreen("dms");
   }
   let body: ReactNode;
+  const personalContext = checkIn
+    ? moContext(profile, checkIn, screen)
+    : "";
   if (loading) body = <LoadingSpinner />;
   else if (error)
     body = <ErrorRetry error={error} onRetry={() => void load(true)} />;
@@ -243,6 +271,7 @@ function MainApp({
             initialCircleId={circleId}
             onOpenDms={openMessage}
             onEvents={openEvents}
+            personalContext={personalContext}
           />
         )}
         {screen === "events" && (
@@ -263,12 +292,14 @@ function MainApp({
             }}
             onMessage={openMessage}
             onBack={() => navigate("circles")}
+            personalContext={personalContext}
           />
         )}
         {screen === "practice" && (
           <Practice
             initialScenario={practice?.scenario}
             initialLevel={practice?.level}
+            personalContext={personalContext}
           />
         )}
         {screen === "dms" && (
@@ -277,6 +308,7 @@ function MainApp({
             initialPeerId={peerId}
             onEvents={() => openEvents()}
             onOpenCircles={() => navigate("circles")}
+            personalContext={personalContext}
           />
         )}
         {screen === "me" && (
@@ -290,6 +322,7 @@ function MainApp({
     );
   return (
     <div className="matched-main">
+      <BadgeCelebration />
       <OnboardingStatusBar />
       <div className="main-scroll bridge-scroll" key={tool ?? screen}>
         {body}

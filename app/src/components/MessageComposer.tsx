@@ -9,12 +9,14 @@ export function MessageComposer({
   disabled,
   onSend,
   context,
+  personalContext,
 }: {
   name: string;
   online: boolean;
   disabled?: boolean;
   onSend: (text: string, id: string) => Promise<void>;
   context: string;
+  personalContext?: string;
 }) {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -60,7 +62,7 @@ export function MessageComposer({
     setError("");
     setSent(false);
     try {
-      const result = await previewDrafts(context);
+      const result = await previewDrafts(context, personalContext);
       setSuggestions(result.suggestions);
       if (!result.suggestions.length)
         setError("No ideas right now. You can write your own message.");
@@ -76,7 +78,7 @@ export function MessageComposer({
     setAiBusy(true);
     setError("");
     try {
-      setDraft(await gentleDraft(draft));
+      setDraft(await gentleDraft(draft, personalContext));
       setConfirm(false);
       input.current?.focus();
     } catch (e) {
@@ -226,8 +228,9 @@ export function MessageComposer({
         </div>
       )}
       <small className="composer-disclosure">
-        Mo uses the latest message or topic for ideas. Sending checks your text
-        for safety.
+        When you ask, Bridge sends Mo your preferences, today’s check-in, and
+        up to 3 recent messages from this chat. Sending checks your text for
+        safety.
       </small>
     </div>
   );

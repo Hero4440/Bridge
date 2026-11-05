@@ -5,6 +5,7 @@ import type { SupportTool } from '../components/DashboardNav';
 import { getCurrentTrustedContacts } from '../lib/profile';
 import { sendHelpAlert } from '../lib/safety';
 import { useOnline } from '../lib/useOnline';
+import { awardBadgeAfter } from '../lib/badges';
 export function HomeSupport({tool,onBack,onTool}:{tool:SupportTool;onBack:()=>void;onTool:(tool:SupportTool)=>void}) {
  const [remaining,setRemaining]=useState(60);
  const [running,setRunning]=useState(false);
@@ -18,7 +19,7 @@ export function HomeSupport({tool,onBack,onTool}:{tool:SupportTool;onBack:()=>vo
  const online=useOnline();
  async function loadContacts(retry=false){if(retry){setLoading(true);setError('');}try{setContacts(await getCurrentTrustedContacts());}catch{setError('Your trusted people could not be loaded. Please try again.');}finally{setLoading(false);}}
  useEffect(()=>{if(tool==='help')void loadContacts();},[tool]);
- useEffect(()=>{if(!running)return;const timer=setInterval(()=>{const seconds=Math.max(0,Math.ceil((deadline.current-Date.now())/1000));setRemaining(seconds);if(seconds===0)setRunning(false);},250);return()=>clearInterval(timer);},[running]);
+ useEffect(()=>{if(!running)return;const timer=setInterval(()=>{const seconds=Math.max(0,Math.ceil((deadline.current-Date.now())/1000));setRemaining(seconds);if(seconds===0){setRunning(false);awardBadgeAfter('breather');}},250);return()=>clearInterval(timer);},[running]);
  async function notify(){if(busy||!online)return;setBusy(true);setError('');try{const result=await sendHelpAlert();setSent(result.notified>0?`Help notification sent to ${result.notified===1?'your connected trusted person':`${result.notified} connected trusted people`}.`:'No connected trusted person can receive help notifications yet. You can call someone below, or connect a trusted person in Me.');}catch{setError('The help notification could not be sent. Please try again, or call your trusted person.');}finally{setBusy(false);}}
  return <section className="dashboard-panel">
  <button onClick={onBack}>← Back to Home</button><Mo mood={tool==='low'?'worried':'calm'} size={72}/>

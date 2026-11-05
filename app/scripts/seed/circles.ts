@@ -1,9 +1,10 @@
 // app/scripts/seed/circles.ts
 // Idempotent seed for the 6 Bridge circles as REAL DynamoDB Group rows (no constant arrays, §1.3).
-// The schema is Cognito-only, so we sign in as a made-up test account first, then upsert each
-// circle by slug (list → create-if-absent). Safe to re-run. Made-up names only (§1.3 / §4).
+// The schema is Cognito-only, so an existing sandbox account signs in before each circle is
+// upserted by slug (list → create-if-absent). Safe to re-run; it creates no users or messages.
 // Run after a sandbox deploy:  cd app && npx tsx scripts/seed/circles.ts
 import { Amplify } from 'aws-amplify';
+import { loadEnvFile } from 'node:process';
 import { signIn, signOut } from 'aws-amplify/auth';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
@@ -12,8 +13,12 @@ import outputs from '../../amplify_outputs.json';
 Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
-const PASSWORD = 'Passw0rd!Test';
-const SEED_USER = 'sam@example.com';
+try { loadEnvFile(); } catch (error) {
+  if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+}
+
+const seedEmail = process.env.BRIDGE_SEED_EMAIL;
+const seedPassword = process.env.BRIDGE_SEED_PASSWORD;
 
 // SKILL §2.2 — the six circles. Made-up descriptions; no real participant data.
 const CIRCLES: Array<{ slug: string; name: string; emoji: string; description: string }> = [
@@ -26,8 +31,9 @@ const CIRCLES: Array<{ slug: string; name: string; emoji: string; description: s
 ];
 
 async function main(): Promise<void> {
+  if (!seedEmail || !seedPassword) throw new Error('Set BRIDGE_SEED_EMAIL and BRIDGE_SEED_PASSWORD to an existing sandbox account.');
   await signOut().catch(() => undefined);
-  await signIn({ username: SEED_USER, password: PASSWORD });
+  await signIn({ username: seedEmail, password: seedPassword });
 
   let created = 0;
   let existing = 0;

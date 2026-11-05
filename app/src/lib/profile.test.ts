@@ -3,16 +3,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const contactApi = vi.hoisted(() => ({ list: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() }));
 const deleteProfileApi=vi.hoisted(()=>vi.fn());
-const removePhotoApi=vi.hoisted(()=>vi.fn());
+const storageApi=vi.hoisted(()=>({uploadData:vi.fn(),getUrl:vi.fn(),remove:vi.fn()}));
 const authApi = vi.hoisted(() => ({ currentUser: vi.fn() }));
 
 vi.mock('aws-amplify/data', () => ({
   generateClient: () => ({ models: { User: {delete:deleteProfileApi}, TrustedContact: contactApi } }),
 }));
-vi.mock('aws-amplify/storage', () => ({ uploadData: vi.fn(), getUrl: vi.fn(), remove:removePhotoApi }));
+vi.mock('aws-amplify/storage', () => storageApi);
 vi.mock('./auth', () => authApi);
 
-import { deleteUserProfile, validateProfileName, findOwnedProfile, saveTrustedContacts, validateTrustedContact, type UserRecord } from './profile';
+import { deleteUserProfile, uploadPhoto, validateProfileName, findOwnedProfile, saveTrustedContacts, validateTrustedContact, type UserRecord } from './profile';
 
 const profile = (id: string, owner: string) => ({ id, owner, email: `${id}@example.com` }) as UserRecord;
 
@@ -85,10 +85,17 @@ describe('profile names and deletion from main',()=>{
   expect(validateProfileName({firstName:' Sam ',lastName:' Lee '})).toEqual({firstName:'Sam',lastName:'Lee'});
   expect(()=>validateProfileName({firstName:'Sam',lastName:' '})).toThrow('Enter your last name');
  });
+ it('uploads photos beneath the signed-in storage identity',async()=>{
+  storageApi.uploadData.mockReturnValue({result:Promise.resolve({path:'profile-photos/identity-1/photo.webp'})});
+  const file=new File(['photo'],'My photo.webp',{type:'image/webp'});
+  await expect(uploadPhoto(file)).resolves.toBe('profile-photos/identity-1/photo.webp');
+  const input=storageApi.uploadData.mock.calls[0][0];
+  expect(input.path({identityId:'identity-1'})).toMatch(/^profile-photos\/identity-1\/\d+-My-photo\.webp$/);
+ });
  it('removes the photo and trusted contact before the profile',async()=>{
-  removePhotoApi.mockResolvedValue({});contactApi.delete.mockResolvedValue({data:{}});deleteProfileApi.mockResolvedValue({data:{}});
+  storageApi.remove.mockResolvedValue({});contactApi.delete.mockResolvedValue({data:{}});deleteProfileApi.mockResolvedValue({data:{}});
   await deleteUserProfile({...profile('mine','my-sub'),photoKey:'profile-photos/mine.webp'}, [{id:'contact-1'} as import('./profile').TrustedContactRecord]);
-  expect(removePhotoApi).toHaveBeenCalledWith({key:'profile-photos/mine.webp'});
+  expect(storageApi.remove).toHaveBeenCalledWith({path:'profile-photos/mine.webp'});
   expect(contactApi.delete).toHaveBeenCalledWith({id:'contact-1'},{selectionSet:['id']});
   expect(deleteProfileApi).toHaveBeenCalledWith({id:'mine'});
  });

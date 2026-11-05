@@ -7,14 +7,15 @@ import { converseWithTool } from '../shared/bedrock';
 import { FALLBACKS } from '../shared/fallback';
 import { logTurn } from '../shared/log';
 import { CLASSIFY_MODEL_ID } from '../../shared/config';
+import { withPersonalContext } from '../shared/context';
 import { HARSH, TONE_SYSTEM, TONE_TOOL_SCHEMA } from './prompts';
 
-export const handler = async (event: { arguments: { text: string }; identity?: { sub?: string } }) => {
+export const handler = async (event: { arguments: { text: string; personalContext?: string }; identity?: { sub?: string } }) => {
   const started = Date.now();
   const userId = event.identity?.sub ?? 'anon';
   const parsed = toneInput.safeParse(event.arguments);
   if (!parsed.success) return { ...FALLBACKS.tone, fallback: true };
-  const text = parsed.data.text;
+  const { text, personalContext } = parsed.data;
 
   // keyword layer first — deterministic harsh-word flags with a per-word reason
   const flaggedWords = Object.entries(HARSH)
@@ -27,7 +28,7 @@ export const handler = async (event: { arguments: { text: string }; identity?: {
   const res = await converseWithTool({
     modelId: CLASSIFY_MODEL_ID, // Haiku-class
     system: TONE_SYSTEM,
-    message: text,
+    message: withPersonalContext(text, personalContext),
     toolName: 'tone',
     inputSchema: TONE_TOOL_SCHEMA as unknown as Record<string, unknown>,
     validator: toneOutput,

@@ -9,6 +9,7 @@ export const practiceInput = z.object({
   level: z.number().int().min(1).max(3),
   goal: z.string().min(1).max(300),
   message: z.string().min(1).max(1000),
+  personalContext: z.string().max(1600).optional(),
 });
 export const practiceOutput = z.object({
   partnerReply: z.string().min(1),
@@ -22,8 +23,11 @@ export const classifyOutput = z.object({
   confidence: z.number().min(0).max(1),
 });
 
-export const toneInput = z.object({ text: z.string().min(1).max(1000) });
+export const toneInput = z.object({
+  text: z.string().min(1).max(1000),
+  personalContext: z.string().max(1600).optional(),
+});
 export const toneOutput = z.object({ gentle: z.string().min(1), flaggedWords: z.array(z.string()) });
 
-export const previewInput = z.object({ context: z.string().min(1).max(1000) });
+export const previewInput = z.object({ context: z.string().min(1).max(2000) });
 export const previewOutput = z.object({ suggestions: z.array(z.string().min(1)).min(1).max(3) });
