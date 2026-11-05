@@ -1,7 +1,7 @@
 ---
 phase: 07-quality-testing
 status: awaiting-human-verification
-updated: 2026-11-04
+updated: 2026-11-05
 ---
 
 # Phase 7 Test Results
@@ -13,8 +13,9 @@ updated: 2026-11-04
 | Real demo seed | Pass | Two Cognito profiles, 5 events, 6 circles, 13 messages, and 6 topics verified in the sandbox; repeat run stayed idempotent. |
 | Seed specification | Pass | `npm run seed:demo:check` |
 | Lint | Pass with warnings | `npm run lint` exits 0; warnings are listed below. |
-| Unit tests | Pass | 14 suites and 57 tests pass, including profile-owner isolation and the practice handler. |
+| Unit tests | Pass | 15 suites and 63 tests pass, including profile-owner isolation, second trusted-person persistence, Me activity aggregation, and the practice handler. |
 | Production build | Pass with warning | TypeScript and Vite build successfully; Vite reports one large client chunk. |
+| Amplify sandbox schema | Pass | Existing `hero4440` sandbox updated successfully; generated AppSync schema includes `gender`, `comfortMoHelp`, and `comfortPlainWords`. |
 
 ## Resolved Showstoppers
 
@@ -35,5 +36,7 @@ updated: 2026-11-04
 - Phone-width and laptop-width checks
 - Browser console inspection
 - Three timed rehearsals of the demo script
+- Figma parity screenshots and refresh-persistence checks for every Me subpage
+- Remaining Home, Circles/DMs, Events, Practice/Mo, and onboarding parity audit from Plan 07-02
 
 No manual checkbox is marked complete until a teammate performs and records the test.

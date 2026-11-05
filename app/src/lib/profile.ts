@@ -80,11 +80,11 @@ export async function updateUserProfile(input: UpdateUserInput): Promise<UserRec
 
 export async function deleteUserProfile(
   profile: UserRecord,
-  trustedContact: TrustedContactRecord | null,
+  trustedContacts: readonly TrustedContactRecord[],
 ): Promise<void> {
   if (profile.photoKey) await remove({ key: profile.photoKey });
 
-  if (trustedContact) {
+  for (const trustedContact of trustedContacts) {
     const { errors } = await client.models.TrustedContact.delete({ id: trustedContact.id });
     if (errors?.length) throw new Error(`delete trusted contact failed: ${JSON.stringify(errors)}`);
   }
@@ -94,17 +94,21 @@ export async function deleteUserProfile(
 }
 
 export async function getCurrentTrustedContact(): Promise<TrustedContactRecord | null> {
+  return (await listTrustedContacts())[0] ?? null;
+}
+
+export async function listTrustedContacts(): Promise<TrustedContactRecord[]> {
   const { data, errors } = await client.models.TrustedContact.list();
-  if (errors?.length) throw new Error(`getCurrentTrustedContact failed: ${JSON.stringify(errors)}`);
-  return data[0] ?? null;
+  if (errors?.length) throw new Error(`listTrustedContacts failed: ${JSON.stringify(errors)}`);
+  return data;
 }
 
 // Upsert makes a failed/retried final onboarding submission safe and avoids duplicate contacts.
-export async function saveTrustedContact(input: TrustedContactInput): Promise<TrustedContactRecord> {
+export async function saveTrustedContact(input: TrustedContactInput, id?: string, createNew = false): Promise<TrustedContactRecord> {
   const valid = validateTrustedContact(input);
-  const existing = await getCurrentTrustedContact();
-  const result = existing
-    ? await client.models.TrustedContact.update({ id: existing.id, ...valid })
+  const existing = id || createNew ? null : await getCurrentTrustedContact();
+  const result = id || existing
+    ? await client.models.TrustedContact.update({ id: id || existing!.id, ...valid })
     : await client.models.TrustedContact.create(valid);
   if (result.errors?.length) throw new Error(`saveTrustedContact failed: ${JSON.stringify(result.errors)}`);
   if (!result.data) throw new Error('saveTrustedContact returned no data');
@@ -142,4 +146,23 @@ export async function uploadPhoto(file: File): Promise<string> {
 export async function getPhotoUrl(key: string): Promise<string> {
   const result = await getUrl({ key });
   return result.url.toString();
+}
+
+export async function replaceProfilePhoto(profile: UserRecord, file: File): Promise<UserRecord> {
+  const key = await uploadPhoto(file);
+  let updated: UserRecord;
+  try {
+    updated = await updateUserProfile({ id: profile.id, photoKey: key });
+  } catch (error) {
+    await remove({ key });
+    throw error;
+  }
+  if (profile.photoKey) await remove({ key: profile.photoKey });
+  return updated;
+}
+
+export async function removeProfilePhoto(profile: UserRecord): Promise<UserRecord> {
+  const updated = await updateUserProfile({ id: profile.id, photoKey: null });
+  if (profile.photoKey) await remove({ key: profile.photoKey });
+  return updated;
 }

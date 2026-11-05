@@ -25,6 +25,7 @@ const schema = a.schema({
       email: a.string().required(),
       firstName: a.string(),
       lastName: a.string(),
+      gender: a.string(),
       interests: a.string().array(),
       trustedPersonName: a.string(),
       trustedPersonRelation: a.enum(['Parent', 'Sibling', 'Friend', 'Other']),
@@ -32,6 +33,8 @@ const schema = a.schema({
       comfortTextSize: a.string(),
       comfortCalmMode: a.boolean(),
       comfortTextFirst: a.boolean(),
+      comfortMoHelp: a.string(),
+      comfortPlainWords: a.boolean(),
       photoKey: a.string(), // S3 key for profile photo (Phase 6 PROFILE-03)
     })
     .authorization((allow) => [allow.owner(), allow.authenticated().to(['read'])]),

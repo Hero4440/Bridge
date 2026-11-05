@@ -64,7 +64,7 @@ function App() {
   } else if (!profile) {
     content = <Onboarding onComplete={setProfile} />;
   } else {
-    content = <MainApp profile={profile} onSignOut={() => { setProfile(null); setAuthState('signedOut'); }} />;
+    content = <MainApp profile={profile} onProfileChange={setProfile} onSignOut={() => { setProfile(null); setAuthState('signedOut'); }} />;
   }
 
   const selectedTheme = isThemeName(profile?.theme) ? profile.theme : 'dawn';
@@ -85,7 +85,7 @@ function App() {
   );
 }
 
-function MainApp({ profile, onSignOut }: { profile: UserRecord; onSignOut: () => void }) {
+function MainApp({ profile, onProfileChange, onSignOut }: { profile: UserRecord; onProfileChange: (profile: UserRecord) => void; onSignOut: () => void }) {
   const [screen, setScreen] = useState<Screen>('home');
   const [userId, setUserId] = useState<string>('');
 
@@ -103,7 +103,7 @@ function MainApp({ profile, onSignOut }: { profile: UserRecord; onSignOut: () =>
         {screen === 'events' && <Events />}
         {screen === 'practice' && <Practice />}
         {screen === 'dms' && <Dms userId={userId} onOpenCircles={() => setScreen('circles')} />}
-        {screen === 'me' && <Me profile={profile} onSignOut={onSignOut} />}
+        {screen === 'me' && <Me profile={profile} onProfileChange={onProfileChange} onSignOut={onSignOut} />}
       </div>
       <NavBar currentScreen={screen} onNavigate={setScreen} />
     </>
