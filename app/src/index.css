@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap');
 
-body{margin:0;font-family:Outfit,system-ui,sans-serif}
+body{margin:0;font-family:Outfit,system-ui,sans-serif;background:#ECE7F4}
 a{color:#3B3350}a:hover{color:#6E6585}
 button{font-family:Outfit,system-ui,sans-serif;cursor:pointer;transition:transform .12s ease,opacity .12s ease}
 button:active{transform:scale(.97)}
@@ -133,6 +133,7 @@ button:active{transform:scale(.97)}
 .onb-card{background:rgba(255,255,255,.88);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:10px;font-size:16px;line-height:1.4}.onb-card.soft{background:rgba(255,255,255,.55)}.onb-card strong{font-size:17px}
 .safety-row{display:flex;gap:12px;align-items:flex-start}.safety-row b{width:26px;height:26px;border-radius:50%;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto}
 .onb-field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted)}.onb-field input{height:52px;border-radius:16px;border:1.5px solid #DCD3EA;background:#fff;padding:0 16px;font:17px Outfit,system-ui,sans-serif;color:var(--ink);box-sizing:border-box;width:100%;outline:none}
+.onb.onb-center>.onb-body{width:100%;box-sizing:border-box;align-items:center;justify-content:center;padding-bottom:0}.onb.onb-center .onb-field{width:100%;text-align:left}.onb-field input:focus-visible{border-color:var(--ink);box-shadow:0 0 0 3px rgba(59,51,80,.12)}
 .field-hint{font-size:14px;color:#A0503F;margin-top:-6px}
 .onb-foot{position:sticky;bottom:0;margin:0 -22px -22px;padding:12px 22px 18px;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;z-index:15}.onb-foot button{height:56px!important}
 /* Comfort settings */
@@ -142,6 +143,7 @@ button:active{transform:scale(.97)}
 
 .stage{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;background:#ECE7F4;padding:24px;box-sizing:border-box}
 .phone{width:390px;height:844px;max-height:calc(100dvh - 48px);border-radius:44px;overflow:hidden;box-shadow:0 30px 80px rgba(59,51,80,0.25)}
+.bridge-app{width:100%;height:100%;box-sizing:border-box;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden;position:relative}
 /* On a phone (or a phone-sized preview): fill the whole screen, keep content clear of the notch / Dynamic Island */
 @media (max-width:500px){
   .stage{padding:0;align-items:stretch}

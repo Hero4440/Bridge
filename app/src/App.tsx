@@ -2,7 +2,7 @@
 // Bridge top-level router: checks auth state and profile existence,
 // routes to Login/Signup (signedOut), Onboarding (no profile), or Main app.
 // Implements FRONTEND-01, FRONTEND-02 (auth flow gating).
-import { useEffect, useState } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useState } from 'react';
 import { currentUser } from './lib/auth';
 import { getCurrentUserProfile } from './lib/profile';
 import { LoadingSpinner } from './components/LoadingSpinner';
@@ -19,6 +19,14 @@ import { Practice } from './screens/Practice';
 
 type AuthState = 'loading' | 'signedOut' | 'signedIn';
 type AuthView = 'login' | 'signup';
+
+const dawnTheme = {
+  '--bg': 'linear-gradient(170deg, #FBE6DD 0%, #F1E4F3 45%, #DFE3FA 100%)',
+  '--bar': 'rgba(251,232,226,0.97)',
+  '--ink': '#3B3350',
+  '--soft': '#EFE6F8',
+  '--muted': '#5E5574',
+} as CSSProperties;
 
 function App() {
   const [authState, setAuthState] = useState<AuthState>('loading');
@@ -40,32 +48,41 @@ function App() {
     checkAuth();
   }, []);
 
-  if (authState === 'loading') {
-    return <LoadingSpinner />;
-  }
+  let content: ReactNode;
 
-  if (authState === 'signedOut') {
+  if (authState === 'loading') {
+    content = <LoadingSpinner />;
+  } else if (authState === 'signedOut') {
     if (authView === 'signup') {
-      return (
+      content = (
         <Signup
           onSignedUp={() => setAuthState('signedIn')}
           onSwitchToLogin={() => setAuthView('login')}
         />
       );
+    } else {
+      content = (
+        <Login
+          onSignedIn={() => setAuthState('signedIn')}
+          onSwitchToSignup={() => setAuthView('signup')}
+        />
+      );
     }
-    return (
-      <Login
-        onSignedIn={() => setAuthState('signedIn')}
-        onSwitchToSignup={() => setAuthView('signup')}
-      />
-    );
+  } else if (!hasProfile) {
+    content = <Onboarding onComplete={() => setHasProfile(true)} />;
+  } else {
+    content = <MainApp onSignOut={() => setAuthState('signedOut')} />;
   }
 
-  if (!hasProfile) {
-    return <Onboarding onComplete={() => setHasProfile(true)} />;
-  }
-
-  return <MainApp onSignOut={() => setAuthState('signedOut')} />;
+  return (
+    <div className="stage">
+      <div className="phone">
+        <div className="bridge-app" style={dawnTheme}>
+          {content}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 type Screen = 'home' | 'circles' | 'events' | 'dms' | 'practice' | 'me';
@@ -81,7 +98,7 @@ function MainApp({ onSignOut }: { onSignOut: () => void }) {
   if (!userId) return <LoadingSpinner />;
 
   return (
-    <div className="bridge-app" style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '60px' }}>
+    <div className="bridge-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingBottom: '60px', boxSizing: 'border-box' }}>
       {screen === 'home' && <Home />}
       {screen === 'circles' && <Circles userId={userId} />}
       {screen === 'events' && <Events />}
