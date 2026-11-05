@@ -1,7 +1,7 @@
 # Bridge Demo Script - Nov 6, 2026
 
 **Team:** Ctrl Alt Elite  
-**Time:** 4-5 minutes  
+**Time:** 4 minutes
 **Venue:** Scottsdale Launchpad  
 **Judges:** ASU Spark Center + First Place AZ
 
@@ -11,9 +11,9 @@
 
 - [ ] Laptop charged + charger available
 - [ ] Demo account pre-created and tested (or can sign up live)
-- [ ] Amplify sandbox running (`npx ampx sandbox`)
-- [ ] Dev server running (`npm run dev`)
-- [ ] Demo data seeded (`npm run seed:demo`)
+- [ ] Amplify sandbox running (`cd app && npx ampx sandbox`)
+- [ ] Dev server running (`cd app && npm run dev`)
+- [ ] Demo data seeded from `app/` (`npm run seed:demo`)
 - [ ] Browser open to http://localhost:5173
 - [ ] Second browser/tab ready for real-time demo (optional)
 - [ ] Backup slides ready (if app crashes)
@@ -22,7 +22,7 @@
 
 ## Script (4 Minutes)
 
-### [0:00 - 0:30] Opening & Problem
+### [0:00 - 0:25] Opening & Problem
 
 **Say:**
 
@@ -36,11 +36,11 @@
 >
 > "Bridge helps users Preview what to expect, Practice with AI feedback, and then Go to the real thing."
 
-**Timing: 30 seconds**
+**Timing: 25 seconds**
 
 ---
 
-### [0:30 - 1:00] Onboarding (Fast Overview)
+### [0:25 - 0:45] Onboarding (Fast Overview)
 
 **Option A (Sign up live):**
 > "Let me create an account real quick..."
@@ -56,11 +56,11 @@
 > 
 > "Users go through onboarding once - pick interests, meet Mo, set comfort preferences. Very quick."
 
-**Timing: 30 seconds total (1:00 elapsed)**
+**Timing: 20 seconds total (0:45 elapsed)**
 
 ---
 
-### [1:00 - 3:00] Practice Feature (THE STAR - 2 MINUTES)
+### [0:45 - 2:45] Practice Feature (THE STAR - 2 MINUTES)
 
 **Say:**
 
@@ -114,11 +114,11 @@
 >
 > **[If time allows, click "Try Again" and show you can practice multiple times]**
 
-**Timing: 2 minutes (3:00 elapsed)**
+**Timing: 2 minutes (2:45 elapsed)**
 
 ---
 
-### [3:00 - 3:45] Social Features
+### [2:45 - 3:25] Social Features
 
 **Say:**
 
@@ -130,7 +130,7 @@
 >
 > **[Tap a circle, show messages]**
 >
-> "Real-time subscriptions via AppSync - messages appear instantly for all members."
+> "Real-time subscriptions via AppSync - connected users see new messages without refreshing."
 >
 > **[Navigate to Events tab]**
 >
@@ -142,11 +142,11 @@
 >
 > "Direct messages with safety - first message from a non-contact goes through Mo's safety check first."
 
-**Timing: 45 seconds (3:45 elapsed)**
+**Timing: 40 seconds (3:25 elapsed)**
 
 ---
 
-### [3:45 - 4:00] Safety
+### [3:25 - 3:40] Safety
 
 **Say:**
 
@@ -156,11 +156,11 @@
 >
 > "We don't store raw practice transcripts. Privacy-first, safety-first."
 
-**Timing: 15 seconds (4:00 elapsed)**
+**Timing: 15 seconds (3:40 elapsed)**
 
 ---
 
-### [4:00 - 4:15] Impact & Closing
+### [3:40 - 4:00] Impact & Closing
 
 **Say:**
 
@@ -172,7 +172,7 @@
 >
 > **[If time is up]:** "Thank you!"
 
-**Timing: 15 seconds (4:15 total)**
+**Timing: 20 seconds (4:00 total)**
 
 ---
 
@@ -228,16 +228,16 @@
 **Expected Questions:**
 
 **Q: How do you ensure AI feedback is appropriate?**  
-A: "Every prompt includes guardrails - judge only against user's goal, parity rules (advice doesn't change with diagnosis), crisis detection, no medical/legal advice. We also run bias probes on our prompts."
+A: "Every prompt includes guardrails - judge only against the user's goal, parity rules, crisis detection, and no medical or legal advice. Before production, we will also run the planned parity and bias probes."
 
 **Q: What about users without smartphones?**  
-A: "It's a PWA - works on any device with a browser. We tested on laptop, phone, and tablet. First Place residents have varying tech access."
+A: "It's a responsive web app designed for modern phone and laptop browsers. The Phase 7 checklist verifies both widths before the demo."
 
 **Q: How do you measure success?**  
 A: "Prototype testing with First Place residents - do they feel more confident? Do they attend more events? Long-term: track attendance rates, self-reported confidence."
 
 **Q: What about privacy?**  
-A: "We don't store raw practice transcripts - only which scenario, level, and feedback type. No message content. All data encrypted, Cognito-authenticated, DynamoDB with proper authorization rules."
+A: "We don't store raw practice transcripts - only the scenario, level, and feedback. Chat messages persist so conversations work, and access is Cognito-authenticated."
 
 **Q: What's next?**  
 A: "Deploy to production with First Place, pilot with 10-15 residents, iterate based on feedback, expand to other First Place locations."
