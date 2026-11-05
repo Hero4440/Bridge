@@ -4,7 +4,7 @@ import { feelingLabels, upcomingLabels, hardestLabels, checkInSchema, type Check
 import { useOnline } from '../lib/useOnline';
 import './Dashboard.css';
 
-export function CheckIn({firstName,onSave,initial}:{firstName:string;onSave:(values:CheckInValues)=>Promise<void>;initial?:CheckInValues}) {
+export function CheckIn({firstName,calmMode=false,onSave,initial}:{firstName:string;calmMode?:boolean;onSave:(values:CheckInValues)=>Promise<void>;initial?:CheckInValues}) {
  const [step,setStep]=useState(0);
  const [values,setValues]=useState<Partial<CheckInValues>>(initial??{});
  const [busy,setBusy]=useState(false);
@@ -32,7 +32,7 @@ export function CheckIn({firstName,onSave,initial}:{firstName:string;onSave:(val
    <div className="checkin-dots" role="img" aria-label={`Question ${step+1} of 3`}>{[0,1,2].map(i=><span key={i} style={{background:i===step?'var(--accent)':'color-mix(in srgb, var(--accent) 30%, #FFFFFF)'}}/>)}</div>
   </div>
   <div key={step} className="checkin-question">
-   <Mo mood="happy" size={60}/>
+   <Mo mood={calmMode?'calm':'happy'} size={60}/>
    <h1 ref={heading} tabIndex={-1}>{[`Hi ${firstName || 'there'}! How are you feeling?`,'Anything coming up?','What feels hardest lately?'][step]}</h1>
    <div className="checkin-options">{Object.entries(options).map(([value,label])=><button key={value} disabled={busy||!online} aria-pressed={values[key]===value} onClick={()=>pick(value)}>{label}</button>)}</div>
    {!online&&<p role="status">You’re offline. Reconnect to save your check-in.</p>}

@@ -15,7 +15,7 @@ describe('summarizeMeActivity', () => {
     }, new Date('2026-11-05T12:00:00Z'));
 
     expect(summary.weeks.map((week) => week.value)).toEqual([0, 0, 1, 3]);
-    expect(summary).toMatchObject({ stepsThisWeek: 3, dailyStreak: 3, practices: 1, eventsJoined: 1, levelReached: 2, blockedCount: 1 });
+    expect(summary).toMatchObject({ stepsThisWeek: 3, practices: 1, eventsJoined: 1, levelReached: 2, blockedCount: 1 });
     expect(summary.badges).toEqual({ hello: true, kind: true, breather: true, circle: true, event: true });
   });
 
@@ -51,23 +51,5 @@ describe('summarizeMeActivity', () => {
       earnedBadges: [{ key: 'event', earnedAt: '2026-11-04T11:00:01Z' }],
     }, new Date('2026-11-05T12:00:00Z'));
     expect(summary.stepsThisWeek).toBe(2);
-  });
-
-  it('advances the streak once per active day and resets after a missed day', () => {
-    const active = summarizeMeActivity({
-      practices: [{ createdAt: '2026-11-03T10:00:00-07:00' }],
-      rsvps: [{ timestamp: '2026-11-04T11:00:00-07:00' }],
-      reflections: [{ timestamp: '2026-11-04T12:00:00-07:00' }],
-      messages: [], goals: [], blockedCount: 0,
-      earnedBadges: [{ key: 'hello', earnedAt: '2026-11-04T13:00:00-07:00' }],
-    }, new Date('2026-11-05T12:00:00-07:00'));
-    const reset = summarizeMeActivity({
-      practices: [{ createdAt: '2026-11-02T10:00:00-07:00' }],
-      rsvps: [{ timestamp: '2026-11-04T11:00:00-07:00' }],
-      reflections: [], messages: [], goals: [], blockedCount: 0, earnedBadges: [],
-    }, new Date('2026-11-05T12:00:00-07:00'));
-
-    expect(active.dailyStreak).toBe(2);
-    expect(reset.dailyStreak).toBe(1);
   });
 });

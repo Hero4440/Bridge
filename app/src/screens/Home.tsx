@@ -37,6 +37,8 @@ interface Props {
   onPractice: (scenario: ScenarioId, level: 1 | 2) => void;
   onCircle: (id: string) => void;
   onComfort: () => void;
+  angryDebrief?: boolean;
+  onDebriefTalk?: () => void;
 }
 export function Home({
   profile,
@@ -46,6 +48,8 @@ export function Home({
   onComfort,
   onEvent,
   onMessage,
+  angryDebrief = false,
+  onDebriefTalk,
 }: Props) {
   const [circles, setCircles] = useState<Circle[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -288,8 +292,11 @@ export function Home({
     homeMood: (checkIn.feeling === "over" ? "calm" : "happy") as
       | "calm"
       | "happy",
-    angryDebrief: false,
-    debriefTalk: () => onPractice(rec.scenario, rec.level),
+    angryDebrief,
+    debriefTalk: () => {
+      onDebriefTalk?.();
+      onPractice(rec.scenario, rec.level);
+    },
     calmOn: !!profile.comfortCalmMode,
     moLine: rec.line,
     goComfort: onComfort,
