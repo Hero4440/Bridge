@@ -16,8 +16,10 @@ import {
   type Goal,
   type Circle,
   type Notification,
+  type DashboardEvent,
 } from "../lib/dashboard";
-import type { UserRecord } from "../lib/profile";
+import { listTrustedContacts, type TrustedContactRecord, type UserRecord } from "../lib/profile";
+import { observeContacts, listMembers, type Contact, type Member } from "../lib/community";
 import type { ScenarioId } from "../lib/practice";
 import { useOnline } from "../lib/useOnline";
 import "./Dashboard.css";
@@ -55,6 +57,10 @@ export function Home({
 }: Props) {
   const [circles, setCircles] = useState<Circle[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [planEvents, setPlanEvents] = useState<DashboardEvent[]>([]);
+  const [trustedPeople, setTrustedPeople] = useState<TrustedContactRecord[]>([]);
+  const [connections, setConnections] = useState<Contact[]>([]);
+  const [members, setMembers] = useState<Record<string, Member>>({});
   const [drafts, setDrafts] = useState<Goal[]>([]);
   const [editing, setEditing] = useState(false);
   const [steps, setSteps] = useState(0);
@@ -82,7 +88,11 @@ export function Home({
       const data = await loadDashboard();
       setCircles(data.circles);
       setGoals(data.goals);
+      setPlanEvents(data.events);
       setSteps(data.steps);
+      const [people, publicMembers] = await Promise.all([listTrustedContacts(), listMembers()]);
+      setTrustedPeople(people);
+      setMembers(publicMembers);
     } catch (e) {
       setLoadError(
         e instanceof Error ? e.message : "Your Home could not be loaded.",
@@ -93,6 +103,10 @@ export function Home({
   }
   useEffect(() => {
     void load();
+  }, []);
+  useEffect(() => {
+    const sub = observeContacts(setConnections, () => setError("Your people could not be refreshed. Reopen Home to try again."));
+    return () => sub.unsubscribe();
   }, []);
   useEffect(() => {
     const ns = observeNotifications(setNotifications, () =>
@@ -325,6 +339,7 @@ export function Home({
     planEdit: editing,
     planGoals: editing ? drafts : goals,
   };
+  const acceptedConnections = connections.filter((contact) => contact.status === "accepted" && contact.contactId).slice(0, 3);
   return (
     <div className="matched-home" aria-busy={saving}>
       {!online && (
@@ -670,6 +685,18 @@ export function Home({
               ))}
             </div>
           </div>
+          <section className="home-people-section" aria-labelledby="home-people-title">
+            <h2 id="home-people-title">My people</h2>
+            <div className="me-list-card">
+              {acceptedConnections.map((contact) => {
+                const peerId = contact.contactId!;
+                const person = members[peerId];
+                return <div className="home-person-row" key={contact.id}><span className="home-person-initial">{(person?.name || "B").slice(0,1)}</span><span className="home-person-copy"><strong>{person?.name || "Bridge connection"}</strong><small>Bridge connection</small></span><button disabled={!onMessage} onClick={() => onMessage?.(peerId)}>Say hi</button></div>;
+              })}
+              {trustedPeople.map((person) => <div className="home-person-row" key={person.id}><span className="home-person-initial">{person.name.slice(0,1)}</span><span className="home-person-copy"><strong>{person.name}</strong><small>{person.relation === "Other" ? person.otherRole || "Trusted person" : person.relation}</small></span><a href={`tel:${person.phone}`}>Call</a></div>)}
+              {acceptedConnections.length === 0 && trustedPeople.length === 0 && <p className="home-people-empty">Your people will appear here when you add a trusted person or connect with someone in Bridge.</p>}
+            </div>
+          </section>
           <div
             style={{ display: "flex", flexDirection: "column", gap: "10px" }}
           >
@@ -808,6 +835,13 @@ export function Home({
                 )}
               </div>
             ))}
+            {planEvents.map((event) => (
+              <button className="home-event-row" key={event.id} onClick={() => onEvent?.(event.id)}>
+                <span className="home-event-date">{event.whenAt ? new Date(event.whenAt).toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"}) : "Event"}</span>
+                <span className="home-event-copy"><strong>{event.what}</strong><small>{event.whenAt ? new Date(event.whenAt).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) : "Time to be confirmed"}{event.venue || event.whereText ? ` · ${event.venue || event.whereText}` : ""}</small></span>
+                <span aria-hidden="true">›</span>
+              </button>
+            ))}
             {editing ? (
               <div className="plan-actions">
                 <button disabled={saving} onClick={addGoal}>
@@ -824,7 +858,7 @@ export function Home({
                 </button>
               </div>
             ) : (
-              goals.length === 0 && (
+              goals.length === 0 && planEvents.length === 0 && (
                 <div className="dashboard-empty">
                   Choose one small step for this week. Tap Edit to add your
                   plan.

@@ -4,7 +4,7 @@ import { OnboardingMo as Mo } from "../components/OnboardingMo";
 import { PersonAvatar } from "../components/PersonAvatar";
 import { CommunityHeader } from "../components/CommunityHeader";
 import { CommunityNotice } from "../components/CommunityNotice";
-import { circleStyle, type Group, type Member } from "../lib/community";
+import { circleStyle, type Group, type Member, type Membership } from "../lib/community";
 import type { Schema } from "../../amplify/data/resource";
 import "./Community.css";
 export interface CircleListViewProps {
@@ -24,6 +24,7 @@ export interface CircleListViewProps {
   presences: Schema["CirclePresence"]["type"][];
   counts: Record<string, number>;
   members: Record<string, Member>;
+  memberships: Membership[];
   topics: Record<string, string>;
 }
 export function CircleListView(v: CircleListViewProps) {
@@ -77,9 +78,10 @@ export function CircleListView(v: CircleListViewProps) {
           {v.shown.map((group) => {
             const slug = group.slug ?? group.name.toLowerCase();
             const style = circleStyle(slug);
-            const active = v.presences.filter(
-              (p) => p.groupId === group.id && p.lastSeen > Date.now() - 90000,
-            );
+            const circlePeople = v.memberships
+              .filter((membership) => membership.groupId === group.id && membership.userId)
+              .filter((membership, index, rows) => rows.findIndex((item) => item.userId === membership.userId) === index)
+              .slice(0, 3);
             return (
               <article key={group.id} className="real-circle-card">
                 <div className="circle-top">
@@ -90,10 +92,10 @@ export function CircleListView(v: CircleListViewProps) {
                     size={48}
                   />
                   <div className="avatar-stack">
-                    {active.slice(0, 3).map((p, i) => (
+                    {circlePeople.map((person, i) => (
                       <PersonAvatar
-                        key={p.id}
-                        name={v.members[p.userId]?.name ?? "Bridge member"}
+                        key={person.id}
+                        name={v.members[person.userId!]?.name ?? "Bridge member"}
                         size={24}
                         tint={
                           i === 0

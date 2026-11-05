@@ -269,6 +269,7 @@ export function Circles({
         presences={presences}
         counts={counts}
         members={members}
+        memberships={memberships}
         topics={topics}
       />
     );
