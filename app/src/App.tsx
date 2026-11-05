@@ -12,6 +12,8 @@ import { Signup } from './screens/Signup';
 import { Onboarding } from './screens/Onboarding';
 import { Home } from './screens/Home';
 import { Me } from './screens/Me';
+import { Circles } from './screens/Circles';
+import { Events } from './screens/Events';
 
 type AuthState = 'loading' | 'signedOut' | 'signedIn';
 type AuthView = 'login' | 'signup';
@@ -68,14 +70,21 @@ type Screen = 'home' | 'circles' | 'events' | 'dms' | 'me';
 
 function MainApp({ onSignOut }: { onSignOut: () => void }) {
   const [screen, setScreen] = useState<Screen>('home');
+  const [userId, setUserId] = useState<string>('');
+
+  useEffect(() => {
+    currentUser().then(user => setUserId(user.userId));
+  }, []);
+
+  if (!userId) return <LoadingSpinner />;
 
   return (
     <div className="bridge-app" style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: '60px' }}>
       {screen === 'home' && <Home />}
-      {screen === 'me' && <Me onSignOut={onSignOut} />}
-      {screen === 'circles' && <div style={{ padding: '40px', textAlign: 'center' }}><h2>Circles Coming Soon</h2></div>}
-      {screen === 'events' && <div style={{ padding: '40px', textAlign: 'center' }}><h2>Events Coming Soon</h2></div>}
+      {screen === 'circles' && <Circles userId={userId} />}
+      {screen === 'events' && <Events userId={userId} />}
       {screen === 'dms' && <div style={{ padding: '40px', textAlign: 'center' }}><h2>DMs Coming Soon</h2></div>}
+      {screen === 'me' && <Me onSignOut={onSignOut} />}
       <NavBar currentScreen={screen} onNavigate={setScreen} />
     </div>
   );

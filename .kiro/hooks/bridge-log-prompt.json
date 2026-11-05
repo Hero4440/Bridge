@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Bridge: log prompt",
+      "trigger": "UserPromptSubmit",
+      "description": "Appends each user prompt to AI_PROMPTS/<Name>.md via bridge-hooks.mjs, mirroring the Claude Code UserPromptSubmit hook. Identifies the tool as \"Kiro\".",
+      "action": {
+        "type": "command",
+        "command": "node scripts/hooks/bridge-hooks.mjs log-prompt --tool \"Kiro\"",
+        "timeout": 15
+      }
+    }
+  ]
+}
