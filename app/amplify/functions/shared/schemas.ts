@@ -20,6 +20,7 @@ export const practiceInput = z.discriminatedUnion('mode', [
   practiceBaseInput.extend({
     mode: z.literal('finish'),
     history: z.string().min(1).max(3600),
+    transcript: z.string().min(1).max(12000),
   }),
 ]);
 export const practicePartnerOutput = z.object({

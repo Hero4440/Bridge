@@ -1,6 +1,6 @@
 // app/amplify/functions/practice/handler.ts
-// Guarded bounded session: start/turn/finish use real Bedrock; finish saves only a safe summary.
-// Raw messages remain request-scoped and are never persisted or logged.
+// Guarded bounded session: start/turn/finish use real Bedrock; finish saves the
+// owner-only raw transcript plus the safe feedback summary for future Mo context.
 import { practiceInput, practiceOutput, practicePartnerOutput } from '../shared/schemas';
 import { classify } from '../shared/classify';
 import { checkRateLimit, RATE_LIMIT_MESSAGE } from '../shared/rateLimit';
@@ -142,12 +142,15 @@ export const handler = async (event: { arguments: unknown; identity?: { sub?: st
   const usedFallback = !res.ok || outLabel.label !== 'safe';
   const reply = usedFallback ? FALLBACKS.practice : generatedReply;
 
-  // 5. Persist feedback and a privacy-safe memory, never the raw conversation or goal text.
+  // 5. Persist the owner-only raw transcript alongside a privacy-safe feedback memory.
   if (isFinish) {
     try {
+      const finishInput = input as { transcript?: string; history?: string };
       await dataClient.models.PracticeRun.create({
         scenarioId,
         level,
+        goal,
+        transcript: finishInput.transcript ?? finishInput.history ?? '',
         feedback: JSON.stringify({ memory: reply.memory, strength: reply.strength, tip: reply.tip }),
         userId,
       });

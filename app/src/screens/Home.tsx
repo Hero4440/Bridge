@@ -34,7 +34,7 @@ interface Props {
   onEvent?: (id?: string) => void;
   profile: UserRecord;
   checkIn: CheckInValues;
-  onPractice: (scenario: ScenarioId, level: 1 | 2) => void;
+  onPractice: (scenario: ScenarioId, level: 1 | 2 | 3) => void;
   onCircle: (id: string) => void;
   onComfort: () => void;
   angryDebrief?: boolean;

@@ -151,8 +151,9 @@ button:active{transform:scale(.97)}
 .account-section .settings-row:nth-child(1){--figma-setting-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 5H5v14h4M13 8l4 4-4 4M17 12H8'/%3E%3C/svg%3E")}.account-section .settings-row:nth-child(2){--figma-setting-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13'/%3E%3C/svg%3E")}
 .inner-header .inner-back svg{width:20px;height:20px}
 .comfort-card .segmented-row:has(.segments button:last-child.on)>span{color:var(--accent);font-weight:600}.comfort-card .segmented-row:has(.segments button:last-child.on)>span:after{content:" · On"}
-/* shortcut: Chatting is the second-last segmented row; add a class if the Comfort row order changes. */
-.comfort-card>.segmented-row:nth-last-of-type(2){display:none}
+/* Text-only support keeps the unused Chatting preference out of the UI. */
+.setup-flow .comfort-card>.segmented-row:last-of-type,
+.me-sub-content .comfort-card>.segmented-row:nth-last-of-type(2){display:none}
 /* First-time setup */
 .onb{min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;padding:16px 22px 22px;gap:18px}
 .onb-top{display:flex;align-items:center;gap:12px;min-height:44px}
@@ -699,7 +700,12 @@ button:active{transform:scale(.97)}
 .practice-hint-ask{align-self:flex-start;min-height:40px;border-radius:999px;border:1.5px dashed #B7C2BA;background:transparent;color:var(--ink);padding:6px 14px;font:500 14px Outfit,system-ui,sans-serif;cursor:pointer;margin-left:4px}
 .practice-or-type{font-size:14px;color:var(--muted);padding:0 4px}
 /* Mo free-chat — reuses practice message/bar patterns */
-.mo-chat-screen{display:flex;flex-direction:column;height:100%;min-height:0}
+.mo-chat-screen{display:flex;flex-direction:column;height:100%;min-height:0;background:var(--bg);color:var(--ink)}
+.mo-chat-header{background:var(--bg)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.mo-chat-title{color:var(--ink)}
 .mo-chat-scroll{flex:1;overflow-y:auto;padding:12px 20px 80px;display:flex;flex-direction:column;gap:16px;-webkit-overflow-scrolling:touch}
+.mo-chat-screen .message-bubble{max-width:80%;box-sizing:border-box;border-radius:24px 24px 24px 8px;background:var(--soft2,var(--soft));color:var(--ink);padding:13px 17px;font-size:17px;line-height:1.45}
+.mo-chat-screen .message.own .message-bubble{border-radius:24px 24px 8px 24px;background:var(--ink);color:#fff}
 .mo-chat-bar{position:fixed;bottom:0;left:0;right:0;z-index:150;background:var(--bar);border-top:1px solid rgba(59,51,80,.08);padding:10px 16px calc(10px + env(safe-area-inset-bottom)) 16px;display:flex;align-items:center;gap:10px;box-sizing:border-box}
 .mo-chat-bar input{flex:1;min-width:0;height:44px;background:var(--soft);border:none;border-radius:22px;padding:0 16px;font:16px Outfit,system-ui,sans-serif;color:var(--ink);outline:none;-webkit-appearance:none;box-sizing:border-box}
+.mo-chat-bar input:focus{outline:2px solid var(--accent);outline-offset:2px}

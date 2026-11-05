@@ -211,12 +211,14 @@ const schema = a
       })
       .authorization((allow) => [allow.authenticated().to(["read"])]),
 
-    // DATA-05 — SKILL §2.8: NO raw transcript. userResponse text is NOT stored;
-    // only scenarioId/level/feedback/hintsUsed are kept.
+    // DATA-05 — practice sessions are owner-only. Completed sessions keep the raw
+    // transcript so Mo can carry the user's chosen practice context forward.
     PracticeRun: a
       .model({
         scenarioId: a.string(),
         level: a.integer(),
+        goal: a.string(),
+        transcript: a.string(),
         feedback: a.string(),
         hintsUsed: a.integer(),
         userId: a.string(), // owner key the practice Lambda sets explicitly (trusted write)
@@ -224,8 +226,7 @@ const schema = a
       .authorization((allow) => [
         allow.ownerDefinedIn("userId").identityClaim("sub"),
       ]),
-    // NOTE: PracticeRun persistence (practice Lambda → Data client) is deferred to Phase 3
-    // (Events & Persistence). Phase 2's practice() returns strength+tip without a DB write.
+    // PracticeRun persistence is performed by the practice Lambda after feedback.
 
     // DATA-06
     Reflection: a
@@ -368,6 +369,7 @@ const schema = a
         goal: a.string().required(),
         message: a.string(),
         history: a.string(),
+        transcript: a.string(),
         personalContext: a.string(),
       })
       .returns(a.ref("PracticeReply"))

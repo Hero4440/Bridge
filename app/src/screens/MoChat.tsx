@@ -59,11 +59,11 @@ export function MoChat({
 
   return (
     <div className="mo-chat-screen">
-      <header className="inner-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 20px' }}>
+      <header className="inner-header mo-chat-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 20px' }}>
         <button className="practice-back" onClick={onBack} aria-label="Back">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
         </button>
-        <h1 style={{ margin: 0, fontSize: '17px', fontWeight: '600' }}>Chat with Mo</h1>
+        <h1 className="mo-chat-title" style={{ margin: 0, fontSize: '17px', fontWeight: '600' }}>Chat with Mo</h1>
       </header>
 
       <div className="mo-chat-scroll" ref={scrollRef}>
