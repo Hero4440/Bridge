@@ -153,7 +153,7 @@ button:active{transform:scale(.97)}
 .setup-interest>b{position:absolute;right:10px}
 /* Comfort settings */
 .calm-mode *,.calm-mode *:before,.calm-mode *:after{animation:none!important;transition:none!important}
-.text-large .bridge-scroll{zoom:1.12}
+.text-large .bridge-scroll,.setup-flow.text-large .setup-body{zoom:1.12}
 @media (prefers-reduced-motion:reduce){.breathe,.floaty,.rise,.screen-transition{animation:none}.screen-transition{opacity:1}}
 
 .stage{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;background:#ECE7F4;padding:24px;box-sizing:border-box}
