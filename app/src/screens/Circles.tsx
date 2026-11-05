@@ -252,7 +252,6 @@ export function Circles({
       <CircleListView
         groupCount={groups.length}
         onOpenDms={() => onOpenDms()}
-        onEvents={() => onEvents()}
         onRetry={() => {
           setLoading(true);
           setRetry((n) => n + 1);
