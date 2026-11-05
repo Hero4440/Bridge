@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Bridge: guard push",
+      "trigger": "PreToolUse",
+      "description": "Blocks git push when the branch is behind, force-pushing main, or pushing secrets/.env. Mirrors the Claude Code PreToolUse Bash hook; matches the execute_bash tool.",
+      "matcher": "execute_bash",
+      "action": {
+        "type": "command",
+        "command": "node scripts/hooks/bridge-hooks.mjs guard-push",
+        "timeout": 30
+      }
+    }
+  ]
+}

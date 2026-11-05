@@ -13,11 +13,12 @@ Bridge transforms from a working prototype to a production-ready AWS-backed app 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Authentication** - Amplify project, Cognito auth, schema definition, budget safeguards (completed 2026-11-04)
-- [ ] **Phase 2: AI Backend Infrastructure** - Lambda functions, Bedrock integration, structured outputs, rate limiting
-- [ ] **Phase 3: Events & Persistence** - Event CRUD, RSVP tracking, prep checklists, reflections
-- [ ] **Phase 4: Real-Time Chat** - Circle subscriptions, message history, reconnection logic, contact system
-- [ ] **Phase 5: Safety & Direct Messages** - Classification, message requests, crisis detection, help notifications
-- [ ] **Phase 6: Profile & Frontend Integration** - Profile persistence, frontend API client, loading/error states
+- [x] **Phase 2: AI Backend Infrastructure** - Lambda functions, Bedrock integration, structured outputs, rate limiting (completed 2026-11-04)
+- [x] **Phase 3: Events & Persistence** - Event CRUD, RSVP tracking, prep checklists, reflections (completed 2026-11-04)
+- [x] **Phase 4: Real-Time Chat** - Circle subscriptions, message history, reconnection logic, contact system (completed 2026-11-04)
+- [x] **Phase 5: Safety & Direct Messages** - Classification, message requests, crisis detection, help notifications (completed 2026-11-04)
+- [x] **Phase 6: Profile & Frontend Integration** - Profile persistence, frontend API client, loading/error states (completed 2026-11-04)
+- [ ] **Phase 6.1: Practice & AI Features UI** - INSERTED - Practice scenarios, AI feedback display, Mo conversation UI
 - [ ] **Phase 7: Quality & Testing** - TypeScript strict mode, accessibility audit, bias probe, 2-account testing
 - [ ] **Phase 8: Production Deployment** - Production app, secrets config, deploy rehearsal, demo prep
 
@@ -78,10 +79,13 @@ Plans:
   3. Circle chat loads last 50 messages on open, filtered by groupId with authenticated access
   4. Daily topic displays at top of circle chat
   5. Starter chips (ask question, share story) generate suggested messages when tapped
-**Plans**: TBD
+**Plans**: 4 (planned 2026-11-04)
 
 Plans:
-- TBD (populated during plan-phase)
+- 01: Chat schema — Group + Topic models, Message groupId/createdAtMs GSI, seed 6 circles (CHAT-01/04/07)
+- 02: dailyTopic Lambda + getDailyTopic query + topic client, AI daily topic cached one row/circle/day (CHAT-05)
+- 03: Client libs — messages (observeQuery, last-50), connection-state mapper, starter chips + unit tests (CHAT-01/02/03/04/06/07)
+- 04: Live two-account verify harness — real-time delivery, isolation, cache, chips (CHAT-01..07)
 
 ### Phase 5: Safety & Direct Messages
 **Goal**: Message moderation protects users with AI classification and trusted person alerts
@@ -93,10 +97,13 @@ Plans:
   3. Crisis keywords ("hurt myself", "end it") detected by classify() and show 988 hotline + trusted person alert
   4. "I need help" button creates Notification for trusted person and actually sends (in-app notification minimum)
   5. User can report any message (creates Report record) and block any contact (updates Contact status to blocked)
-**Plans**: TBD
+**Plans**: 4 (planned 2026-11-04)
 
 Plans:
-- TBD (populated during plan-phase)
+- 01: Schema — MessageRequest + Report models (DM-02, SAFE-04)
+- 02: Safety Lambdas — sendDm (classify+hold/deliver+crisis), respondToRequest, sendHelpAlert + mutations (DM-01..04, SAFE-01/02/03/06/07)
+- 03: Client libs — dm (threadId, send/observe/respond) + safety (report/block/help) + units (DM-01..05, SAFE-02/04/05/06)
+- 04: Live two-account verify harness — hold/accept/deliver, unsafe+crisis, guardian alert, report/block (DM-01..05, SAFE-01..07)
 
 ### Phase 6: Profile & Frontend Integration
 **Goal**: Frontend uses Amplify Data client for all features with proper loading/error states
@@ -108,6 +115,28 @@ Plans:
   3. Profile photo upload saves to S3 with size/MIME validation
   4. Frontend shows loading states during all API calls (spinner, skeleton, "loading...")
   5. Frontend shows error states on API failures with retry button and clear error message
+**Plans**: 6 (completed 2026-11-04)
+
+Plans:
+- 01: Schema + Profile Lib — User.photoKey, S3 storage, CRUD operations, photo upload (PROFILE-01/02/03/04)
+- 02: UI Components — Mo, Avatar, Glyph, Loading, Error, Empty, NavBar (FRONTEND-05)
+- 03: Auth Flow — Login, Signup, 5-step Onboarding (FRONTEND-01/02)
+- 04: Home + Me screens — Event list, profile display, sign out (FRONTEND-03/04)
+- 05: Circles + Events screens — Live chat, RSVP functionality (FRONTEND-06/07/08)
+- 06: DMs screen + Final Integration — Message requests, threads, all navigation complete (FRONTEND-06)
+
+### Phase 6.1: Practice & AI Features UI (INSERTED)
+**Goal**: Core AI practice feature works end-to-end — user can practice conversations with real Bedrock feedback
+**Depends on**: Phase 2 (practice Lambda), Phase 6 (frontend framework)
+**Requirements**: AI-01, AI-02, AI-03
+**Success Criteria** (what must be TRUE):
+  1. User can pick from 7 practice scenarios (join, left-on-read, cancel, leave, repair, invite, disagree)
+  2. User can set difficulty level (1-3) and their own goal before practicing
+  3. User types a practice message and gets AI feedback (partner reply + strength + tip) from Bedrock
+  4. Crisis detection works — if user expresses self-harm, show 988 + trusted person alert
+  5. Loading state shows "Mo is thinking..." during Bedrock API call (2-5 seconds)
+  6. Fallback response shown if Bedrock times out
+  7. User can "Try Again" or "Done" after feedback
 **Plans**: TBD
 
 Plans:
@@ -153,10 +182,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Authentication | 5/5 | Complete   | 2026-11-04 |
-| 2. AI Backend Infrastructure | 0/0 | Not started | - |
-| 3. Events & Persistence | 0/0 | Not started | - |
-| 4. Real-Time Chat | 0/0 | Not started | - |
-| 5. Safety & Direct Messages | 0/0 | Not started | - |
-| 6. Profile & Frontend Integration | 0/0 | Not started | - |
+| 2. AI Backend Infrastructure | 5/5 | Complete   | 2026-11-04 |
+| 3. Events & Persistence | 5/5 | Complete   | 2026-11-04 |
+| 4. Real-Time Chat | 4/4 | Complete   | 2026-11-04 |
+| 5. Safety & Direct Messages | 4/4 | Complete   | 2026-11-04 |
+| 6. Profile & Frontend Integration | 6/6 | Complete   | 2026-11-04 |
+| 6.1. Practice & AI Features UI | 0/0 | Not started | - |
 | 7. Quality & Testing | 0/0 | Not started | - |
 | 8. Production Deployment | 0/0 | Not started | - |

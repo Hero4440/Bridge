@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase-complete
-stopped_at: Phase 1 complete (deployed + verified)
-last_updated: "2026-11-04T04:00:00.000Z"
-last_activity: 2026-11-04 -- Phase 1 complete (5/5 plans, deployed to sandbox, verified)
+status: in_progress
+stopped_at: Phase 7 human verification checkpoint
+last_updated: "2026-11-04T00:00:00-07:00"
+last_activity: 2026-11-04 -- Phase 7 automated gates passed
 progress:
-  total_phases: 8
-  completed_phases: 1
-  total_plans: 5
-  completed_plans: 5
-  percent: 13
+  total_phases: 9
+  completed_phases: 7
+  total_plans: 31
+  completed_plans: 30
+  percent: 97
 ---
 
 # Project State
@@ -21,21 +21,25 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-03)
 
 **Core value:** Practice scenarios with real AI feedback must work reliably. Users get immediate, supportive coaching on conversation skills before facing real social situations.
-**Current focus:** Phase 1 — Foundation & Authentication
+**Current focus:** Phase 7 — complete manual demo verification and rehearsal
 
 ## Current Position
 
-Phase: 1 (Foundation & Authentication) — ✅ COMPLETE
-Plan: 5 of 5 complete
-Status: Phase 1 deployed to sandbox and verified; ready for Phase 2 (AI Backend Infrastructure)
-Last activity: 2026-11-04 -- Phase 1 complete (deploy green, auth + owner-isolation verified)
+Phase: 7 (Quality & Testing) — IN PROGRESS
+Plan: 07-01, tasks 1-3 and automated portion of task 4 complete
+Status: Real seed, 57 tests, production build, and lint pass; human verification pending
+Last activity: 2026-11-04 -- automated Phase 7 gates passed
 
-Progress: [█░░░░░░░░░] 13% (1/8 phases)
+Progress: [█████████░] 97% (30/31 plans)
 
-**Residuals before/within Phase 2:**
-- Enable Bedrock Anthropic model access in us-east-1 console; record BEDROCK_MODEL_ID (INFRA-02)
-- Optional manual check: browser-refresh session persistence (AUTH-03)
+**Open items (not blocking Phase 6):**
+
 - Rotate the IAM access key shared in chat
+- backend.ts budget email is a personal gmail (public repo) — swap for a shared alias before merging to main
+- Phases 1-5 on `dev` (pushed to origin/dev), not merged to main
+- Pre-existing: `practice/__tests__/handler.test.ts` fails under vitest (`$amplify/env/practice` has no test alias) — add a vitest alias for `$amplify/env/*`
+- Owner-binding pattern: Lambda-written owner models must use `allow.ownerDefinedIn('userId')` (fixed for PracticeRun/Contact/Notification) — apply to any future Lambda-created owner rows
+- Optional: raise Lambda concurrency + Bedrock 500 RPM quota; re-add reserved concurrency
 
 ## Performance Metrics
 
@@ -96,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-11-04T02:06:37.186Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-foundation-authentication/01-CONTEXT.md
+Last session: 2026-11-04
+Stopped at: Phase 7 human verification checkpoint after automated gates passed
+Resume file: scripts/test-demo-flow.md

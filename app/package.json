@@ -8,9 +8,14 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed:demo": "tsx scripts/seed/demo-data.ts",
+    "seed:demo:check": "tsx scripts/seed/demo-data.ts --check"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.1161.0",
+    "@aws-sdk/client-dynamodb": "^3.1161.0",
+    "@aws-sdk/lib-dynamodb": "^3.1161.0",
     "aws-amplify": "^6.22.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
