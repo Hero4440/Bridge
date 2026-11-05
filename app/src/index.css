@@ -428,3 +428,151 @@ button:active{transform:scale(.97)}
 .rsvp-btn.active.cant {
   background: #6b7280;
 }
+
+/* DMs screen styles */
+.dm-requests-list,
+.dm-contacts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 20px 20px;
+}
+
+.request-card {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: var(--soft);
+  border-radius: 12px;
+  border: 1px solid var(--soft);
+}
+
+.request-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.request-from {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.request-from strong {
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.unsafe-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #dc2626;
+  background: #fee2e2;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.request-preview {
+  font-size: 14px;
+  color: var(--subtext);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.request-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.accept-btn,
+.decline-btn {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.accept-btn {
+  background: var(--tint);
+  color: white;
+}
+
+.accept-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.decline-btn {
+  background: var(--bg);
+  border: 1px solid var(--soft);
+  color: var(--subtext);
+}
+
+.decline-btn:hover:not(:disabled) {
+  background: var(--soft);
+}
+
+.accept-btn:disabled,
+.decline-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--soft);
+  border: 1px solid var(--soft);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.contact-row:hover {
+  background: var(--bg);
+  transform: translateY(-1px);
+}
+
+.contact-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contact-info strong {
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.dm-thread {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.requests-badge {
+  background: var(--tint);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.requests-badge:hover {
+  opacity: 0.9;
+}
