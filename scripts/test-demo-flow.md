@@ -10,7 +10,9 @@
 
 - [ ] Start Amplify sandbox: `cd app && npx ampx sandbox`
 - [ ] Start dev server: `cd app && npm run dev`
-- [ ] Run seed script: `npm run seed:demo` (if available)
+- [ ] Copy `app/.env.example` to the gitignored `app/.env` and fill the four `BRIDGE_DEMO_*` values with `example.com` demo accounts
+- [ ] Run seed script from `app/`: `npm run seed:demo`
+- [ ] Confirm output reports 2 users, 5 events, 6 circles, 13 messages, and 6 topics
 - [ ] Open 2 browsers: Chrome + Chrome Incognito
 - [ ] Clear browser data (or use fresh profiles)
 
@@ -21,7 +23,7 @@
 **Browser 1:**
 - [ ] Navigate to http://localhost:5173
 - [ ] Click "Create account"
-- [ ] Enter email + password (test+demo@example.com / Test123!)
+- [ ] Enter a new made-up `example.com` email and a unique test password
 - [ ] Account created successfully
 - [ ] **Onboarding Step 1 (Welcome):** Shows Mo, "Preview. Practice. Go."
 - [ ] Click Continue
@@ -39,7 +41,7 @@
 - [ ] Home screen appears immediately (no onboarding)
 - [ ] Profile data persists (check Me tab)
 
-**Result:** ✅ Pass / ❌ Fail  
+**Result:** ✅ Pass / ❌ Fail
 **Issues:**
 
 ---
@@ -86,7 +88,7 @@
 - [ ] Test "Disagree Kindly" scenario at Level 3
 - [ ] Verify AI feedback is different for each
 
-**Result:** ✅ Pass / ❌ Fail  
+**Result:** ✅ Pass / ❌ Fail
 **Issues:**
 
 ---
@@ -104,8 +106,7 @@
 - [ ] Message appears in chat immediately
 
 **Browser 2:**
-- [ ] Sign in with second account (test2+demo@example.com)
-- [ ] Complete onboarding (faster flow)
+- [ ] Sign in with the Jordan account configured in `BRIDGE_DEMO_JORDAN_EMAIL`
 - [ ] Tap **Circles tab**
 - [ ] Tap **Gaming circle**
 - [ ] **Verify:** Browser 1's message "What's everyone playing?" is visible
@@ -125,7 +126,7 @@
 
 **Browser 1:**
 - [ ] Tap **Events tab**
-- [ ] See 5 seeded events (or empty state if not seeded)
+- [ ] See the 5 seeded events
 - [ ] Event cards show: date tile, title, location, RSVP buttons
 - [ ] Tap **"Going"** on "Gaming Night" event
 - [ ] Button highlights (active state)
@@ -169,11 +170,10 @@
 - [ ] Tap **Me tab**
 - [ ] Profile displays: name, email, interests
 - [ ] Current theme shown
-- [ ] Tap **"Sage" theme**
-- [ ] Colors change immediately (background, accent colors)
+- [ ] Current theme matches the choice saved during onboarding
 - [ ] **Refresh page**
 - [ ] Navigate to Me tab
-- [ ] **Verify:** Sage theme persists (still selected)
+- [ ] **Verify:** the same theme remains displayed after refresh
 
 **Result:** ✅ Pass / ❌ Fail  
 **Issues:**
@@ -233,7 +233,7 @@
 
 ---
 
-## 10. Mobile Responsive (Optional)
+## 10. Mobile Responsive
 
 **Phone or Narrow Browser:**
 - [ ] Resize browser to 375px width (iPhone size)
@@ -243,14 +243,26 @@
 - [ ] NavBar fits on screen
 - [ ] Practice conversation UI works
 
-**Result:** ✅ Pass / ❌ Fail / ⏭️ Skipped  
+**Result:** ✅ Pass / ❌ Fail
+**Issues:**
+
+---
+
+## 11. Backup Evidence
+
+- [ ] Capture a screenshot of Practice feedback (partner reply, strength, and tip)
+- [ ] Capture a screenshot of the 988 crisis response without including account details
+- [ ] Capture a screenshot of two-browser real-time circle chat
+- [ ] Save screenshots outside the repository if they contain account identifiers
+
+**Result:** ✅ Pass / ❌ Fail
 **Issues:**
 
 ---
 
 ## Summary
 
-**Total Tests:** _____ / 10  
+**Total Tests:** _____ / 11
 **Pass:** _____  
 **Fail:** _____  
 **Skipped:** _____
