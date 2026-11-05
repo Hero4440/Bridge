@@ -23,6 +23,15 @@ import { sendHelpAlert } from './functions/sendHelpAlert/resource';
 
 const backend = defineBackend({ auth, data, storage, preSignUp, classify, practice, tone, preview, reflectReply, dailyTopic, sendDm, respondToRequest, sendHelpAlert });
 
+// Private daily state and intentions can be restored after an accidental write.
+// Amplify's custom table manager exposes wrappers rather than CfnTable objects.
+for (const name of ['CheckIn', 'WeeklyGoal', 'CirclePresence']) {
+  backend.data.resources.cfnResources.amplifyDynamoDbTables[name].pointInTimeRecoveryEnabled = true;
+}
+backend.data.resources.cfnResources.amplifyDynamoDbTables.CirclePresence.timeToLiveAttribute = {
+  attributeName: 'expiresAt', enabled: true,
+};
+
 // D-05 / AUTH-03: 30-day refresh token so sessions survive a browser refresh.
 const { cfnUserPoolClient } = backend.auth.resources.cfnResources;
 cfnUserPoolClient.refreshTokenValidity = 30;

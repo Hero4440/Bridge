@@ -17,6 +17,15 @@ import { Circles } from './screens/Circles';
 import { Events } from './screens/Events';
 import { Dms } from './screens/Dms';
 import { Practice } from './screens/Practice';
+import { CheckIn } from './screens/CheckIn';
+import { DashboardNav, type SupportTool } from './components/DashboardNav';
+import { OnboardingStatusBar } from './components/OnboardingStatusBar';
+import { ErrorRetry } from './components/ErrorRetry';
+import { HomeSupport } from './screens/HomeSupport';
+import { HomeComfort } from './screens/HomeComfort';
+import { getTodayCheckIn, saveCheckIn } from './lib/dashboard';
+import { localDate, type CheckInValues } from './lib/checkin';
+import type { ScenarioId } from './lib/practice';
 
 type AuthState = 'loading' | 'signedOut' | 'signedIn';
 type AuthView = 'login' | 'signup';
@@ -85,29 +94,48 @@ function App() {
   );
 }
 
-function MainApp({ profile, onProfileChange, onSignOut }: { profile: UserRecord; onProfileChange: (profile: UserRecord) => void; onSignOut: () => void }) {
+
+function MainApp({ onSignOut, profile, onProfileChange }: { onSignOut: () => void; profile: UserRecord; onProfileChange:(profile:UserRecord)=>void }) {
   const [screen, setScreen] = useState<Screen>('home');
-  const [userId, setUserId] = useState<string>('');
-
-  useEffect(() => {
-    currentUser().then(user => setUserId(user.userId));
-  }, []);
-
-  if (!userId) return <LoadingSpinner />;
-
-  return (
-    <>
-      <div className="bridge-scroll" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingBottom: '92px', boxSizing: 'border-box' }}>
-        {screen === 'home' && <Home profile={profile} onOpenEvents={() => setScreen('events')} />}
-        {screen === 'circles' && <Circles userId={userId} onOpenDms={() => setScreen('dms')} />}
-        {screen === 'events' && <Events />}
-        {screen === 'practice' && <Practice />}
-        {screen === 'dms' && <Dms userId={userId} onOpenCircles={() => setScreen('circles')} />}
-        {screen === 'me' && <Me profile={profile} onProfileChange={onProfileChange} onSignOut={onSignOut} />}
-      </div>
-      <NavBar currentScreen={screen} onNavigate={setScreen} />
-    </>
-  );
+  const [userId, setUserId] = useState('');
+  const [checkIn, setCheckIn] = useState<CheckInValues | null>(null);
+  const [day, setDay] = useState(localDate());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [circleId, setCircleId] = useState<string>();
+  const [practice, setPractice] = useState<{scenario:ScenarioId;level:1|2}>();
+  const [comfort,setComfort]=useState(false);
+  const [tool, setTool] = useState<SupportTool | null>(null);
+  async function load(retry=false) {
+    if(retry){setLoading(true);setError('');}
+    try {const user=await currentUser();setUserId(user.userId);setCheckIn(await getTodayCheckIn(user.userId));setDay(localDate());}
+    catch(e){setError(e instanceof Error?e.message:'Your check-in could not be loaded.');}
+    finally{setLoading(false);}
+  }
+  useEffect(()=>{void load();},[]);
+  useEffect(()=>{const fresh=()=>{if(localDate()!==day)void load(true);};window.addEventListener('focus',fresh);const timer=setInterval(fresh,60000);return()=>{window.removeEventListener('focus',fresh);clearInterval(timer);};},[day]);
+  function navigate(next:Screen){setTool(null);setScreen(next);if(next==='circles')setCircleId(undefined);if(next==='practice')setPractice(undefined);}
+  let body:ReactNode;
+  if(loading)body=<LoadingSpinner/>;
+  else if(error)body=<ErrorRetry error={error} onRetry={()=>void load(true)}/>;
+  else if(!checkIn)body=<CheckIn firstName={profile.firstName??''} onSave={async values=>{const saved=await saveCheckIn(userId,values);setCheckIn(saved);setDay(localDate());}}/>;
+  else if(comfort)body=<HomeComfort profile={profile} onSaved={onProfileChange} onBack={()=>setComfort(false)}/>;
+  else if(tool)body=<HomeSupport key={tool} tool={tool} onTool={setTool} onBack={()=>setTool(null)}/>;
+  else body=<>
+    {screen === 'home' && <Home profile={profile} checkIn={checkIn} onPractice={(scenario,level)=>{setPractice({scenario,level});setScreen('practice');}} onCircle={id=>{setCircleId(id);setScreen('circles');}} onComfort={()=>setComfort(true)}/>}
+    {screen === 'circles' && <Circles userId={userId} initialCircleId={circleId} onOpenDms={()=>setScreen('dms')}/>}
+    {screen === 'events' && <Events />}
+    {screen === 'practice' && <Practice initialScenario={practice?.scenario} initialLevel={practice?.level}/>}
+    {screen === 'dms' && <Dms userId={userId} onOpenCircles={()=>setScreen('circles')} />}
+    {screen === 'me' && <Me profile={profile} onSignOut={onSignOut} />}
+  </>;
+  return <div className="matched-main">
+    <OnboardingStatusBar/>
+    <div className="main-scroll bridge-scroll" key={tool??screen}>{body}</div>
+    {!loading&&!error&&checkIn&&!tool&&!comfort&&(screen==='home'
+      ?<DashboardNav feeling={checkIn.feeling} onNavigate={navigate} onTool={setTool}/>
+      :<NavBar currentScreen={screen} onNavigate={navigate}/>)}
+  </div>;
 }
 
 export default App;

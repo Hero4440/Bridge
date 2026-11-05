@@ -1,46 +1,20 @@
-// Verifies profile ownership, setup validation, and destructive cleanup behavior.
+// Verifies profile selection never returns another authenticated-readable user's row.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
-  deleteUser: vi.fn(),
-  deleteTrustedContact: vi.fn(),
-  listTrustedContacts: vi.fn(),
-  createTrustedContact: vi.fn(),
-  updateTrustedContact: vi.fn(),
-  removePhoto: vi.fn(),
-}));
+const contactApi = vi.hoisted(() => ({ list: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() }));
+const deleteProfileApi=vi.hoisted(()=>vi.fn());
+const removePhotoApi=vi.hoisted(()=>vi.fn());
+const authApi = vi.hoisted(() => ({ currentUser: vi.fn() }));
 
 vi.mock('aws-amplify/data', () => ({
-  generateClient: () => ({
-    models: {
-      User: { delete: mocks.deleteUser },
-      TrustedContact: {
-        delete: mocks.deleteTrustedContact,
-        list: mocks.listTrustedContacts,
-        create: mocks.createTrustedContact,
-        update: mocks.updateTrustedContact,
-      },
-    },
-  }),
+  generateClient: () => ({ models: { User: {delete:deleteProfileApi}, TrustedContact: contactApi } }),
 }));
-vi.mock('aws-amplify/storage', () => ({ uploadData: vi.fn(), getUrl: vi.fn(), remove: mocks.removePhoto }));
-vi.mock('./auth', () => ({ currentUser: vi.fn() }));
+vi.mock('aws-amplify/storage', () => ({ uploadData: vi.fn(), getUrl: vi.fn(), remove:removePhotoApi }));
+vi.mock('./auth', () => authApi);
 
-import {
-  deleteUserProfile,
-  findOwnedProfile,
-  saveTrustedContact,
-  validateProfileName,
-  validateTrustedContact,
-  type TrustedContactRecord,
-  type UserRecord,
-} from './profile';
+import { deleteUserProfile, validateProfileName, findOwnedProfile, saveTrustedContacts, validateTrustedContact, type UserRecord } from './profile';
 
 const profile = (id: string, owner: string) => ({ id, owner, email: `${id}@example.com` }) as UserRecord;
-
-beforeEach(() => {
-  vi.clearAllMocks();
-});
 
 describe('findOwnedProfile', () => {
   it('selects the signed-in owner even when another readable profile is first', () => {
@@ -50,6 +24,47 @@ describe('findOwnedProfile', () => {
 
   it('returns null when no profile belongs to the signed-in user', () => {
     expect(findOwnedProfile([profile('other', 'other-sub::other-user')], 'my-sub')).toBeNull();
+  });
+  it('accepts the sub-only owner returned by the deployed API', () => {
+    expect(findOwnedProfile([profile('mine', 'my-sub')], 'my-sub')?.id).toBe('mine');
+  });
+});
+
+describe('saving trusted people', () => {
+  const sam = { name: 'Sam', phone: '(480) 555-0142', email: '', relation: 'Other', otherRole: 'Neighbor' } as const;
+  const jordan = { ...sam, name: 'Jordan', relation: 'Sibling', otherRole: '' } as const;
+  beforeEach(() => {
+    vi.resetAllMocks();
+    authApi.currentUser.mockResolvedValue({ userId: 'person-sub' });
+    contactApi.list.mockResolvedValue({ data: [] });
+    contactApi.create.mockResolvedValue({ data: { id: 'saved' } });
+    contactApi.update.mockResolvedValue({ data: { id: 'saved' } });
+    contactApi.delete.mockResolvedValue({ data: { id: 'deleted' } });
+  });
+  it('saves both people with separate stable IDs and preserves the custom relationship', async () => {
+    await saveTrustedContacts([sam, jordan]);
+    expect(contactApi.create.mock.calls.map(([row]) => row)).toEqual([
+      { ...sam, id: 'person-sub-trusted-0', position: 0 },
+      { ...jordan, id: 'person-sub-trusted-1', position: 1 },
+    ]);
+  });
+  it('recovers a partial save without duplicating the first person', async () => {
+    contactApi.list.mockResolvedValue({ data: [{ ...sam, id: 'first-existing', position: 0, createdAt: '2026-11-05' }] });
+    await saveTrustedContacts([sam, jordan]);
+    expect(contactApi.update).toHaveBeenCalledWith(expect.objectContaining({ id: 'first-existing' }));
+    expect(contactApi.create).toHaveBeenCalledTimes(1);
+  });
+  it('stops on a failed write so the parent cannot mark setup complete', async () => {
+    contactApi.create.mockResolvedValueOnce({ data: null, errors: [{ message: 'Denied' }] });
+    await expect(saveTrustedContacts([sam, jordan])).rejects.toThrow('Could not save');
+    expect(contactApi.create).toHaveBeenCalledTimes(1);
+  });
+  it('follows pagination before deciding whether to create a second person', async () => {
+    contactApi.list.mockResolvedValueOnce({ data: [{ id: 'first', position: 0, createdAt: '2026-11-05' }], nextToken: 'next' })
+      .mockResolvedValueOnce({ data: [{ id: 'second', position: 1, createdAt: '2026-11-05' }] });
+    await saveTrustedContacts([sam, jordan]);
+    expect(contactApi.create).not.toHaveBeenCalled();
+    expect(contactApi.update).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -64,41 +79,17 @@ describe('validateTrustedContact', () => {
   });
 });
 
-describe('saveTrustedContact', () => {
-  it('creates a second trusted person instead of overwriting the onboarding contact', async () => {
-    const saved = { id: 'trusted-2', name: 'Alex' } as TrustedContactRecord;
-    mocks.createTrustedContact.mockResolvedValue({ data: saved, errors: undefined });
 
-    await expect(saveTrustedContact({ name: 'Alex', phone: '480-555-0199', email: '', relation: 'Friend' }, undefined, true)).resolves.toBe(saved);
-
-    expect(mocks.listTrustedContacts).not.toHaveBeenCalled();
-    expect(mocks.createTrustedContact).toHaveBeenCalledWith({ name: 'Alex', phone: '480-555-0199', email: '', relation: 'Friend' });
-  });
-});
-
-describe('validateProfileName', () => {
-  it('requires and trims both names', () => {
-    expect(validateProfileName({ firstName: ' Sam ', lastName: ' Lee ' }))
-      .toEqual({ firstName: 'Sam', lastName: 'Lee' });
-    expect(() => validateProfileName({ firstName: 'Sam', lastName: ' ' })).toThrow('Enter your last name');
-  });
-});
-
-describe('deleteUserProfile', () => {
-  it('removes the profile photo and owner-only records', async () => {
-    mocks.removePhoto.mockResolvedValue({});
-    mocks.deleteTrustedContact.mockResolvedValue({ data: {}, errors: undefined });
-    mocks.deleteUser.mockResolvedValue({ data: {}, errors: undefined });
-
-    await deleteUserProfile(
-      { ...profile('mine', 'my-sub::my-user'), photoKey: 'profile-photos/mine.webp' } as UserRecord,
-      [{ id: 'trusted-1' } as TrustedContactRecord, { id: 'trusted-2' } as TrustedContactRecord],
-    );
-
-    expect(mocks.removePhoto).toHaveBeenCalledWith({ key: 'profile-photos/mine.webp' });
-    expect(mocks.deleteTrustedContact).toHaveBeenCalledTimes(2);
-    expect(mocks.deleteTrustedContact).toHaveBeenCalledWith({ id: 'trusted-1' });
-    expect(mocks.deleteTrustedContact).toHaveBeenCalledWith({ id: 'trusted-2' });
-    expect(mocks.deleteUser).toHaveBeenCalledWith({ id: 'mine' });
-  });
+describe('profile names and deletion from main',()=>{
+ it('requires and trims both profile names',()=>{
+  expect(validateProfileName({firstName:' Sam ',lastName:' Lee '})).toEqual({firstName:'Sam',lastName:'Lee'});
+  expect(()=>validateProfileName({firstName:'Sam',lastName:' '})).toThrow('Enter your last name');
+ });
+ it('removes the photo and trusted contact before the profile',async()=>{
+  removePhotoApi.mockResolvedValue({});contactApi.delete.mockResolvedValue({data:{}});deleteProfileApi.mockResolvedValue({data:{}});
+  await deleteUserProfile({...profile('mine','my-sub'),photoKey:'profile-photos/mine.webp'}, {id:'contact-1'} as import('./profile').TrustedContactRecord);
+  expect(removePhotoApi).toHaveBeenCalledWith({key:'profile-photos/mine.webp'});
+  expect(contactApi.delete).toHaveBeenCalledWith({id:'contact-1'},{selectionSet:['id']});
+  expect(deleteProfileApi).toHaveBeenCalledWith({id:'mine'});
+ });
 });

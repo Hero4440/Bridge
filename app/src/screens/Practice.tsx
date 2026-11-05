@@ -10,10 +10,10 @@ import { ErrorRetry } from '../components/ErrorRetry';
 
 type Step = 'picker' | 'setup' | 'conversation' | 'feedback';
 
-export function Practice() {
-  const [step, setStep] = useState<Step>('picker');
-  const [selectedScenario, setSelectedScenario] = useState<ScenarioId | null>(null);
-  const [level, setLevel] = useState<1 | 2 | 3>(1);
+export function Practice({initialScenario,initialLevel=1}:{initialScenario?:ScenarioId;initialLevel?:1|2} = {}) {
+  const [step, setStep] = useState<Step>(initialScenario?'setup':'picker');
+  const [selectedScenario, setSelectedScenario] = useState<ScenarioId | null>(initialScenario??null);
+  const [level, setLevel] = useState<1 | 2 | 3>(initialLevel);
   const [goal, setGoal] = useState('');
   const [userMessage, setUserMessage] = useState('');
   const [partnerReply, setPartnerReply] = useState('');

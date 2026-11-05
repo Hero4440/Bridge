@@ -46,8 +46,36 @@ const schema = a.schema({
       phone: a.string().required(),
       email: a.string(),
       relation: a.enum(['Parent', 'Guardian', 'Sibling', 'Coach', 'Friend', 'Other']),
+      otherRole: a.string(), // Person's own description when relationship is Other.
+      position: a.integer(), // Stable ordering for the two onboarding contact slots.
     })
     .authorization((allow) => [allow.owner()]),
+
+  // Check-ins and weekly intentions are private to the person who created them.
+  CheckIn: a.model({
+    date: a.date().required(),
+    feeling: a.enum(['over', 'okay', 'ready']),
+    upcoming: a.enum(['group', 'text', 'hard', 'none']),
+    hardest: a.enum(['start', 'keep', 'tone', 'disagree', 'leave']),
+  }).authorization((allow) => [allow.owner()]),
+
+  WeeklyGoal: a.model({
+    week: a.date().required(),
+    text: a.string().required(),
+    done: a.boolean().required(),
+    position: a.integer().required(),
+  }).authorization((allow) => [allow.owner()]),
+
+  // A heartbeat represents an actual open circle, never a fabricated activity count.
+  CirclePresence: a.model({
+    userId: a.string().required(),
+    groupId: a.string().required(),
+    lastSeen: a.float().required(),
+    expiresAt: a.integer(),
+  }).authorization((allow) => [
+    allow.ownerDefinedIn('userId').identityClaim('sub'),
+    allow.authenticated().to(['read']),
+  ]),
 
   // DATA-02
   // TODO(phase-5): member-only / DM-participant visibility check (D-08) — a server-side Lambda

@@ -7,6 +7,7 @@ interface CircleGlyphProps {
   kind: CircleKind;
   tint?: string;
   size?: number;
+  color?: string;
 }
 
 const iconPaths: Record<CircleKind, string> = {
@@ -18,7 +19,7 @@ const iconPaths: Record<CircleKind, string> = {
   tech: 'M4 5h16v12H4zM8 21h8M12 17v4M8 10l2 2-2 2M13 14h3',
 };
 
-export function CircleGlyph({ kind, tint, size = 44 }: CircleGlyphProps) {
+export function CircleGlyph({ kind, tint, color, size = 44 }: CircleGlyphProps) {
   const iconSize = size > 40 ? 24 : 20;
 
   return (
@@ -35,7 +36,7 @@ export function CircleGlyph({ kind, tint, size = 44 }: CircleGlyphProps) {
         height={iconSize}
         viewBox="0 0 24 24"
         fill="none"
-        style={{ stroke: 'var(--ink)' }}
+        style={{ stroke: color || 'var(--ink)' }}
         strokeWidth="1.9"
         strokeLinecap="round"
         strokeLinejoin="round"
