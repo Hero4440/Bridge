@@ -4,6 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   deleteUser: vi.fn(),
   deleteTrustedContact: vi.fn(),
+  listTrustedContacts: vi.fn(),
+  createTrustedContact: vi.fn(),
+  updateTrustedContact: vi.fn(),
   removePhoto: vi.fn(),
 }));
 
@@ -11,7 +14,12 @@ vi.mock('aws-amplify/data', () => ({
   generateClient: () => ({
     models: {
       User: { delete: mocks.deleteUser },
-      TrustedContact: { delete: mocks.deleteTrustedContact },
+      TrustedContact: {
+        delete: mocks.deleteTrustedContact,
+        list: mocks.listTrustedContacts,
+        create: mocks.createTrustedContact,
+        update: mocks.updateTrustedContact,
+      },
     },
   }),
 }));
@@ -21,6 +29,7 @@ vi.mock('./auth', () => ({ currentUser: vi.fn() }));
 import {
   deleteUserProfile,
   findOwnedProfile,
+  saveTrustedContact,
   validateProfileName,
   validateTrustedContact,
   type TrustedContactRecord,
@@ -55,6 +64,18 @@ describe('validateTrustedContact', () => {
   });
 });
 
+describe('saveTrustedContact', () => {
+  it('creates a second trusted person instead of overwriting the onboarding contact', async () => {
+    const saved = { id: 'trusted-2', name: 'Alex' } as TrustedContactRecord;
+    mocks.createTrustedContact.mockResolvedValue({ data: saved, errors: undefined });
+
+    await expect(saveTrustedContact({ name: 'Alex', phone: '480-555-0199', email: '', relation: 'Friend' }, undefined, true)).resolves.toBe(saved);
+
+    expect(mocks.listTrustedContacts).not.toHaveBeenCalled();
+    expect(mocks.createTrustedContact).toHaveBeenCalledWith({ name: 'Alex', phone: '480-555-0199', email: '', relation: 'Friend' });
+  });
+});
+
 describe('validateProfileName', () => {
   it('requires and trims both names', () => {
     expect(validateProfileName({ firstName: ' Sam ', lastName: ' Lee ' }))
@@ -71,11 +92,13 @@ describe('deleteUserProfile', () => {
 
     await deleteUserProfile(
       { ...profile('mine', 'my-sub::my-user'), photoKey: 'profile-photos/mine.webp' } as UserRecord,
-      { id: 'trusted-1' } as TrustedContactRecord,
+      [{ id: 'trusted-1' } as TrustedContactRecord, { id: 'trusted-2' } as TrustedContactRecord],
     );
 
     expect(mocks.removePhoto).toHaveBeenCalledWith({ key: 'profile-photos/mine.webp' });
+    expect(mocks.deleteTrustedContact).toHaveBeenCalledTimes(2);
     expect(mocks.deleteTrustedContact).toHaveBeenCalledWith({ id: 'trusted-1' });
+    expect(mocks.deleteTrustedContact).toHaveBeenCalledWith({ id: 'trusted-2' });
     expect(mocks.deleteUser).toHaveBeenCalledWith({ id: 'mine' });
   });
 });
