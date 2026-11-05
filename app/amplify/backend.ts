@@ -9,6 +9,7 @@ import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
+import { storage } from './storage/resource';
 import { preSignUp } from './functions/pre-sign-up/resource';
 import { classify } from './functions/classify/resource';
 import { practice } from './functions/practice/resource';
@@ -20,7 +21,7 @@ import { sendDm } from './functions/sendDm/resource';
 import { respondToRequest } from './functions/respondToRequest/resource';
 import { sendHelpAlert } from './functions/sendHelpAlert/resource';
 
-const backend = defineBackend({ auth, data, preSignUp, classify, practice, tone, preview, reflectReply, dailyTopic, sendDm, respondToRequest, sendHelpAlert });
+const backend = defineBackend({ auth, data, storage, preSignUp, classify, practice, tone, preview, reflectReply, dailyTopic, sendDm, respondToRequest, sendHelpAlert });
 
 // D-05 / AUTH-03: 30-day refresh token so sessions survive a browser refresh.
 const { cfnUserPoolClient } = backend.auth.resources.cfnResources;

@@ -32,6 +32,7 @@ const schema = a.schema({
       comfortTextSize: a.string(),
       comfortCalmMode: a.boolean(),
       comfortTextFirst: a.boolean(),
+      photoKey: a.string(), // S3 key for profile photo (Phase 6 PROFILE-03)
     })
     .authorization((allow) => [allow.owner(), allow.authenticated().to(['read'])]),
 
