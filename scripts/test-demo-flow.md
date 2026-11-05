@@ -10,11 +10,9 @@
 
 - [ ] Start Amplify sandbox: `cd app && npx ampx sandbox`
 - [ ] Start dev server: `cd app && npm run dev`
-- [ ] Copy `app/.env.example` to the gitignored `app/.env` and fill the four `BRIDGE_DEMO_*` values with `example.com` demo accounts
-- [ ] Run seed script from `app/`: `npm run seed:demo`
-- [ ] Confirm output reports 2 users, 5 events, 6 circles, 13 messages, and 6 topics
 - [ ] Open 2 browsers: Chrome + Chrome Incognito
 - [ ] Clear browser data (or use fresh profiles)
+- [ ] Create a separate test account through the app in each browser
 
 ---
 
@@ -100,13 +98,13 @@
 - [ ] See 6 circles (Gaming, Music, Anime, Cooking, Art, Tech)
 - [ ] Tap **Gaming circle**
 - [ ] Daily topic displays at top
-- [ ] Seeded messages appear (if any)
+- [ ] The circle starts empty unless a real user has posted
 - [ ] Type message: **"What's everyone playing?"**
 - [ ] Click **Send**
 - [ ] Message appears in chat immediately
 
 **Browser 2:**
-- [ ] Sign in with the Jordan account configured in `BRIDGE_DEMO_JORDAN_EMAIL`
+- [ ] Sign in with the second account created during setup
 - [ ] Tap **Circles tab**
 - [ ] Tap **Gaming circle**
 - [ ] **Verify:** Browser 1's message "What's everyone playing?" is visible
@@ -126,9 +124,9 @@
 
 **Browser 1:**
 - [ ] Tap **Events tab**
-- [ ] See the 5 seeded events
+- [ ] Create an event through the app
 - [ ] Event cards show: date tile, title, location, RSVP buttons
-- [ ] Tap **"Going"** on "Gaming Night" event
+- [ ] Tap **"Going"** on the event
 - [ ] Button highlights (active state)
 - [ ] Going count updates (X+1)
 - [ ] **Refresh page** (Cmd+R / Ctrl+R)

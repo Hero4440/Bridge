@@ -10,10 +10,9 @@
 ## Setup Before Demo
 
 - [ ] Laptop charged + charger available
-- [ ] Demo account pre-created and tested (or can sign up live)
+- [ ] Test account created through the app and tested (or sign up live)
 - [ ] Amplify sandbox running (`cd app && npx ampx sandbox`)
 - [ ] Dev server running (`cd app && npm run dev`)
-- [ ] Demo data seeded from `app/` (`npm run seed:demo`)
 - [ ] Browser open to http://localhost:5173
 - [ ] Second browser/tab ready for real-time demo (optional)
 - [ ] Backup slides ready (if app crashes)
@@ -50,7 +49,7 @@
 > "Five quick steps: pick interests, meet Mo our AI buddy, set a trusted person, and comfort preferences like themes and text size."
 
 **Option B (Use pre-created account):**
-> "I'll sign in with a demo account so we can jump right to the features..."
+> "I'll sign in with a test account so we can jump right to the features..."
 > 
 > **[Sign in, shows Home screen]**
 > 
