@@ -8,7 +8,6 @@ import {
 import { loadMeActivity, type MeActivity } from '../lib/me';
 import { authSignOut } from '../lib/auth';
 import { themes, themeNames, isThemeName, type ThemeName } from '../lib/theme';
-import { StatusBar } from '../components/StatusBar';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorRetry } from '../components/ErrorRetry';
 import { PersonAvatar } from '../components/PersonAvatar';
@@ -24,7 +23,7 @@ interface MeProps {
 }
 
 const EMPTY_ACTIVITY: MeActivity = {
-  weeks: [], stepsThisWeek: 0, practices: 0, eventsJoined: 0, levelReached: 0, blockedCount: 0,
+  weeks: [], stepsThisWeek: 0, dailyStreak: 0, practices: 0, eventsJoined: 0, levelReached: 0, blockedCount: 0,
   badges: { hello: false, kind: false, breather: false, circle: false, event: false },
 };
 
@@ -155,7 +154,7 @@ export function Me({ profile, onProfileChange, onSignOut }: MeProps) {
   }
 
   async function handleDeleteProfile() {
-    try { setBusy(true); await deleteUserProfile(profile, contacts); await authSignOut(); onSignOut(); }
+    try { setBusy(true); await deleteUserProfile(profile); await authSignOut(); onSignOut(); }
     catch (err) { setNotice(err instanceof Error ? err.message : 'Could not delete profile'); setBusy(false); }
   }
 
@@ -163,13 +162,18 @@ export function Me({ profile, onProfileChange, onSignOut }: MeProps) {
   if (error) return <ErrorRetry error={error} onRetry={loadDetails} />;
 
   function renderBadges(detail = false) {
-    return BADGES.map((badge) => {
+    const earnedBadges = BADGES.map((badge) => {
       const unlocked = activity.badges[badge.key];
       return <div className={detail ? (unlocked ? '' : 'locked') : `badge-tile${unlocked ? '' : ' locked'}`} key={badge.key}>
         <span className={detail ? 'badge-mark' : 'badge-circle'} style={{ background: badge.bg }}><BadgeIcon kind={badge.kind} color={badge.color} /></span>
         <strong className={detail ? '' : 'badge-name'}>{badge.name}</strong>{detail && <small>{unlocked ? badge.detail : 'Not earned yet'}</small>}
       </div>;
     });
+    const streak = <div className={detail ? '' : 'badge-tile'} key="daily-streak">
+      <span className={`${detail ? 'badge-mark' : 'badge-circle'} streak-badge`}><strong>{activity.dailyStreak}</strong></span>
+      <strong className={detail ? '' : 'badge-name'}>Streak</strong>{detail && <small>{activity.dailyStreak === 1 ? '1 day with a brave step' : `${activity.dailyStreak} days with brave steps`}</small>}
+    </div>;
+    return [streak, ...earnedBadges];
   }
 
   let content;
@@ -190,12 +194,12 @@ export function Me({ profile, onProfileChange, onSignOut }: MeProps) {
           <button className="me-list-row settings-row" onClick={() => setView('interests')}><span className="setting-icon">♡</span><span><strong>Interests</strong></span><small>{interests.length} picked</small><b>›</b></button>
           <button className="me-list-row settings-row" onClick={() => setView('privacy')}><span className="setting-icon">♢</span><span><strong>Privacy &amp; safety</strong></span><b>›</b></button>
         </div></section>
-        <section className="account-section"><h2 className="section-title">Account</h2><div className="me-list-card"><button className="me-list-row settings-row" onClick={() => void handleSignOut()} disabled={busy}><span className="setting-icon">↪</span><span><strong>Log out</strong></span></button><button className="me-list-row settings-row account-danger" onClick={() => setConfirmDelete(true)} disabled={busy}><span className="setting-icon">×</span><span><strong>Delete profile</strong><small>Remove your Bridge profile data</small></span></button></div>{confirmDelete && <div className="account-confirm" role="alertdialog"><strong>Delete your Bridge profile?</strong><p>This removes your profile, preferences, trusted people and photo. Your login remains.</p><div><button className="secondary-action" onClick={() => setConfirmDelete(false)}>Keep profile</button><button className="danger-action" onClick={() => void handleDeleteProfile()} disabled={busy}>Delete profile</button></div></div>}</section>
+        <section className="account-section"><h2 className="section-title">Account</h2><div className="me-list-card"><button className="me-list-row settings-row" onClick={() => void handleSignOut()} disabled={busy}><span className="setting-icon">↪</span><span><strong>Log out</strong></span></button><button className="me-list-row settings-row account-danger" onClick={() => setConfirmDelete(true)} disabled={busy}><span className="setting-icon">×</span><span><strong>Delete profile</strong><small>Remove your Bridge profile data</small></span></button></div>{confirmDelete && <div className="account-confirm" role="alertdialog"><strong>Delete your Bridge profile?</strong><p>This removes your profile, preferences, trusted people, photo and badges. Your login, messages and events remain.</p><div><button className="secondary-action" onClick={() => setConfirmDelete(false)}>Keep profile</button><button className="danger-action" onClick={() => void handleDeleteProfile()} disabled={busy}>Delete profile</button></div></div>}</section>
         <div className="me-footer-card">Mo isn't a therapist. Need help now? <strong>Call 988.</strong></div>
       </div>
     </>;
   } else if (view === 'journey') {
-    content = <><SubHeader title="My journey" onBack={() => setView('overview')} /><div className="me-sub-content"><div className="calm-card me-sub-card"><div className="journey-bars">{activity.weeks.map((week, index) => <div className="journey-col" key={week.label}><strong>{week.value}</strong><i style={{ height: `${Math.max(10, Math.round((week.value / maxWeek) * 84))}px`, background: index === 3 ? 'var(--accent)' : 'color-mix(in srgb, var(--accent) 30%, #FFFFFF)' }} /><small>{week.label}</small></div>)}</div><span className="muted-copy">{profile.comfortPlainWords ? 'Steps per week' : 'Brave steps per week'}</span><div className="journey-stats"><div><strong>{activity.practices}</strong><small>practices</small></div><div><strong>{activity.eventsJoined}</strong><small>events joined</small></div><div><strong>{activity.levelReached ? `Level ${activity.levelReached}` : '—'}</strong><small>reached</small></div></div><h2 className="section-title">Badges</h2><div className="badge-grid">{renderBadges(true)}</div><span className="muted-copy no-streaks">No streaks here. Skip a day or a week and nothing resets. Your steps and badges stay yours.</span></div></div></>;
+    content = <><SubHeader title="My journey" onBack={() => setView('overview')} /><div className="me-sub-content"><div className="calm-card me-sub-card"><div className="journey-bars">{activity.weeks.map((week, index) => <div className="journey-col" key={week.label}><strong>{week.value}</strong><i style={{ height: `${Math.max(10, Math.round((week.value / maxWeek) * 84))}px`, background: index === 3 ? 'var(--accent)' : 'color-mix(in srgb, var(--accent) 30%, #FFFFFF)' }} /><small>{week.label}</small></div>)}</div><span className="muted-copy">{profile.comfortPlainWords ? 'Steps per week' : 'Brave steps per week'}</span><div className="journey-stats"><div><strong>{activity.practices}</strong><small>practices</small></div><div><strong>{activity.eventsJoined}</strong><small>events joined</small></div><div><strong>{activity.levelReached ? `Level ${activity.levelReached}` : '—'}</strong><small>reached</small></div></div><h2 className="section-title">Badges</h2><div className="badge-grid">{renderBadges(true)}</div><span className="muted-copy no-streaks">One day with a brave step keeps your streak going. Missing a day never removes earned badges.</span></div></div></>;
   } else if (view === 'trusted') {
     content = <><SubHeader title={selectedContact?.name || 'Trusted person'} onBack={() => setView('overview')} /><div className="me-sub-content"><div className="calm-card me-sub-card person-detail">{!editingContact && selectedContact ? <><PersonAvatar name={selectedContact.name} size={64} tint="var(--soft)" /><h2>{selectedContact.name}</h2><span className="muted-copy">{selectedContact.relation} · {selectedContact.phone}</span><strong>What they receive when you tap I need help</strong><div className="trusted-message">Can you call me when you're free? I'm having a hard time.</div><button className="secondary-action" onClick={() => setEditingContact(true)}>Edit</button></> : <div className="profile-form trusted-form"><label>Their name<input value={contactForm.name} onChange={(event) => setContactForm({ ...contactForm, name: event.target.value })} /></label><label>Phone number<input inputMode="tel" value={contactForm.phone} onChange={(event) => setContactForm({ ...contactForm, phone: event.target.value })} /></label><label>Email (optional)<input type="email" value={contactForm.email} onChange={(event) => setContactForm({ ...contactForm, email: event.target.value })} /></label><span>They are my</span><div className="pill-group">{(['Parent', 'Guardian', 'Sibling', 'Coach', 'Friend', 'Other'] as const).map((relation) => <button key={relation} className={`choice-pill${contactForm.relation === relation ? ' on' : ''}`} aria-pressed={contactForm.relation === relation} onClick={() => setContactForm({ ...contactForm, relation })}>{relation}</button>)}</div><button className="primary-action" disabled={busy} onClick={() => void persistContact()}>Save trusted person</button></div>}</div></div></>;
   } else if (view === 'profile') {
@@ -211,5 +215,5 @@ export function Me({ profile, onProfileChange, onSignOut }: MeProps) {
     content = <><SubHeader title="Privacy & safety" onBack={() => setView('overview')} /><div className="me-sub-content"><div className="calm-card me-sub-card privacy-card"><h2>Who sees what</h2><div><strong>{contacts.map((contact) => contact.name).join(' and ') || 'No trusted person'}</strong><span>Gets your I need help texts</span></div><p className="muted-copy">Your chats, check-ins and pauses are never shared.</p><h2>Blocked people</h2><div><strong>{activity.blockedCount ? `${activity.blockedCount} blocked ${activity.blockedCount === 1 ? 'person' : 'people'}` : 'No blocked people'}</strong></div><h2>Safety rules</h2>{['Never share your address, passwords or money.', 'If someone asks for secrets or money, Mo warns you privately.', 'You can leave, mute or block anyone, anytime.', 'Need help now? Tap Mo, then I need help, or call 988.'].map((rule, index) => <span className="safety-row" key={rule}><b>{index + 1}</b>{rule}</span>)}</div></div></>;
   }
 
-  return <div className="tab-screen"><StatusBar />{content}{notice && <div className="ui-toast" role="status"><span>{notice}</span>{notice !== 'Saved ✓' && <button className="toast-dismiss" onClick={() => setNotice(null)}>Dismiss</button>}</div>}</div>;
+  return <div className="tab-screen">{content}{notice && <div className="ui-toast" role="status"><span>{notice}</span>{notice !== 'Saved ✓' && <button className="toast-dismiss" onClick={() => setNotice(null)}>Dismiss</button>}</div>}</div>;
 }

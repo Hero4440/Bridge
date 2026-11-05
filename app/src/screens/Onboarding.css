@@ -10,7 +10,7 @@
   font: 400 16px Outfit, system-ui, sans-serif;
 }
 .setup-flow *, .setup-flow *::before, .setup-flow *::after { font-family: inherit; }
-.setup-flow .setup-scroll { height:100%; overflow-y:auto; overflow-x:hidden; box-sizing:border-box; padding:44px 0 calc(150px + env(safe-area-inset-bottom)); }
+.setup-flow .setup-scroll { height:100%; overflow-y:auto; overflow-x:hidden; box-sizing:border-box; padding:env(safe-area-inset-top) 0 calc(150px + env(safe-area-inset-bottom)); }
 .setup-flow .onb { min-height:100%; box-sizing:border-box; display:flex; flex-direction:column; padding:16px 22px 22px; gap:18px; }
 .setup-flow .setup-fields { display:contents; margin:0; padding:0; border:0; min-width:0; }
 .setup-flow .onb-top { display:flex; align-items:center; gap:12px; min-height:44px; }

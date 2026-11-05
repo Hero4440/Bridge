@@ -14,6 +14,7 @@ import {
   validateTrustedContact,
   type TrustedContactInput,
 } from "./trustedContacts";
+import { allPages } from "./apiResults";
 export {
   validateTrustedContact,
   type TrustedContactInput,
@@ -38,23 +39,25 @@ export function findOwnedProfile(
   );
 }
 
+function listOwnedProfiles(userId: string): Promise<UserRecord[]> {
+  return allPages((nextToken) => client.models.User.list({
+    filter: {
+      or: [
+        { owner: { eq: userId } },
+        { owner: { beginsWith: `${userId}::` } },
+      ],
+    },
+    nextToken,
+  }));
+}
+
 /**
  * Get current user's profile (owner query, max 1 result).
  * Returns null if no User row exists yet (onboarding not complete).
  */
 export async function getCurrentUserProfile(): Promise<UserRecord | null> {
   const user = await currentUser();
-  const { data, errors } = await client.models.User.list({
-    filter: {
-      or: [
-        { owner: { eq: user.userId } },
-        { owner: { beginsWith: `${user.userId}::` } },
-      ],
-    },
-  });
-  if (errors?.length)
-    throw new Error(`getCurrentUserProfile failed: ${JSON.stringify(errors)}`);
-  return findOwnedProfile(data, user.userId);
+  return findOwnedProfile(await listOwnedProfiles(user.userId), user.userId);
 }
 
 /**
@@ -254,9 +257,18 @@ export function validateProfileName(input: ProfileNameInput) {
 
 export async function deleteUserProfile(
   profile: UserRecord,
-  trustedContacts: readonly TrustedContactRecord[],
 ): Promise<void> {
-  if (profile.photoKey) await remove({ path: profile.photoKey });
+  const { userId } = await currentUser();
+  const [ownedProfiles, trustedContacts, badges] = await Promise.all([
+    listOwnedProfiles(userId),
+    getCurrentTrustedContacts(),
+    allPages((nextToken) => client.models.Badge.list({ nextToken })),
+  ]);
+  if (!ownedProfiles.some(({ id }) => id === profile.id)) ownedProfiles.push(profile);
+
+  for (const photoKey of new Set(ownedProfiles.map(({ photoKey }) => photoKey).filter(Boolean))) {
+    await remove({ path: photoKey! });
+  }
 
   for (const trustedContact of trustedContacts) {
     const { errors } = await client.models.TrustedContact.delete(
@@ -269,7 +281,18 @@ export async function deleteUserProfile(
       );
   }
 
-  const { errors } = await client.models.User.delete({ id: profile.id });
-  if (errors?.length)
-    throw new Error(`delete profile failed: ${JSON.stringify(errors)}`);
+  for (const badge of badges) {
+    const { errors } = await client.models.Badge.delete(
+      { id: badge.id },
+      { selectionSet: ["id"] },
+    );
+    if (errors?.length)
+      throw new Error(`delete badge failed: ${JSON.stringify(errors)}`);
+  }
+
+  for (const ownedProfile of ownedProfiles) {
+    const { errors } = await client.models.User.delete({ id: ownedProfile.id });
+    if (errors?.length)
+      throw new Error(`delete profile failed: ${JSON.stringify(errors)}`);
+  }
 }

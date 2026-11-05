@@ -4,7 +4,6 @@
 // Links to Signup screen (to be added). Implements FRONTEND-02.
 import { useState } from 'react';
 import { authSignIn } from '../lib/auth';
-import { StatusBar } from '../components/StatusBar';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
 interface LoginProps {
@@ -36,7 +35,6 @@ export function Login({ onSignedIn, onSwitchToSignup }: LoginProps) {
 
   return (
     <div className="onb onb-center">
-      <StatusBar />
       <div className="onb-body">
         <span className="onb-brand">BRIDGE</span>
         <h1 className="onb-title">Welcome back</h1>

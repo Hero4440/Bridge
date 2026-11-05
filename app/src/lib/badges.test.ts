@@ -9,7 +9,7 @@ vi.mock('aws-amplify/data', () => ({
 }));
 vi.mock('./auth', () => authApi);
 
-import { awardBadge, listEarnedBadgeKeys } from './badges';
+import { awardBadge, countBadgeSteps, listEarnedBadgeKeys } from './badges';
 
 describe('badges', () => {
   beforeEach(() => {
@@ -37,5 +37,16 @@ describe('badges', () => {
   it('returns only recognized earned badge keys', async () => {
     badgeApi.list.mockResolvedValue({ data: [{ key: 'breather' }, { key: 'unknown' }], nextToken: null });
     await expect(listEarnedBadgeKeys()).resolves.toEqual(['breather']);
+  });
+
+  it('counts badge-backed actions once and leaves Kind Words to its practice run', () => {
+    const start = new Date('2026-11-02T00:00:00');
+    const end = new Date('2026-11-09T00:00:00');
+    expect(countBadgeSteps([
+      { key: 'hello', earnedAt: '2026-11-04T12:00:00Z' },
+      { key: 'circle', earnedAt: '2026-11-04T12:01:00Z' },
+      { key: 'kind', earnedAt: '2026-11-04T12:02:00Z' },
+      { key: 'event', earnedAt: '2026-11-04T12:03:00Z' },
+    ], start, end)).toBe(2);
   });
 });
