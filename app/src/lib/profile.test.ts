@@ -87,7 +87,7 @@ describe('profile names and deletion from main',()=>{
  });
  it('removes the photo and trusted contact before the profile',async()=>{
   removePhotoApi.mockResolvedValue({});contactApi.delete.mockResolvedValue({data:{}});deleteProfileApi.mockResolvedValue({data:{}});
-  await deleteUserProfile({...profile('mine','my-sub'),photoKey:'profile-photos/mine.webp'}, {id:'contact-1'} as import('./profile').TrustedContactRecord);
+  await deleteUserProfile({...profile('mine','my-sub'),photoKey:'profile-photos/mine.webp'}, [{id:'contact-1'} as import('./profile').TrustedContactRecord]);
   expect(removePhotoApi).toHaveBeenCalledWith({key:'profile-photos/mine.webp'});
   expect(contactApi.delete).toHaveBeenCalledWith({id:'contact-1'},{selectionSet:['id']});
   expect(deleteProfileApi).toHaveBeenCalledWith({id:'mine'});

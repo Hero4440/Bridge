@@ -20,3 +20,24 @@ Okay for that AI prompt write my name - Dhyey
 I added one src folder so first commit anf push that by making my branch
 ```
 
+
+## BRIDGE-COMMUNITY-IDEAS: Circle and private-message context templates
+Purpose: optional, editable conversation ideas requested by the person. Type: template. Model: the existing Preview Lambda's Haiku inference profile (`CLASSIFY_MODEL_ID`). Used in `app/amplify/functions/preview/prompts.ts`, `app/src/screens/Circles.tsx`, and `app/src/screens/Dms.tsx`.
+Variables: {circleName}, {topic}, {latestMessage}; only the latest incoming message, limited to 1,600 characters, is used for DM ideas. No conversation context is saved as an AI transcript. Guardrails: existing `PREVIEW_SYSTEM`, no invented shared experiences, ideas never auto-send, and visible wording explains what Mo uses. Last changed 2026-11-05 by Dhyey: real community screens now call the existing suggestion endpoint.
+
+Circle context:
+```text
+Give an optional conversation starter for the {circleName} circle. Today’s topic: {topic}
+```
+
+DM reply context:
+```text
+Suggest optional short replies to this message. Do not invent shared experiences: {latestMessage}
+```
+
+DM opener context when there is no incoming message:
+```text
+Offer a short optional friendly opener for a private conversation. Do not assume facts about the other person.
+```
+
+Verification: live two-account message/request delivery, private access checks, user-controlled tone rewrites/send decisions, and unsafe/crisis routing. System prompt and generation guardrails are unchanged.

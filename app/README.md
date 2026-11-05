@@ -56,3 +56,56 @@ Run `npm test`, `npm run lint`, and `npm run build` from this directory. After d
 the development sandbox and generating `amplify_outputs.json`, run
 `npx tsx scripts/verify-dashboard.ts` for live persistence and two-account access checks.
 It creates fictional accounts and deletes their records and accounts afterward.
+
+## Circles, Events, and private messages
+
+Circles and Messages share the Make segmented header and three-tab navigation.
+Circle membership, mute preferences, and read markers are stored in DynamoDB.
+Reading mode does not send or join automatically. All chat streams use AppSync
+subscriptions, and Mo suggestions stay editable until the person taps Send.
+
+`Message` now contains open-circle chat only. `DirectMessage` is readable only by
+its two participants. Message requests and contacts have participant/owner-only
+reads, and trusted Lambdas enforce acceptance, blocks, sender identity, retry
+IDs, and event capacity. Profile emails, last names, interests, and comfort
+preferences have field-level owner authorization; public lookups select only
+first names and photo references.
+
+Events include a three-step creator, real meeting details/links, calendar export,
+RSVPs, private saved preparation, and private reflection. The RSVP action uses a
+DynamoDB transaction so two people cannot take the last place. EventBridge runs
+an idempotent reminder Lambda each minute. Invitations and chosen event sharing
+create real private notifications; no SMS or meeting links are fabricated.
+
+Use a personal sandbox, for example `npx ampx sandbox --identifier dhyey --once`.
+The local `amplify_outputs.json` selects that sandbox's real backend and is never
+committed. Personal sandboxes have independent Cognito users and data; accounts
+from the shared sandbox are not copied. Budget names are unique per backend,
+while the original `hero4440` sandbox keeps its existing `bridge-monthly` guard.
+
+Live verification (from `app/`, with generated outputs):
+
+```sh
+BRIDGE_VERIFICATION_CLEANUP=/tmp/bridge-community-cleanup.json npx tsx scripts/verify-community.ts
+python3 scripts/cleanup-community-verification.py /tmp/bridge-community-cleanup.json
+```
+
+The first command creates three fictional accounts and checks requests,
+participant isolation, blocks, trusted circle sends, invitations, concurrent
+last-place RSVPs, and real scheduled reminders. Cleanup needs maintainer AWS
+credentials because read-only client models intentionally cannot delete server
+records. It deletes only records owned by the listed fictional accounts.
+
+The legacy migration is reviewable without writes:
+`npx tsx scripts/migrate-community.ts --api-id <development-api-id>`.
+Add `--apply` only with the matching schema deployed: it transactionally copies
+DM history into private storage before removing public copies, and aligns old
+circle slugs with actual Group IDs. It prints counts, never message bodies.
+
+During this change, another deployment repeatedly removed the shared sandbox's
+new models. The five legacy DMs were recovered from DynamoDB's automatic backup
+into `BridgeCommunityDmRecovery20261105` in `us-east-1`. Their count was verified;
+the recovery table has deletion protection and point-in-time recovery enabled.
+It is an IAM-only recovery copy, outside the changing shared stack. Preserve it
+until the team restores the matching private-message schema and reconciles the
+history under the original Cognito identities.
