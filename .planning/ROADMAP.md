@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Events & Persistence** - Event CRUD, RSVP tracking, prep checklists, reflections (completed 2026-11-04)
 - [x] **Phase 4: Real-Time Chat** - Circle subscriptions, message history, reconnection logic, contact system (completed 2026-11-04)
 - [x] **Phase 5: Safety & Direct Messages** - Classification, message requests, crisis detection, help notifications (completed 2026-11-04)
-- [ ] **Phase 6: Profile & Frontend Integration** - Profile persistence, frontend API client, loading/error states
+- [x] **Phase 6: Profile & Frontend Integration** - Profile persistence, frontend API client, loading/error states (completed 2026-11-04)
 - [ ] **Phase 7: Quality & Testing** - TypeScript strict mode, accessibility audit, bias probe, 2-account testing
 - [ ] **Phase 8: Production Deployment** - Production app, secrets config, deploy rehearsal, demo prep
 
@@ -114,10 +114,15 @@ Plans:
   3. Profile photo upload saves to S3 with size/MIME validation
   4. Frontend shows loading states during all API calls (spinner, skeleton, "loading...")
   5. Frontend shows error states on API failures with retry button and clear error message
-**Plans**: TBD
+**Plans**: 6 (completed 2026-11-04)
 
 Plans:
-- TBD (populated during plan-phase)
+- 01: Schema + Profile Lib — User.photoKey, S3 storage, CRUD operations, photo upload (PROFILE-01/02/03/04)
+- 02: UI Components — Mo, Avatar, Glyph, Loading, Error, Empty, NavBar (FRONTEND-05)
+- 03: Auth Flow — Login, Signup, 5-step Onboarding (FRONTEND-01/02)
+- 04: Home + Me screens — Event list, profile display, sign out (FRONTEND-03/04)
+- 05: Circles + Events screens — Live chat, RSVP functionality (FRONTEND-06/07/08)
+- 06: DMs screen + Final Integration — Message requests, threads, all navigation complete (FRONTEND-06)
 
 ### Phase 7: Quality & Testing
 **Goal**: App meets accessibility standards, TypeScript strict mode enabled, and bias validation complete
@@ -163,6 +168,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 | 3. Events & Persistence | 5/5 | Complete   | 2026-11-04 |
 | 4. Real-Time Chat | 4/4 | Complete   | 2026-11-04 |
 | 5. Safety & Direct Messages | 4/4 | Complete   | 2026-11-04 |
-| 6. Profile & Frontend Integration | 0/0 | Not started | - |
+| 6. Profile & Frontend Integration | 6/6 | Complete   | 2026-11-04 |
 | 7. Quality & Testing | 0/0 | Not started | - |
 | 8. Production Deployment | 0/0 | Not started | - |
