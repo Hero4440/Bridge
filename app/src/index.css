@@ -151,8 +151,9 @@ button:active{transform:scale(.97)}
 .account-section .settings-row:nth-child(1){--figma-setting-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 5H5v14h4M13 8l4 4-4 4M17 12H8'/%3E%3C/svg%3E")}.account-section .settings-row:nth-child(2){--figma-setting-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13'/%3E%3C/svg%3E")}
 .inner-header .inner-back svg{width:20px;height:20px}
 .comfort-card .segmented-row:has(.segments button:last-child.on)>span{color:var(--accent);font-weight:600}.comfort-card .segmented-row:has(.segments button:last-child.on)>span:after{content:" · On"}
-/* shortcut: Chatting is the second-last segmented row; add a class if the Comfort row order changes. */
-.comfort-card>.segmented-row:nth-last-of-type(2){display:none}
+/* Text-only support keeps the unused Chatting preference out of the UI. */
+.setup-flow .comfort-card>.segmented-row:last-of-type,
+.me-sub-content .comfort-card>.segmented-row:nth-last-of-type(2){display:none}
 /* First-time setup */
 .onb{min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;padding:16px 22px 22px;gap:18px}
 .onb-top{display:flex;align-items:center;gap:12px;min-height:44px}

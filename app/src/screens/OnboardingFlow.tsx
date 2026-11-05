@@ -157,7 +157,7 @@ export function OnboardingFlow({ onSave }: { onSave: (values: OnboardingValues) 
               {calmMode && <div className="calm-preview"><Mo mood="calm" size={20} /><span>Animations off · Quieter layout</span></div>}
               <div className="segmented-row"><span>Chatting</span><Segments label="Chatting" value={!textFirst} labels={['Text first', 'Voice is okay']} onChange={(value) => setTextFirst(!value)} /></div>
             </div>
-            <div className="setup-note"><Mo mood="calm" size={40} /><span>Calm mode turns off moving animations. Text first means circles and events start in text, and voice is always optional.</span></div>
+            <div className="setup-note"><Mo mood="calm" size={40} /><span>Calm mode turns off moving animations. Bridge uses text here, so you can take your time.</span></div>
             <h2 className="section-title setup-safety-title">A few safety rules</h2>
             <div className="onb-card">
               <span className="safety-row"><b>1</b>Never share your address, passwords or money.</span>
