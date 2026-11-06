@@ -4,10 +4,22 @@ Bridge helps neurodivergent young adults practice everyday conversations and fee
 more prepared to connect with people. Mo, an AI buddy, offers practice and
 suggestions while the person stays in control.
 
+![Meet Bridge](submission/meet-bridge.jpeg)
+
 **[Open Bridge](https://main.d36gmcisbn28tb.amplifyapp.com)** — create an account to get started.
 
 Built for the **North American AI Challenge for Neurodiverse Learning**, in
 partnership with **First Place AZ**.
+
+## Links
+
+- [Live app](https://main.d36gmcisbn28tb.amplifyapp.com)
+- [Source code](https://github.com/Hero4440/Bridge)
+- [Local setup and verification](app/README.md)
+- [Deployment runbook](docs/DEPLOYMENT.md)
+- [AI integration guide](docs/AI_INTEGRATION.md)
+- [Figma/design brief](idea/Idea%201%20-%20Bridge.md)
+- [Research and original brief](idea/Idea%201%20-%20Bridge.md#2-primary-research-partner-visits-n--2-visits-our-own-notes)
 
 ## What Bridge does
 
