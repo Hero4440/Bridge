@@ -9,19 +9,22 @@ suggestions while the person stays in control.
 Built for the **North American AI Challenge for Neurodiverse Learning**, in
 partnership with **First Place AZ**.
 
-## What you can do
+## What Bridge does
 
-- **Practice:** rehearse social situations with Mo and get feedback on your own goal.
-- **Connect:** join interest circles, chat, and get optional reply ideas or tone checks.
-- **Prepare:** see event details, plan ahead, and reflect afterward.
-- **Feel comfortable:** use daily check-ins, breathing tools, themes, and text settings.
+Bridge is an AI social coach for autistic and neurodivergent young adults, built with First Place AZ, who told us their residents want help socializing.
 
-Mo suggests words; you decide what to send.
+- **Daily check-in:** how I feel, what's coming up, and what I'd like help with (meeting new people, staying close to people I know, handling tricky moments, or talking at work or school). Home and today's practice follow the answer, and on overwhelmed days Home shows just one small thing.
+- **Practice with Mo:** role-play real moments, including catching up with a friend, fixing a misunderstanding and asking a boss for help, at three levels (Guided, Light help, On your own) where support fades as skills grow. Every level has a box to answer in your own words.
+- **My people:** family, roommates and coworkers the user already knows, with a gentle nudge to say hi in their own words.
+- **Interest circles:** small groups with a daily topic, where reading without posting counts.
+- **Messages:** a tone check before sending explains why something might sound harsh, and the user can still send it. Mo's reply ideas stay hidden until asked for, and the user can turn Mo's help down from Lots to When I ask.
+- **Events:** people, sound and lighting shown before you go, a prep checklist, a breather, and a short reflection after.
+- **Comfort and control:** calm color themes, large text, calm mode, plain words, and a trusted person who sees only what the user chooses.
 
 ## How we built it
 
-First Place AZ visits, research, and conversations with Josh Munoz informed the
-app. We designed the flows in Figma and built the web app with React and Vite.
+First Place AZ visits, [research and the original brief](idea/Idea%201%20-%20Bridge.md),
+and conversations with Josh Munoz informed the app. We designed the flows in Figma and built the web app with React and Vite.
 AWS handles sign-in, messages, storage, and reminders. Mo uses Claude through
 Amazon Bedrock.
 
