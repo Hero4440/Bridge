@@ -1,4 +1,4 @@
-# Bridge: Master Brief (everything we discussed)
+# Bridge: Master Brief
 
 **Team:** Ctrl Alt Elite | **Challenge:** North American AI Challenge for Neurodiverse Learning | **Prepared:** Mon Nov 2, 2026
 **Decision:** The team is going with **Bridge** ("Preview. Practice. Go.")
