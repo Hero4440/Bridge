@@ -38,7 +38,7 @@ Bridge is an AI social coach for autistic and neurodivergent young adults, built
 
 ## How we built it
 
-- **Research:** partner visits and a meeting with First Place AZ, the challenge kickoff, and a review of existing apps.
+- **Research:** partner visits and a meeting with First Place AZ, the challenge kickoff, and a review of existing apps [idea/Idea 1 - Bridge.md](idea/Idea 1 - Bridge.md).
 - **Design:** information architecture and user flows in Figma, iterated with teammate comments.
 - **Design prototype:** React (`figma-make/src/App.tsx`, `index.css`) built and previewed in Figma Make. It runs on rule-based logic with no API key, so the design can be clicked through anywhere. Partner feedback from Josh Munoz at First Place AZ shaped the latest round: user-chosen goals, My people, fading reply ideas, and a calmer warm color system.
 - **Production app:** `app/` is a React + Vite app on AWS Amplify Gen 2 (Cognito sign-in, DynamoDB, Lambda). See [app/README.md](app/README.md).
