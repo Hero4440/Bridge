@@ -45,6 +45,42 @@ Bridge is an AI social coach for autistic and neurodivergent young adults, built
 - **Live deployment:** the production app is [main.d36gmcisbn28tb.amplifyapp.com](https://main.d36gmcisbn28tb.amplifyapp.com). Merges to `main` redeploy it; see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the runbook.
 - **AI in the product:** in the production app, Mo runs on Claude through Amazon Bedrock from Lambda functions: Sonnet 4.5 plays the practice partner and gives one strength and one tip; Haiku 4.5 checks tone, suggests reply ideas and classifies messages for safety. Model output is validated, handlers provide fallback text on model failure, and suggestions never send a message for the user. Practice, Mo chat, tone, and reply ideas use a per-user rate limit; see [AI integration](docs/AI_INTEGRATION.md) for the handler-specific controls and retained context. Prompts live in `app/amplify/functions/*/prompts.ts`; access uses AWS IAM roles, so no keys are stored in the repo.
 
+## Architecture
+
+The production app uses Amplify Gen 2 infrastructure defined in
+[`app/amplify/backend.ts`](app/amplify/backend.ts). This diagram shows the current
+service boundaries; the Figma Make prototype is separate from this runtime.
+
+```mermaid
+flowchart TD
+    hosting["AWS Amplify Hosting"] --> web["React and Vite web app"]
+    web -->|"Sign up and sign in"| auth["Amazon Cognito"]
+    auth -->|"Pre-sign-up trigger"| signup["Lambda: auto-confirm signup"]
+    web <-->|"Authenticated queries, mutations, subscriptions"| api["AWS AppSync"]
+    web <-->|"Authorized profile photo access"| photos["Amazon S3"]
+    api <-->|"Model operations and live updates"| data[("DynamoDB app tables")]
+    api -->|"Custom operations"| actions["Lambda: community, DMs, requests, help"]
+    api -->|"AI queries"| ai["Lambda: practice, Mo chat, tone, preview, classification, reflection, topics"]
+    actions <-->|"Authorized reads and writes"| data
+    ai <-->|"Practice memory and topic cache"| data
+    actions -->|"Message safety checks"| classify["Shared classifier: keywords then model"]
+    ai -->|"Practice, Mo chat, and classification paths"| classify
+    classify --> bedrock["Amazon Bedrock: Claude Sonnet and Haiku"]
+    ai -->|"Converse API via IAM roles"| bedrock
+    actions -->|"Selected handlers"| limits[("DynamoDB rate counters with TTL")]
+    ai -->|"Practice, Mo chat, tone, preview"| limits
+    schedule["Amazon EventBridge: every minute"] --> reminders["Lambda: event reminders"]
+    reminders <-->|"Events, RSVPs, private notifications"| data
+```
+
+AppSync authenticates app requests with Cognito. Model authorization rules and
+custom Lambda checks control data access. AI calls stay on the server, use
+validated structured output, and return scripted fallbacks on model failure.
+Rate limits and safety checks vary by handler; see
+[AI integration](docs/AI_INTEGRATION.md) for the exact controls, context, and
+practice-memory persistence. Deployment details are in
+[the deployment runbook](docs/DEPLOYMENT.md).
+
 ## AI disclosure
 
 We used AI tools while building Bridge, with a person reviewing every change:
