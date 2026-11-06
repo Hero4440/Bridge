@@ -83,7 +83,6 @@ type PracticeRequest = {
   goal: string;
   message?: string;
   history?: string;
-  transcript?: string;
   personalContext?: string;
 };
 
@@ -93,13 +92,6 @@ export function buildPracticeHistory(messages: readonly PracticeMessage[]): stri
     .map(({ role, text }) => `${role === 'partner' ? 'Practice partner' : 'User'}: ${text.slice(0, 500)}`)
     .join('\n')
     .slice(0, 3600);
-}
-
-export function buildPracticeTranscript(messages: readonly PracticeMessage[]): string {
-  return messages
-    .map(({ role, text }) => `${role === 'partner' ? 'Practice partner' : 'User'}: ${text}`)
-    .join('\n')
-    .slice(0, 12000);
 }
 
 async function requestPractice(args: PracticeRequest): Promise<PracticeReply> {
@@ -148,10 +140,9 @@ export async function finishPractice(
   level: 1 | 2 | 3,
   goal: string,
   history: string,
-  transcript: string,
   personalContext?: string,
 ) {
-  const reply = await requestPractice({ mode: 'finish', scenarioId, level, goal, history, transcript, personalContext });
+  const reply = await requestPractice({ mode: 'finish', scenarioId, level, goal, history, personalContext });
   if (!reply.crisis && (scenarioId === 'disagree' || scenarioId === 'repair')) awardBadgeAfter('kind');
   return reply;
 }

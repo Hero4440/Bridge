@@ -293,22 +293,12 @@ export function Circles({
           <small>{topics[selected] || circle?.description}</small>
         </div>
         <button
-          className="round-back"
+          className="circle-safety-trigger"
           aria-label="Safety options"
           aria-expanded={menu}
           onClick={() => setMenu((v) => !v)}
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            aria-hidden="true"
-          >
-            <path d="M12 3 5 6v5c0 4.6 2.8 8.2 7 10 4.2-1.8 7-5.4 7-10V6l-7-3Z" />
-          </svg>
+          Safety
         </button>
       </div>
       <CommunityNotice

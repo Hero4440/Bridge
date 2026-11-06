@@ -1,4 +1,4 @@
-// Verifies MoChat can use the user's owner-scoped saved practice transcript.
+// Verifies MoChat can use the user's owner-scoped saved practice feedback memory.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { listPracticeRuns } = vi.hoisted(() => ({
@@ -7,7 +7,7 @@ const { listPracticeRuns } = vi.hoisted(() => ({
     scenarioId: string;
     level: number;
     goal: string;
-    transcript: string;
+    feedback: string;
   }> }> => ({ data: [] })),
 }));
 
@@ -32,14 +32,14 @@ import { converseWithTool } from '../../shared/bedrock';
 beforeEach(() => vi.clearAllMocks());
 
 describe('moChat handler', () => {
-  it('passes recent saved practice transcripts to the model as context', async () => {
+  it('passes recent saved practice feedback memory to the model as context', async () => {
     listPracticeRuns.mockResolvedValueOnce({
       data: [{
         createdAt: '2026-11-05T10:00:00.000Z',
         scenarioId: 'join',
         level: 2,
         goal: 'introduce myself clearly',
-        transcript: 'Practice partner: What brings you here?\nUser: I am new here.',
+        feedback: JSON.stringify({ memory: 'The person practiced a clear introduction.', strength: 'Clear goal', tip: 'Ask one follow-up question.' }),
       }],
     });
     vi.mocked(classify).mockResolvedValue({ label: 'safe', confidence: 0.9, fallback: false });
@@ -53,7 +53,7 @@ describe('moChat handler', () => {
     expect(result).toMatchObject({ reply: 'You practiced introducing yourself at Level 2.', fallback: false });
     expect(listPracticeRuns).toHaveBeenCalledWith(expect.objectContaining({ filter: { userId: { eq: 'user-1' } } }));
     expect(converseWithTool).toHaveBeenCalledWith(expect.objectContaining({
-      message: expect.stringContaining('I am new here.'),
+      message: expect.stringContaining('practiced a clear introduction'),
     }));
   });
 });

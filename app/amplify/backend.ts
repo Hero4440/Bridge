@@ -71,6 +71,18 @@ const { cfnUserPoolClient } = backend.auth.resources.cfnResources;
 cfnUserPoolClient.refreshTokenValidity = 30;
 cfnUserPoolClient.tokenValidityUnits = { refreshToken: "days" };
 
+// Keep signup approachable: eight characters are still required, but users do not
+// need to invent uppercase letters or numbers just to make an account.
+backend.auth.resources.cfnResources.cfnUserPool.policies = {
+  passwordPolicy: {
+    minimumLength: 8,
+    requireLowercase: false,
+    requireUppercase: false,
+    requireNumbers: false,
+    requireSymbols: false,
+  },
+};
+
 // D-06: $50/month cost guard with email alerts at 50/80/100% ACTUAL spend.
 // Plain team email — config, not a secret. (Public repo: swap for a shared alias if preferred.)
 const budgetStack = backend.createStack("BudgetStack");

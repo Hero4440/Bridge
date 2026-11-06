@@ -9,8 +9,9 @@ Decided in Phase 1 (see `.planning/phases/01-foundation-authentication/01-CONTEX
 - **Region:** us-east-1 (single region for all AWS services + Bedrock).
 - **Auth:** Cognito email + password only, no email verification (pre-sign-up
   Lambda auto-confirms test accounts). Profile data lives in the User DynamoDB model.
-- **Schema:** all 9 models defined together (User, Message, Event, RSVP, PracticeRun,
-  Reflection, Contact, GuardianLink, Notification).
+- **Schema:** the production data models are defined together in one Amplify schema,
+  including profiles, circles, messages, events, RSVPs, practice memory, reflections,
+  contacts, guardian links, notifications, and safety records.
 - **Budget:** $50/month, alerts at 50/80/100%.
 
 ## Planned layout
@@ -19,8 +20,8 @@ Decided in Phase 1 (see `.planning/phases/01-foundation-authentication/01-CONTEX
 app/
 ├── amplify/
 │   ├── auth/            # Cognito (no groups), pre-sign-up auto-confirm trigger
-│   ├── data/            # 9-model schema + authorization rules
-│   ├── functions/       # Lambda endpoints (practice, tone, preview, classify) — Phase 2
+│   ├── data/            # production schema + authorization rules
+│   ├── functions/       # Lambda endpoints for practice, safety, community, events and Mo
 │   ├── shared/
 │   │   └── config.ts    # region (us-east-1) + model id constants
 │   └── backend.ts       # IAM least-privilege, Budgets, CDK overrides
@@ -32,8 +33,8 @@ app/
 
 SKILL.md's `amplify/...` and `src/...` paths are rooted here (prefix with `app/`).
 
-> Scaffolding happens during Phase 1 execution (`/gsd-plan-phase 1` → `/gsd-execute-phase 1`).
-> This folder is a placeholder until then.
+The production build is implemented under this directory. The Figma Make export remains
+the clickable design prototype; it is not the production runtime.
 
 
 ## Daily check-in and Home

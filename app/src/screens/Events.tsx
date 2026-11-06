@@ -1,5 +1,5 @@
 // Real event index, Make details/preparation/reflection, and the three-step create flow.
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { OnboardingMo as Mo } from "../components/OnboardingMo";
 import { CircleGlyph, type CircleKind } from "../components/CircleGlyph";
 import { MapThumb } from "../components/MapThumb";
@@ -88,6 +88,11 @@ export function Events({
   const [busy, setBusy] = useState(false);
   const [retry, setRetry] = useState(0);
   const online = useOnline();
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
   useEffect(() => {
     let alive = true;
     async function load() {
@@ -120,8 +125,8 @@ export function Events({
       alive = false;
       contacts.unsubscribe();
     };
-  }, [retry]);
-  async function loadDetails(id: string) {
+  }, [retry, userId]);
+  const loadDetails = useCallback(async (id: string) => {
     const [state, event] = await Promise.all([
       loadEventState(userId, id),
       getEvent(id),
@@ -133,7 +138,7 @@ export function Events({
     setReflection(state.reflection);
     setFeeling((state.reflection?.feeling as Feeling) ?? null);
     setWins((state.reflection?.wins ?? []).filter((s): s is string => !!s));
-  }
+  }, [userId]);
   useEffect(() => {
     if (!selected) return;
     let alive = true;
@@ -154,7 +159,7 @@ export function Events({
     return () => {
       alive = false;
     };
-  }, [selected, retry]);
+  }, [loadDetails, retry, selected]);
   function open(id: string) {
     setSelected(id);
     setNotice("");
@@ -323,7 +328,7 @@ export function Events({
           />
         </div>
       );
-    const past = !!event.whenAt && eventEnd(event) <= Date.now();
+    const past = !!event.whenAt && eventEnd(event) <= now;
     const mine = rsvps.find((r) => r.userId === userId)?.status;
     const attendees = rsvps.filter((r) => r.status === "going");
     const count = event.goingCount ?? attendees.length;
@@ -699,8 +704,8 @@ export function Events({
       (e) =>
         filter === "all" ||
         (filter === "past"
-          ? eventEnd(e) > 0 && eventEnd(e) <= Date.now()
-          : !e.whenAt || eventEnd(e) > Date.now()),
+          ? eventEnd(e) > 0 && eventEnd(e) <= now
+          : !e.whenAt || eventEnd(e) > now),
     )
     .sort((a, b) =>
       filter === "past"

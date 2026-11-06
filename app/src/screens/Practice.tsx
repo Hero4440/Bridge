@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   buildPracticeHistory,
-  buildPracticeTranscript,
   finishPractice,
   practiceTurn,
   SCENARIOS,
@@ -68,6 +67,7 @@ export function Practice({ initialScenario, initialLevel = 1, personalContext, o
   const [hintVisible, setHintVisible] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [finishing, setFinishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const composerRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -87,6 +87,7 @@ export function Practice({ initialScenario, initialLevel = 1, personalContext, o
     setHint('');
     setHintVisible(false);
     setShowComposer(false);
+    setFinishing(false);
     setError(null);
   };
 
@@ -102,6 +103,7 @@ export function Practice({ initialScenario, initialLevel = 1, personalContext, o
     if (!selectedScenario || goal.trim().length < 5) return;
     setStep('conversation');
     setLoading(true);
+    setFinishing(false);
     setError(null);
     setMessages([]);
     try {
@@ -125,6 +127,7 @@ export function Practice({ initialScenario, initialLevel = 1, personalContext, o
   const handleSendMessage = async () => {
     if (!userMessage.trim() || !selectedScenario) return;
     setLoading(true);
+    setFinishing(false);
     setError(null);
     try {
       const sent = userMessage.trim();
@@ -149,9 +152,10 @@ export function Practice({ initialScenario, initialLevel = 1, personalContext, o
   const handleFinishPractice = async () => {
     if (!selectedScenario || userTurnCount < 1) return;
     setLoading(true);
+    setFinishing(true);
     setError(null);
     try {
-      const result = await finishPractice(selectedScenario, level, goal.trim(), buildPracticeHistory(messages), buildPracticeTranscript(messages), personalContext);
+      const result = await finishPractice(selectedScenario, level, goal.trim(), buildPracticeHistory(messages), personalContext);
       if (result.crisis) return handleCrisis();
       if (result.rateLimited) return setError('Mo needs a short break. Please try again in a minute.');
       setStrength(result.strength);
@@ -162,6 +166,7 @@ export function Practice({ initialScenario, initialLevel = 1, personalContext, o
       setError('Mo could not prepare your feedback. Please try again.');
     } finally {
       setLoading(false);
+      setFinishing(false);
     }
   };
 
@@ -232,7 +237,7 @@ export function Practice({ initialScenario, initialLevel = 1, personalContext, o
           </div>)}
           {loading && userMessage.trim() && <div className="message own rise"><div className="message-bubble">{userMessage.trim()}</div></div>}
         </div>
-        {loading && <div className="practice-loading"><LoadingSpinner size={36} /><p>{messages.length ? `${partnerName} is typing…` : 'Starting your practice…'}</p></div>}
+        {loading && <div className="practice-loading"><LoadingSpinner size={36} /><p>{finishing ? 'Preparing your feedback…' : messages.length ? `${partnerName} is typing…` : 'Starting your practice…'}</p></div>}
         {!loading && error && <ErrorRetry error={error} onRetry={messages.length ? () => setError(null) : () => void handleStartPractice()} />}
         {!loading && !error && composing && hint && (level === 1 || (level === 2 && hintVisible)) && <div className="practice-hint rise">Hint from Mo: {hint}</div>}
         {!loading && !error && composing && level === 2 && hint && !hintVisible && <button className="practice-hint-ask" onClick={() => setHintVisible(true)}>Need a hint?</button>}

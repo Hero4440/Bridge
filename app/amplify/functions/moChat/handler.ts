@@ -1,5 +1,5 @@
 // Mo free-chat handler. Mirrors practice handler flow: classify → rate limit →
-// load the user's saved practice context → model → classify output.
+// load the user's saved feedback memory → model → classify output.
 import { moChatInput, moChatOutput } from '../shared/schemas';
 import { classify } from '../shared/classify';
 import { checkRateLimit, RATE_LIMIT_MESSAGE } from '../shared/rateLimit';
@@ -23,9 +23,22 @@ type StoredPractice = {
   scenarioId?: string | null;
   level?: number | null;
   goal?: string | null;
-  transcript?: string | null;
+  feedback?: string | null;
   createdAt?: string | null;
 };
+
+function readableMemory(feedback?: string | null): string {
+  if (!feedback) return '';
+  try {
+    const value = JSON.parse(feedback) as { memory?: unknown; strength?: unknown; tip?: unknown };
+    return [value.memory, value.strength, value.tip]
+      .filter((item): item is string => typeof item === 'string' && item.length > 0)
+      .join(' ')
+      .slice(0, 700);
+  } catch {
+    return '';
+  }
+}
 
 async function recentPracticeContext(userId: string): Promise<string> {
   if (userId === 'anon') return '';
@@ -35,12 +48,11 @@ async function recentPracticeContext(userId: string): Promise<string> {
       limit: 5,
     });
     return (data as StoredPractice[])
-      .filter((run) => run.transcript)
       .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
       .map((run) => [
         `Practice session${run.scenarioId ? ` · ${run.scenarioId}` : ''}${run.level ? ` · Level ${run.level}` : ''}`,
         run.goal ? `Goal: ${run.goal}` : '',
-        `Transcript:\n${run.transcript}`,
+        readableMemory(run.feedback),
       ].filter(Boolean).join('\n'))
       .join('\n\n')
       .slice(0, 12000);

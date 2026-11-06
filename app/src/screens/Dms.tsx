@@ -380,6 +380,7 @@ export function Dms({ userId, initialPeerId, onOpenCircles, personalContext }: P
                 <span className={unread ? "unread-copy" : ""}>
                   {last?.content ?? "Say hi when you’re ready."}
                 </span>
+                {unread && <span className="unread-label">Unread</span>}
               </span>
               {unread && <i className="unread-dot" aria-label="Unread" />}
             </button>

@@ -1,29 +1,43 @@
-# Connecting Mo to a live AI model
+# Bridge AI integration
 
-The prototype in `figma-make/src/App.tsx` runs without an API key. Mo's replies, tone checks and practice feedback are rule-based today. This guide marks the exact places where a live model call replaces those rules, and the prompts to use.
+The clickable prototype in `figma-make/src/App.tsx` runs without an API key and keeps its
+rule-based behavior. The production app under `app/` already sends bounded requests through
+Amplify custom queries to Lambda, then calls Amazon Bedrock with IAM credentials. This guide
+documents the production boundaries and the prompts those handlers use.
 
-## Recommended scope for the demo
+## Production AI boundaries
 
-Connect two things live and keep everything else scripted:
+The live handlers are intentionally small and bounded:
 
-1. **Level 3 practice ("On your own")**: Mo plays the other person and gives feedback on what the user typed.
-2. **Tone check before send** in DMs and circle chats.
+1. **Practice** (`app/amplify/functions/practice/`): Mo plays the other person and gives feedback tied to the user's goal.
+2. **Tone check** (`app/amplify/functions/tone/`): Mo explains a possible harsh phrase and suggests an optional rewrite.
+3. **Reply ideas and event preview** (`preview/`): Mo returns short suggestions on request.
+4. **Safety labels** (`classify/`): the deterministic keyword layer runs first, then the model only when needed.
 
-Both are short, bounded calls. If a call fails or takes longer than 4 seconds, fall back to the existing rule-based code so the demo never stalls.
+Every handler validates input and structured model output, rate-limits where needed, and returns
+a safe fallback when Bedrock is unavailable. Safety-sensitive paths also pass through the shared
+`classify()` function before a response is shown or saved.
 
 ## Keep the key out of the app
 
-Figma Make apps run in the browser, so an API key in `App.tsx` would be visible to anyone. Put the key in a tiny server function (Vercel, Netlify, Cloudflare Workers or a Supabase Edge Function) and call that from the app:
+Never put a model key in the browser or repository. Amplify provisions the Lambda role and the
+frontend calls the authenticated custom query:
 
 ```
-App.tsx  --POST {task, input}-->  /api/mo  (holds the key in an env var)  -->  model API
+React app  --authenticated query-->  Amplify Lambda  --IAM role-->  Amazon Bedrock
 ```
 
-- The key lives only in the server function's environment variables, never in the repo.
-- The function accepts only the two tasks below and caps input at 500 characters.
+- No model key is needed: the Lambda execution role grants the exact Bedrock resources it uses.
+- Each function accepts only its documented task and caps input with its zod schema.
 - Return JSON only. The app validates the shape and falls back to the rules if anything is missing.
 
-## Hook point 1: Level 3 practice feedback
+## Prototype prompt reference
+
+The following hook-point names describe the old Figma Make prototype only. In the production
+build, the equivalent logic lives in the Lambda handlers listed above; do not add model calls to
+`figma-make/src/App.tsx`.
+
+### Level 3 practice feedback
 
 **Where:** `evalOwn` in `App.tsx`, under the comment `Level 3: user types their own reply`. It returns `{ harsh, words, asks, kind, good }`.
 
@@ -55,7 +69,7 @@ Return only JSON:
  "good": boolean}
 ```
 
-## Hook point 2: Tone check before sending
+### Tone check before sending
 
 **Where:**
 - DMs: `harshWords`, `dmHarsh` and `harshHit` in the DMs section of `App.tsx`.

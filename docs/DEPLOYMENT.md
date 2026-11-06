@@ -1,31 +1,31 @@
 # Bridge deployment
 
-This runbook documents the live Amplify Hosting preview and the normal deployment loop.
+This runbook documents the live Amplify Hosting production branch and the normal deployment loop.
 
-## Live preview
+## Live production app
 
-- URL: https://tejas-latest-main.d36gmcisbn28tb.amplifyapp.com
+- URL: https://main.d36gmcisbn28tb.amplifyapp.com
 - AWS region: `us-east-1`
 - Amplify app ID: `d36gmcisbn28tb`
-- GitHub branch: `tejas/latest-main`
-- Branch stage: `BETA`
+- GitHub branch: `main`
+- Branch stage: `PRODUCTION`
 - Auto-build: enabled
 
-The URL is stable. Every push to `tejas/latest-main` starts an Amplify Hosting release.
+The URL is stable. Every merge to `main` starts an Amplify Hosting release.
 The release first deploys the Amplify Gen 2 backend, then builds and publishes the Vite
 frontend from `app/`.
 
 ## Normal iteration
 
-From the repository root:
+Work on a feature branch, then merge through the reviewed pull request:
 
 ```sh
-git pull --rebase --autostash
+git pull --rebase origin main
 # make and verify changes
 git add -A
 git commit -m "describe the change"
-git pull --rebase --autostash
-git push origin tejas/latest-main
+git push origin <your-branch>
+# Open a pull request into main; the merge starts the production release.
 ```
 
 Watch the deployment:
@@ -33,13 +33,13 @@ Watch the deployment:
 ```sh
 aws amplify list-jobs \
   --app-id d36gmcisbn28tb \
-  --branch-name tejas/latest-main \
+  --branch-name main \
   --max-results 5 \
   --output table
 
 aws amplify get-job \
   --app-id d36gmcisbn28tb \
-  --branch-name tejas/latest-main \
+  --branch-name main \
   --job-id <job-id> \
   --query 'job.summary.{status:status,commitId:commitId,startTime:startTime,endTime:endTime}' \
   --output json
@@ -87,7 +87,7 @@ Keep `app/package-lock.json` synchronized with `app/package.json`, because Hosti
 ## One-time AWS setup (already completed)
 
 The Hosting app is connected to `https://github.com/Hero4440/Bridge.git` and the
-`tejas/latest-main` branch. It uses the customer IAM role
+`main` branch. It uses the customer IAM role
 `arn:aws:iam::429367298232:role/BridgeAmplifyHostingServiceRole` with AWS managed policy
 `service-role/AmplifyBackendDeployFullAccess`.
 
@@ -96,7 +96,7 @@ role, attach that managed policy, and restrict its trust policy to the Amplify p
 and this branch ARN:
 
 ```text
-arn:aws:amplify:us-east-1:429367298232:apps/d36gmcisbn28tb/branches/tejas/latest-main
+arn:aws:amplify:us-east-1:429367298232:apps/d36gmcisbn28tb/branches/main
 ```
 
 The GitHub access token is never stored in this repository. Reconnect the repository from

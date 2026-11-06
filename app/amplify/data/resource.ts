@@ -1,5 +1,5 @@
 // app/amplify/data/resource.ts
-// Bridge data schema — all 9 models defined at once (D-07) so the TS2590
+// Bridge data schema — core models are defined together (D-07) so the TS2590
 // "type instantiation excessively deep" risk surfaces on the first deploy.
 // Authorization follows D-08: Reflection/PracticeRun/Notification are owner-only;
 // Event/RSVP/Contact/GuardianLink/User are owner + authenticated read; Message is
@@ -211,14 +211,13 @@ const schema = a
       })
       .authorization((allow) => [allow.authenticated().to(["read"])]),
 
-    // DATA-05 — practice sessions are owner-only. Completed sessions keep the raw
-    // transcript so Mo can carry the user's chosen practice context forward.
+    // DATA-05 — practice sessions are owner-only. Keep only feedback memory;
+    // raw practice conversations are never persisted.
     PracticeRun: a
       .model({
         scenarioId: a.string(),
         level: a.integer(),
         goal: a.string(),
-        transcript: a.string(),
         feedback: a.string(),
         hintsUsed: a.integer(),
         userId: a.string(), // owner key the practice Lambda sets explicitly (trusted write)
@@ -369,7 +368,6 @@ const schema = a
         goal: a.string().required(),
         message: a.string(),
         history: a.string(),
-        transcript: a.string(),
         personalContext: a.string(),
       })
       .returns(a.ref("PracticeReply"))

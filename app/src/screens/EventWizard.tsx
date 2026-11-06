@@ -1,5 +1,5 @@
 // The Make three-step event wizard saves real host details, invitations, and reminders.
-import { useRef, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { OnboardingMo as Mo } from "../components/OnboardingMo";
 import { CommunityNotice } from "../components/CommunityNotice";
 import { localDate } from "../lib/checkin";
@@ -60,8 +60,11 @@ export function EventWizard({
   onBack: () => void;
   textFirst: boolean;
 }) {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrow = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    return date;
+  }, []);
   const [form, setForm] = useState<EventForm>({
     what: "",
     date: localDate(tomorrow),
@@ -89,11 +92,11 @@ export function EventWizard({
     setForm((s) => ({ ...s, [key]: value }));
     setError("");
   };
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
+  const days = useMemo(() => Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(tomorrow);
     d.setDate(d.getDate() + i);
     return d;
-  });
+  }), [tomorrow]);
   const proposedDate = new Date(`${form.date}T${form.time}`);
   const proposed = {
     whenAt: Number.isFinite(proposedDate.getTime())

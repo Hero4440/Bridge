@@ -33,7 +33,7 @@ Bridge is an AI social coach for autistic and neurodivergent young adults, built
 - **Design:** information architecture and user flows in Figma, iterated with teammate comments.
 - **Design prototype:** React (`figma-make/src/App.tsx`, `index.css`) built and previewed in Figma Make. It runs on rule-based logic with no API key, so the design can be clicked through anywhere. Partner feedback from Josh Munoz at First Place AZ shaped the latest round: user-chosen goals, My people, fading reply ideas, and a calmer warm color system.
 - **Production app:** `app/` is a React + Vite app on AWS Amplify Gen 2 (Cognito sign-in, DynamoDB, Lambda). See [app/README.md](app/README.md).
-- **Live deployment:** the shareable preview is [tejas-latest-main.d36gmcisbn28tb.amplifyapp.com](https://tejas-latest-main.d36gmcisbn28tb.amplifyapp.com). Pushes to `tejas/latest-main` redeploy it; see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the runbook.
+- **Live deployment:** the production app is [main.d36gmcisbn28tb.amplifyapp.com](https://main.d36gmcisbn28tb.amplifyapp.com). Merges to `main` redeploy it; see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the runbook.
 - **AI in the product:** in the production app, Mo runs on Claude through Amazon Bedrock from Lambda functions: Sonnet 4.5 plays the practice partner and gives one strength and one tip; Haiku 4.5 checks tone, suggests reply ideas and classifies messages for safety. Every call is validated and rate-limited, falls back to safe text on failure, and never sends a message for the user. Prompts live in `app/amplify/functions/*/prompts.ts`; access uses AWS IAM roles, so no keys are stored in the repo.
 
 ## AI disclosure
