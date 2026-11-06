@@ -733,6 +733,7 @@
   font-weight: 600;
 }
 .event-detail-body {
+  flex: 1 1 auto;
   padding: 8px 20px 120px;
   display: flex;
   flex-direction: column;
