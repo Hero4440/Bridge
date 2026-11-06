@@ -2,7 +2,7 @@
 
 This folder holds the code for the live Bridge prototype in Figma Make. Give this file to a new chat, or to Figma Make's AI, before asking for changes.
 
-- **Figma Make file:** https://www.figma.com/make/CmV9IOc2bubFxzcPJzz4Q7 ("Bridge Independence App")
+- **Figma Make file:**[ https://www.figma.com/make/CmV9IOc2bubFxzcPJzz4Q7](https://www.figma.com/make/nNkx4mz0eXrSNIZtCBuxRK/Bridge-Independence-App--2-?fullscreen=1&t=tACKsiQToNSxPhRR-1&code-node-id=0-6) ("Bridge Independence App")
 - **User flows (Figma design file):** https://www.figma.com/design/tipYMvE4FisuZCNeKZD8ZK, on the "User flows" page
 - **Last updated:** Nov 4, 2026
 
