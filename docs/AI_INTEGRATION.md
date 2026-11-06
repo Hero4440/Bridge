@@ -1,110 +1,97 @@
 # Bridge AI integration
 
-The clickable prototype in `figma-make/src/App.tsx` runs without an API key and keeps its
-rule-based behavior. The production app under `app/` already sends bounded requests through
-Amplify custom queries to Lambda, then calls Amazon Bedrock with IAM credentials. This guide
-documents the production boundaries and the prompts those handlers use.
+This describes the production implementation under `app/`. The Figma Make export
+under `figma-make/` is a separate, rule-based design prototype. Earlier prototype
+integration proposals remain available in Git history; the executable prompts
+linked below are the source of truth for the current build.
 
-## Production AI boundaries
+## Request path and models
 
-The live handlers are intentionally small and bounded:
-
-1. **Practice** (`app/amplify/functions/practice/`): Mo plays the other person and gives feedback tied to the user's goal.
-2. **Tone check** (`app/amplify/functions/tone/`): Mo explains a possible harsh phrase and suggests an optional rewrite.
-3. **Reply ideas and event preview** (`preview/`): Mo returns short suggestions on request.
-4. **Safety labels** (`classify/`): the deterministic keyword layer runs first, then the model only when needed.
-
-Every handler validates input and structured model output, rate-limits where needed, and returns
-a safe fallback when Bedrock is unavailable. Safety-sensitive paths also pass through the shared
-`classify()` function before a response is shown or saved.
-
-## Keep the key out of the app
-
-Never put a model key in the browser or repository. Amplify provisions the Lambda role and the
-frontend calls the authenticated custom query:
-
-```
-React app  --authenticated query-->  Amplify Lambda  --IAM role-->  Amazon Bedrock
+```text
+React app → Cognito-authenticated AppSync operation → Lambda → Amazon Bedrock
 ```
 
-- No model key is needed: the Lambda execution role grants the exact Bedrock resources it uses.
-- Each function accepts only its documented task and caps input with its zod schema.
-- Return JSON only. The app validates the shape and falls back to the rules if anything is missing.
+The AI queries are defined in [the data schema](../app/amplify/data/resource.ts).
+Lambda uses its IAM execution role to invoke Bedrock; the browser needs no model
+API key. [Model configuration](../app/amplify/shared/config.ts) defaults to Claude
+Sonnet 4.5 for practice and Mo chat, and Claude Haiku 4.5 for the other model tasks.
+Environment overrides can change those model IDs. The Bedrock client uses
+`us-east-1`; the configured US inference profiles can route inference across regions.
 
-## Prototype prompt reference
+| AppSync query | Handler and prompt source | Behavior |
+|---|---|---|
+| `practiceTurn` | [practice/](../app/amplify/functions/practice/) | Start, continue, and finish bounded role-play at three support levels; feedback gives one strength and one tip against the person's goal. |
+| `moChatTurn` | [moChat/](../app/amplify/functions/moChat/) | Conversational support with current request context and saved practice feedback memory. |
+| `toneCheck` | [tone/](../app/amplify/functions/tone/) | Keyword explanations and an optional model-generated gentle rewrite. |
+| `previewReplies` | [preview/](../app/amplify/functions/preview/) | One to three short reply or opener suggestions. |
+| `classifyText` | [classify/](../app/amplify/functions/classify/) and [shared classifier prompts](../app/amplify/functions/shared/classify-prompts.ts) | Shared crisis, money, address, unsafe, bias, or safe labeling. |
+| `reflectReply` | [reflectReply/](../app/amplify/functions/reflectReply/) | A short response to the person's reflection feeling and selected wins. |
+| `getDailyTopic` | [dailyTopic/](../app/amplify/functions/dailyTopic/) | A conversation starter cached by circle and UTC date in the `Topic` model. Concurrent cache misses can each call the model. |
 
-The following hook-point names describe the old Figma Make prototype only. In the production
-build, the equivalent logic lives in the Lambda handlers listed above; do not add model calls to
-`figma-make/src/App.tsx`.
+System prompts and tool schemas live in each handler directory's `prompts.ts`,
+with classifier prompts under `shared/`. Development prompt records and app-prompt
+entries are in [AI_PROMPTS/](../AI_PROMPTS/); tool attribution is in the
+[root README](../README.md#ai-disclosure).
 
-### Level 3 practice feedback
+## Validation, safety, and failure behavior
 
-**Where:** `evalOwn` in `App.tsx`, under the comment `Level 3: user types their own reply`. It returns `{ harsh, words, asks, kind, good }`.
+[The shared Bedrock helper](../app/amplify/functions/shared/bedrock.ts) uses Converse
+with a forced tool schema and validates the tool result with zod. It caps output
+at 500 tokens and uses temperature 0.2. Its default per-call timeout is five
+seconds; practice and Mo chat request fifteen seconds. Classification and other
+calls add to the full request duration, so these are not end-to-end deadlines.
+Invalid model output, timeouts, and invocation errors return a failure result
+that handlers convert to scripted responses marked `fallback: true`.
 
-**Replace with:** an async call made when the user taps Send on Level 3. Store the result in state (for example `pEval`) and read it where `ownEv` is used today.
+[The shared classifier](../app/amplify/functions/shared/classify.ts) checks keywords
+first and invokes Haiku when no keyword label applies. Its model-failure default
+is `unsafe`. Practice and Mo chat classify input and generated response text;
+crisis input returns fixed help wording before the normal rate-limit/model path.
+Tone checks collect keyword reasons before calling the rewrite model. These
+checks differ by handler: tone, preview, reflection, and daily topics do not run
+the same input/output classifier sequence as practice and Mo chat.
 
-**System prompt:**
+Practice, Mo chat, tone, and preview use the shared DynamoDB rate limiter
+(100 requests per user per hour). The standalone classifier, reflection reply,
+and daily-topic handlers do not call that limiter. The limiter allows requests
+when `RATE_LIMIT_TABLE` is absent; deployment wiring matters. Backend IAM, alarms, and budget resources are defined in
+[backend.ts](../app/amplify/backend.ts). Reserved concurrency is currently disabled
+there because of the account concurrency quota.
 
-```
-You are Mo, a calm practice buddy in Bridge, an app that helps autistic and
-neurodivergent young adults practice everyday social conversations.
-You are role-playing {partner} in this scenario: {scenario_title}.
-Context so far: {scenario_messages}.
+Suggestions and rewrites do not send chat messages. The person reviews them and
+chooses whether to send; normal tone warnings offer **Send anyway**. Message
+requests and blocking are enforced by the messaging/community server handlers,
+separately from suggestion generation.
 
-The user just typed a reply. Do two things:
-1. Reply as {partner} in one or two short, natural sentences.
-2. Give the user feedback as Mo.
+## Context, persistence, and logs
 
-Rules for feedback:
-- Start with one specific thing that worked. Then at most one tip.
-- Plain, literal language. No sarcasm, idioms or exclamation-heavy praise.
-- Never tell the user to act "more normal" or to mask. Different styles are fine.
-- If the reply could sound harsh, say which words and why, and suggest a gentler
-  version that keeps the user's meaning.
-- No medical, diagnostic or therapy advice.
+[Client context](../app/src/lib/moContext.ts) can include the person's first name,
+interests, comfort preferences, session check-in, current screen, and up to three
+recent relevant messages. It is capped at 1,600 characters. It does not explicitly
+include profile email or trusted-contact fields, although free text can contain
+personal information. Context supplied to a model is treated as data in the prompt.
 
-Return only JSON:
-{"partner_reply": string, "worked": string, "tip": string | null,
- "sounds_harsh": boolean, "harsh_words": string[], "gentler_version": string | null,
- "good": boolean}
-```
+Practice also sends the chosen scenario, level, goal, and bounded conversation
+history. On finish, it stores an owner-only `PracticeRun` with scenario, level,
+goal, and generated feedback memory (memory, strength, and tip). The current
+handler does not persist raw practice turns. Practice and Mo chat can retrieve
+saved feedback for subsequent requests; Mo chat also accepts transient chat
+history. Its handler does not persist that chat history.
 
-### Tone check before sending
+Reflections and generated daily topics have their own data records. Consequently,
+this application does store selected inputs and generated content; it should not
+be described as storing no model inputs or outputs. App privacy wording must
+explain what is sent to Amazon Bedrock and what practice memory is retained.
 
-**Where:**
-- DMs: `harshWords`, `dmHarsh` and `harshHit` in the DMs section of `App.tsx`.
-- Circle chat: `isAngry`, `toneLabel` and `toneWhy`.
+[Structured turn logs](../app/amplify/functions/shared/log.ts) contain metadata
+such as function, scenario, level, latency, labels, and fallback status. This
+helper does not log user messages, raw practice turns, or generated reply text.
 
-**Replace with:** a call when the user pauses typing for about 600 ms, or when they tap Send. Keep the current UI. Only the source of `harsh`, `why` and the "Say it gently" text changes.
+## Verification
 
-**System prompt:**
-
-```
-You check the tone of a chat message before an autistic or neurodivergent young
-adult sends it to a peer they met in an interest group. Your job is to help them
-decide, not to block or rewrite their voice.
-
-Message: {draft}
-Recent conversation: {last_3_messages}
-
-Return only JSON:
-{"might_sound_harsh": boolean,
- "why": string,            // one literal sentence, e.g. "'Whatever' can sound like you don't care what they said."
- "gentler_version": string // same meaning, kinder wording, about the same length
-}
-If the message is fine, return might_sound_harsh false, and empty strings for why and gentler_version.
-```
-
-The user always keeps **Send anyway**. Mo suggests and the user decides.
-
-## Kept rule-based on purpose
-
-- **Unsafe message holding** (requests for money, secrecy or meeting alone): keep this as fixed rules plus human moderation. It should never depend on a model's judgment.
-- **Check-in to practice suggestions** (`recList`, `upNextText`): these are simple mappings that are easy to explain, and they already work.
-- **Help and crisis** ("I need help", 988): always fixed text, never generated.
-
-## Privacy
-
-- Send only the current scenario or the last 3 messages, never names, emails or the trusted person's details.
-- Don't store model inputs or outputs on the server.
-- Say in Privacy & safety that practice replies and tone checks are processed by an AI model.
+From `app/`, run `npm test`, `npm run lint`, and `npm run build`. Handler and shared
+helper tests use isolated test doubles to check validation, safety, persistence,
+and failure paths. They do not prove that a deployed Bedrock model is reachable.
+Use a signed-in fictional account in your personal sandbox to verify live model
+responses and fallback behavior. See [the app guide](../app/README.md) for setup
+and [the deployment runbook](DEPLOYMENT.md) for Hosting configuration.

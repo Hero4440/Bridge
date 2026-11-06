@@ -4,17 +4,18 @@ This is the production application root (Amplify Gen 2 + Vite), kept separate fr
 `figma-make/` (the design prototype). All code the North American AI Challenge
 reviews for the real build lives here.
 
-Decided in Phase 1 (see `.planning/phases/01-foundation-authentication/01-CONTEXT.md`):
+## Runtime and services
 
-- **Region:** us-east-1 (single region for all AWS services + Bedrock).
-- **Auth:** Cognito email + password only, no email verification (pre-sign-up
-  Lambda auto-confirms test accounts). Profile data lives in the User DynamoDB model.
+- **Region:** AWS resources and the Bedrock client use `us-east-1`; the configured US inference profiles can route model inference across regions.
+- **Auth:** Cognito email + password, with no user groups. The pre-sign-up Lambda
+  auto-confirms every signup and marks supplied email addresses verified without a
+  confirmation code. This does not prove email ownership. Profile data lives in DynamoDB.
 - **Schema:** the production data models are defined together in one Amplify schema,
   including profiles, circles, messages, events, RSVPs, practice memory, reflections,
   contacts, guardian links, notifications, and safety records.
 - **Budget:** $50/month, alerts at 50/80/100%.
 
-## Planned layout
+## Code layout
 
 ```
 app/
@@ -22,13 +23,15 @@ app/
 │   ├── auth/            # Cognito (no groups), pre-sign-up auto-confirm trigger
 │   ├── data/            # production schema + authorization rules
 │   ├── functions/       # Lambda endpoints for practice, safety, community, events and Mo
+│   ├── storage/         # profile-photo storage
 │   ├── shared/
 │   │   └── config.ts    # region (us-east-1) + model id constants
 │   └── backend.ts       # IAM least-privilege, Budgets, CDK overrides
-└── src/
-    ├── components/       # reusable UI
-    ├── screens/          # Onboarding, CheckIn, Home, ...
-    └── lib/              # Amplify Data client, types
+├── src/
+│   ├── components/       # reusable UI
+│   ├── screens/          # Onboarding, CheckIn, Home, ...
+│   └── lib/              # Amplify Data client, types
+└── scripts/              # seeding, live verification, and migration tools
 ```
 
 SKILL.md's `amplify/...` and `src/...` paths are rooted here (prefix with `app/`).
@@ -36,6 +39,49 @@ SKILL.md's `amplify/...` and `src/...` paths are rooted here (prefix with `app/`
 The production build is implemented under this directory. The Figma Make export remains
 the clickable design prototype; it is not the production runtime.
 
+## Local setup and checks
+
+Use Node.js 22.12 or newer and npm. Backend setup also needs AWS credentials for
+an authorized development account and access to the configured Bedrock inference
+profiles. Keep credentials in your local AWS profile, outside this repository.
+Dependencies and locked versions are in [package.json](package.json) and
+[package-lock.json](package-lock.json).
+
+From the repository root:
+
+```sh
+cd app
+npm ci
+npx ampx sandbox --identifier <your-name> --once
+npm run dev
+```
+
+The sandbox command deploys real AWS resources and generates the ignored
+`app/amplify_outputs.json` consumed by the frontend. Use your own sandbox identifier;
+it has separate Cognito accounts and data. Sign up in the app, complete onboarding,
+and create content through the app. To populate interest circles in that sandbox,
+set `BRIDGE_SEED_EMAIL` and `BRIDGE_SEED_PASSWORD` to an existing fictional
+sandbox account in your local environment (or ignored `app/.env`), then run
+`npx tsx scripts/seed/circles.ts` from `app/` after backend outputs exist.
+Run `npx ampx sandbox --identifier <your-name>` without `--once` when you want
+backend changes watched and redeployed during development.
+
+From `app/`, run the local checks:
+
+```sh
+npm test
+npm run lint
+npm run build
+```
+
+Unit tests use isolated test doubles; the running app calls the real AWS backend.
+Live verification commands below create fictional accounts and write to the
+configured backend, so run them only against your development sandbox. Passing
+local checks alone does not verify a deployed environment or the final demo.
+
+For Hosting configuration and the deployment workflow, see
+[the deployment runbook](../docs/DEPLOYMENT.md). For model calls, prompts, context,
+and persistence, see [AI integration](../docs/AI_INTEGRATION.md).
 
 ## Daily check-in and Home
 
