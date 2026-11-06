@@ -16,38 +16,8 @@
 
 **Headline metric to show:** attendance and return, not in-app scores. Fewer hints needed over time is the second metric.
 
----
 
-## 2. Challenge context
-
-**What it is:** A student design and venture challenge run by ASU's Spark Center for Innovation in Learning with ASU Enterprise Technology. Focus: AI-driven ventures that support neurodivergent young people (ADHD, autism, dyslexia, other cognitive or health differences). Core brief: build intelligent systems that decode executive function (planning, focusing, juggling tasks).
-
-**Dates:**
-- Oct 24: virtual kickoff (done)
-- Oct 25 to Nov 6: two-week design sprint
-- Nov 6: Scottsdale Launchpad (Fri 4-8 p.m., ASU). Monterrey Launchpad is Sat Nov 7, 8 a.m. to noon, hosted by Tec de Monterrey
-- Nov 21: grand finale in Phoenix. One team per Launchpad advances.
-
-**Rules that matter for us:**
-- Must use customer research from a Challenge Partner (we have First Place AZ and an Arizona school visit).
-- Must build a functional MVP that uses AI and the partner research.
-- MVP must be original work built during the sprint. No deadline extensions.
-- Team must pitch in person at the Launchpad.
-- Discord has a Presenter Packet. **Check it for the exact 5-slide template.**
-
-**What judges reward:**
-- Executive-function patterns and transitions in neurodivergent young adults
-- Early indicators, adaptive systems, behavioral signals, context-aware interventions
-- Research turned into human-centered design
-- Technical feasibility, ethics, entrepreneurial potential
-- Novel AI, interdisciplinary thinking, understanding of real-world context
-- **Explicitly not competitive:** standalone focus apps and generic productivity tools
-
-**Prizes:** Gold (Sinema Student Award) $15,000 ($10,000 seed plus $5,000 scholarships, plus ASU mentorship and a year of Venture Studio support). Silver $5,000. Bronze $2,500. Sources disagree on the total ($20K vs $15K vs $22.5K), so confirm with organizers. Not important for the pitch.
-
----
-
-## 3. Primary research: partner visits (n = 2 visits, our own notes)
+## 2. Primary research: partner visits (n = 2 visits, our own notes)
 
 **First Place AZ (adult-living community program), visited Oct 27:**
 - About 80% of participants get hired, which they credit to the community. *Unverified: ask how "hired" is defined (timeframe, denominator).*
@@ -70,7 +40,7 @@
 
 ---
 
-## 4. Evidence base (from the research report)
+## 3. Evidence base (from the research report)
 
 Full report: `Neurodivergent young adult unmet needs.md`. Evidence is **autism-heavy and mostly 2007-2015**. No ADHD or dyslexia outcome data, no trial of open-ended AI role-play, and no evidence on predicting overload from passive signals in neurodivergent adults. Pitch Bridge as a **testable hypothesis**.
 
@@ -89,7 +59,7 @@ Full report: `Neurodivergent young adult unmet needs.md`. Evidence is **autism-h
 
 ---
 
-## 5. How Bridge evolved
+## 4. How Bridge evolved
 
 **v1 (original pitch):** Connect (interest circles, matching) + Practice (AI role-play) + Meet (group chat -> 1:1 -> group event) + AI buddy (reply suggestions, tone check, safety flags) + Check-in + fading support.
 
@@ -117,7 +87,7 @@ Full report: `Neurodivergent young adult unmet needs.md`. Evidence is **autism-h
 
 ---
 
-## 6. Product spec
+## 5. Product spec
 
 ### Users
 - **Young adult (primary):** previews, practices, resets, reflects.
@@ -184,7 +154,7 @@ Full report: `Neurodivergent young adult unmet needs.md`. Evidence is **autism-h
 
 ---
 
-## 7. Principled innovation (ethics slide)
+## 6. Principled innovation (ethics slide)
 - User defines what "good" means; no pressure to mask.
 - Scripted, bounded scenarios, like the one controlled AI trial (Noora).
 - Verified members only; report and block always visible.
@@ -194,74 +164,16 @@ Full report: `Neurodivergent young adult unmet needs.md`. Evidence is **autism-h
 - Mock data only in the prototype; no real resident information or photos.
 - **Disclosure-bias test** (our differentiator): run the same 10 event scenarios on our chosen model with and without "I'm autistic" or "I have ADHD" added. Count how often the advice becomes "skip it" or avoidant. Show the parity result on a slide. Run it *before* Nov 5 so any fixes land in the prompt.
 
----
 
-## 8. Competition and differentiation (**not independently verified**)
-Existing tools tend to do one piece: friendship matching (e.g., Hiki), AI conversation practice (e.g., Skill Coach), interest-based meetups (Meetup, Discord, Bumble BFF). Our difference: closing the loop between practice and real-world attendance, measuring attendance and return, fading our own support, and embedding in an existing community with a coach. **Verify each app's features before presenting, and say "one of the few" rather than "the only."** The research notes that free ChatGPT plus community prompt hacks is the real competitor, so be ready to explain why a structured, bounded, coach-connected flow is better than a general chatbot.
-
----
-
-## 9. Business model (hypothesis, not tested)
+## 7. Business model (hypothesis, not tested)
 - Likely payer: programs and service providers (participants already pay rent and therapy separately, which argues against an individual paywall).
 - Value to buyer: attendance and engagement visibility, staff time saved, earlier outreach.
 - Public funding (Medicaid waivers) is a slow channel (long waitlists).
 - Research has no willingness-to-pay data, so say "hypothesis" and name the validation step.
 
----
+## 8. Validation, pilot plan and partner outreach
 
-## 10. Pitch kit
-
-### 5-slide outline (confirm against the Presenter Packet template)
-1. **Problem:** after high school, supports vanish and friends are the biggest need. Josh Munoz quote. Key stat: loneliness g = 0.89, depression r = 0.48. The gap is showing up.
-2. **Solution:** Bridge, Preview. Practice. Go. The loop diagram with the coach.
-3. **Demo / how it works:** Sam's story (below).
-4. **Responsible AI + evidence:** principles, disclosure-bias result, what is verified vs hypothesis.
-5. **Impact + business + next steps:** attendance and return as the metric, program payer, pilot plan with First Place, ask.
-
-### 90-second demo (mock data: Sam, Jordan, Coach Alex)
-1. Coach Alex has set Sam's goal: attend one event this month. Sam gets a "Friday game night" card.
-2. **Preview:** he swipes through venue steps, noise level and exit route.
-3. **Practice:** he rehearses joining Jordan's group, gets one strength and one tip, and sets his own goal ("stay 30 minutes").
-4. **Reset:** at the event he opens the one-minute card.
-5. **Reflect:** three taps. His private progress view updates. Both he and Jordan choose to share contact.
-6. Coach view: aggregate attendance and one opt-in "check-in" prompt.
-
-### Likely judge questions (and short answers)
-- **"Isn't this just a social app?"** No. It scaffolds an executive-function transition (decide, plan, start, arrive, leave) inside an existing community, and measures attendance, not engagement.
-- **"How do you avoid pushing masking?"** The user sets the goal; feedback is judged against it; no tone grading; we test parity after disclosure.
-- **"Why not ChatGPT?"** Bounded scenarios, user-set goals, a coach in the loop, event-specific previews, and signals from real attendance. A general chatbot gives none of that and showed avoidant advice after disclosure in audits.
-- **"What's the evidence it works?"** Honest answer: training raises knowledge but real-world transfer is the weak link, which is exactly what Bridge targets. The scripted-AI evidence is early (Noora). We pitch a testable hypothesis with a pilot plan.
-- **"Who pays?"** Programs and providers (hypothesis; we asked First Place).
-- **"Privacy and safety?"** No sensitive data, user controls sharing, coach sees aggregates, mock data only, 988 always available.
-- **"What would you build next?"** A First Place pilot; ADHD- and dyslexia-specific scenarios; Second Chance (friendship repair).
-
----
-
-## 11. Build plan for the last 4 days (today Mon Nov 2)
-
-The original plan had build days Nov 1-4 and rehearsal on Nov 5. Compressed:
-
-| Day | Goal |
-|---|---|
-| **Mon Nov 2 (tonight)** | Lock scope (below). Write the 3 scenarios, one sample event and the guardrail prompt. Pick the stack. Check the Presenter Packet slide template. |
-| **Tue Nov 3** | Build practice flow with hint fading and one-strength-one-tip feedback. Build the preview generator from a sample event listing. |
-| **Wed Nov 4** | Build Reset and Reflect, the coach view with mock data, and the check-in signal. **Run the disclosure-bias probe** and tune the prompt. |
-| **Thu Nov 5** | Polish, bug fixes, record a backup demo video, finish the 5 slides, rehearse the pitch out loud at least twice, plan travel to Scottsdale. |
-| **Fri Nov 6** | Present at the Scottsdale Launchpad, 4-8 p.m. |
-
-**Scope: must / should / fake**
-- **Must be real:** AI practice with hint fading and feedback; preview generated from an event listing; Reflect; disclosure-bias test results.
-- **Should be real if time allows:** Reset card; coach view reading from mock data; signal rule.
-- **Fine to fake (label as mock):** event feed, user accounts, matching and contact-sharing, attendance data, coach alerts.
-- **Cut if behind:** visual illustrations, Second Chance, "Help me say it", interest circles.
-
-**Suggested tech approach (adjust to your team's skills):** a simple web app (single-page), a hosted LLM API with a system prompt and structured JSON output for feedback, scenarios and events stored as JSON, and a static dashboard for the coach view using mock data. A Python script runs the disclosure probe. **Always have a recorded backup demo.**
-
----
-
-## 12. Validation, pilot plan and partner outreach
-
-**Email sent (or ready) to partners:** asks (1) what the First Place events app records and for sample screens or a data outline with no personal information, (2) what most often stops participants from attending or staying, and (3) feedback on the plan. Offers a 15-minute call this weekend or early next week. **Check for replies and use any answer in the pitch with attribution.**
+**Email sent to partners:** asks (1) what the First Place events app records and for sample screens or a data outline with no personal information, (2) what most often stops participants from attending or staying, and (3) feedback on the plan. Offers a 15-minute call this weekend or early next week. **Check for replies and use any answer in the pitch with attribution.**
 
 **Still unanswered:** First Place's definition of "80% hired"; what "EIP Pro" and "Oar search and snicker" are; whether the preview feels helpful or childish; what coaches should never see; who pays.
 
@@ -269,7 +181,7 @@ The original plan had build days Nov 1-4 and rehearsal on Nov 5. Compressed:
 
 ---
 
-## 13. Open questions and risks
+## 9. Open questions and risks
 - Evidence is mostly autism, mostly older data. Say so.
 - Disclosure bias on *our* model is untested until we run the probe.
 - Competitor table unverified. Visual previews need real venue photos or labeled illustrations.
@@ -280,7 +192,7 @@ The original plan had build days Nov 1-4 and rehearsal on Nov 5. Compressed:
 
 ---
 
-## 14. Files and sources
+## 10. Files and sources
 
 **Project docs:** Bridge v3 - Preview Practice Go; Bridge v2 - Enhanced Pitch; Idea 1 - Bridge (brainstorm); Partner Visit Notes (Oct 27-29); organizer docs (Intro, More info, Launching This Saturday).
 **On your computer:** `/Users/hero4440/Documents/Code/neuro/idea/` (Idea 1 - Bridge.md, Idea 1 - Bridge v3.md, and this brief).
