@@ -64,7 +64,8 @@ is a design reference.
 
 Claude helped with research, planning, prototype code, and tooling. Figma Make AI
 helped with the prototype. Codex helped with production code, tests, reviews, and
-documentation. The team reviews the work and makes the product decisions.
+documentation. We also used Kiro during the project. The team reviews the work
+and makes the product decisions.
 See [detailed credits](docs/AI_DISCLOSURE.md) and [prompt logs](AI_PROMPTS/).
 
 ## Team and contributions
