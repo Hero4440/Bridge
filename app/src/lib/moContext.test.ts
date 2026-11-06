@@ -25,7 +25,7 @@ describe("moContext", () => {
     expect(result).toContain("This session's check-in");
     expect(result).toContain("feeling Okay");
     expect(result).toContain("coming up Texting someone new");
-    expect(result).toContain("hardest part Reading tone");
+    expect(result).toContain("hardest part Handling tricky moments");
     expect(result).toContain("calm mode off");
     expect(result).not.toContain("Private");
     expect(result).not.toContain("private@example.com");

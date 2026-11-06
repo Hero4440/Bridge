@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { OnboardingMo as Mo } from '../components/OnboardingMo';
-import { feelingLabels, upcomingLabels, hardestLabels, checkInSchema, type CheckInValues } from '../lib/checkin';
+import { feelingLabels, upcomingLabels, hardestOptions, checkInSchema, type CheckInValues } from '../lib/checkin';
 import { useOnline } from '../lib/useOnline';
 import './Dashboard.css';
 
@@ -16,7 +16,7 @@ export function CheckIn({firstName,calmMode=false,onSave,initial}:{firstName:str
  useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current);},[]);
  useEffect(()=>{heading.current?.focus({preventScroll:true});heading.current?.closest('.main-scroll')?.scrollTo(0,0);},[step]);
  const key=(['feeling','upcoming','hardest'] as const)[step];
- const options=[feelingLabels,upcomingLabels,hardestLabels][step];
+ const options=[feelingLabels,upcomingLabels,hardestOptions][step];
  async function finish(next:Partial<CheckInValues>) {
   try {await onSave(checkInSchema.parse(next));}
   catch(e) {setError(e instanceof Error?e.message:'Your check-in could not be saved. Please try again.');lock.current=false;setBusy(false);}
@@ -33,7 +33,7 @@ export function CheckIn({firstName,calmMode=false,onSave,initial}:{firstName:str
   </div>
   <div key={step} className="checkin-question">
    <Mo mood={calmMode?'calm':'happy'} size={60}/>
-   <h1 ref={heading} tabIndex={-1}>{[`Hi ${firstName || 'there'}! How are you feeling?`,'Anything coming up?','What feels hardest lately?'][step]}</h1>
+   <h1 ref={heading} tabIndex={-1}>{[`Hi ${firstName || 'there'}! How are you feeling?`,'Anything coming up?','What would you like help with?'][step]}</h1>
    <div className="checkin-options">{Object.entries(options).map(([value,label])=><button key={value} disabled={busy||!online} aria-pressed={values[key]===value} onClick={()=>pick(value)}>{label}</button>)}</div>
    {!online&&<p role="status">You’re offline. Reconnect to save your check-in.</p>}
    {busy&&step===2&&<span className="visually-hidden" role="status">Saving your check-in…</span>}

@@ -3,7 +3,9 @@ import type { ScenarioId } from './practice';
 
 export const feelingLabels = { over: 'Overwhelmed', okay: 'Okay', ready: 'Ready to connect' } as const;
 export const upcomingLabels = { group: 'A group hangout', text: 'Texting someone new', hard: 'A hard conversation', none: 'Nothing planned' } as const;
-export const hardestLabels = { start: 'Starting a chat', keep: 'Keeping it going', tone: 'Reading tone', disagree: 'Disagreeing', leave: 'Leaving or saying no' } as const;
+// Keep stored keys stable for existing check-ins while matching the current Figma labels.
+export const hardestLabels = { start: 'Meeting new people', keep: 'Staying close to people I know', tone: 'Handling tricky moments', disagree: 'Talking at work or school', leave: 'Leaving or saying no' } as const;
+export const hardestOptions = { start: hardestLabels.start, keep: hardestLabels.keep, tone: hardestLabels.tone, disagree: hardestLabels.disagree } as const;
 export const checkInSchema = z.object({
   feeling: z.enum(['over', 'okay', 'ready']),
   upcoming: z.enum(['group', 'text', 'hard', 'none']),
@@ -20,7 +22,7 @@ export function weekStart(now = new Date()) {
   return localDate(monday);
 }
 const hardScenarios: Record<CheckInValues['hardest'], ScenarioId> = {
-  start:'join', keep:'left-on-read', tone:'left-on-read', disagree:'disagree', leave:'leave',
+  start:'join', keep:'invite', tone:'repair', disagree:'disagree', leave:'leave',
 };
 const titles: Record<ScenarioId, string> = {
   join:'Join a chat that is already going', 'left-on-read':'They left you on read', cancel:'A friend cancels last minute',
@@ -29,9 +31,10 @@ const titles: Record<ScenarioId, string> = {
 export function recommendation(checkIn: CheckInValues) {
   const scenario = hardScenarios[checkIn.hardest];
   const lines: Partial<Record<CheckInValues['hardest'], string>> = {
-    start:"Starting chats is tough. I picked today's practice just for that.",
-    keep:"Knowing what to reply is hard. I've got a scenario ready for you.",
-    tone:"Reading the room can be tricky. Let's work on that today.",
+    start:"Meeting new people takes courage. I picked a practice for that.",
+    keep:"Staying close matters. Let's practice reaching out to someone you know.",
+    tone:"Tricky moments get easier with practice. I've got one ready.",
+    disagree:"Let's practice talking at work or school today.",
   };
   const line = lines[checkIn.hardest] ?? (checkIn.feeling === 'over'
     ? "Thanks for telling me. Let's keep today gentle. Just reading a circle counts."
