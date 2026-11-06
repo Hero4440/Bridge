@@ -1,104 +1,79 @@
 # Bridge: Preview. Practice. Go.
 
-Bridge helps neurodivergent young adults practice social moments safely with Mo, an AI buddy, then use those skills with real people: new people they meet through shared interests, and people they already know.
+Bridge helps neurodivergent young adults practice everyday conversations and feel
+more prepared to connect with people. Mo, an AI buddy, offers practice and
+suggestions while the person stays in control.
 
-Built by **Team Ctrl Alt Elite** for the North American AI Challenge for Neurodiverse Learning (Spark Center for Innovation in Learning and ASU Enterprise Technology), in partnership with First Place AZ.
+**[Open Bridge](https://main.d36gmcisbn28tb.amplifyapp.com)** — create an account to get started.
 
-## Team
+Built for the **North American AI Challenge for Neurodiverse Learning**, in
+partnership with **First Place AZ**.
 
-| Name | Focus | Contact |
-|---|---|---|
-| Tejas Shah | AI and engineering | [tshah44@asu.edu](mailto:tshah44@asu.edu) |
-| Dhyey Patel | AI and engineering | [dpate408@asu.edu](mailto:dpate408@asu.edu) |
-| Shreeya Bohra | User research, design and accessibility | [sbohra2@asu.edu](mailto:sbohra2@asu.edu) |
-| Rishi Kataria | User research, design and accessibility | [rkatari6@asu.edu](mailto:rkatari6@asu.edu) |
+## What you can do
 
-All team members are graduate students at Arizona State University.
+- **Practice:** rehearse social situations with Mo and get feedback on your own goal.
+- **Connect:** join interest circles, chat, and get optional reply ideas or tone checks.
+- **Prepare:** see event details, plan ahead, and reflect afterward.
+- **Feel comfortable:** use daily check-ins, breathing tools, themes, and text settings.
 
-## Team contributions
-
-| Team member | Contributions |
-|---|---|
-| Dhyey Patel | Code development and research. |
-| Shreeya Bohra | Figma design, research, and app-related questions for Josh Munoz at First Place AZ. |
-| Rishi Kataria | Figma design, research, and participation in the field visit. |
-| Tejas Shah | Code development, research, and participation in the field visit. |
-
-## What Bridge does
-
-Bridge is an AI social coach for autistic and neurodivergent young adults, built with First Place AZ, who told us their residents want help socializing.
-
-- **Daily check-in:** how I feel, what's coming up, and what I'd like help with (meeting new people, staying close to people I know, handling tricky moments, or talking at work or school). Home and today's practice follow the answer, and on overwhelmed days Home shows just one small thing.
-- **Practice with Mo:** role-play real moments, including catching up with a friend, fixing a misunderstanding and asking a boss for help, at three levels (Guided, Light help, On your own) where support fades as skills grow. Every level has a box to answer in your own words.
-- **My people:** family, roommates and coworkers the user already knows, with a gentle nudge to say hi in their own words.
-- **Interest circles:** small groups with a daily topic, where reading without posting counts.
-- **Messages:** a tone check before sending explains why something might sound harsh, and the user can still send it. Mo's reply ideas stay hidden until asked for, and the user can turn Mo's help down from Lots to When I ask.
-- **Events:** people, sound and lighting shown before you go, a prep checklist, a breather, and a short reflection after.
-- **Comfort and control:** calm color themes, large text, calm mode, plain words, and a trusted person who sees only what the user chooses.
+Mo suggests words; you decide what to send.
 
 ## How we built it
 
-- **Research:** partner visits and a meeting with First Place AZ, the challenge kickoff, and a review of existing apps [idea/Idea 1 - Bridge.md](idea/Idea 1 - Bridge.md).
-- **Design:** information architecture and user flows in Figma, iterated with teammate comments.
-- **Design prototype:** React (`figma-make/src/App.tsx`, `index.css`) built and previewed in Figma Make. It runs on rule-based logic with no API key, so the design can be clicked through anywhere. Partner feedback from Josh Munoz at First Place AZ shaped the latest round: user-chosen goals, My people, fading reply ideas, and a calmer warm color system.
-- **Production app:** `app/` is a React + Vite app on AWS Amplify Gen 2 (Cognito sign-in, DynamoDB, Lambda). See [app/README.md](app/README.md).
-- **Live deployment:** the production app is [main.d36gmcisbn28tb.amplifyapp.com](https://main.d36gmcisbn28tb.amplifyapp.com). Merges to `main` redeploy it; see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the runbook.
-- **AI in the product:** in the production app, Mo runs on Claude through Amazon Bedrock from Lambda functions: Sonnet 4.5 plays the practice partner and gives one strength and one tip; Haiku 4.5 checks tone, suggests reply ideas and classifies messages for safety. Model output is validated, handlers provide fallback text on model failure, and suggestions never send a message for the user. Practice, Mo chat, tone, and reply ideas use a per-user rate limit; see [AI integration](docs/AI_INTEGRATION.md) for the handler-specific controls and retained context. Prompts live in `app/amplify/functions/*/prompts.ts`; access uses AWS IAM roles, so no keys are stored in the repo.
+First Place AZ visits, research, and conversations with Josh Munoz informed the
+app. We designed the flows in Figma and built the web app with React and Vite.
+AWS handles sign-in, messages, storage, and reminders. Mo uses Claude through
+Amazon Bedrock.
 
 ## Architecture
 
-The production app uses Amplify Gen 2 infrastructure defined in
-[`app/amplify/backend.ts`](app/amplify/backend.ts). This diagram shows the current
-service boundaries; the Figma Make prototype is separate from this runtime.
-
 ```mermaid
 flowchart TD
-    hosting["AWS Amplify Hosting"] --> web["React and Vite web app"]
-    web -->|"Sign up and sign in"| auth["Amazon Cognito"]
-    auth -->|"Pre-sign-up trigger"| signup["Lambda: auto-confirm signup"]
-    web <-->|"Authenticated queries, mutations, subscriptions"| api["AWS AppSync"]
-    web <-->|"Authorized profile photo access"| photos["Amazon S3"]
-    api <-->|"Model operations and live updates"| data[("DynamoDB app tables")]
-    api -->|"Custom operations"| actions["Lambda: community, DMs, requests, help"]
-    api -->|"AI queries"| ai["Lambda: practice, Mo chat, tone, preview, classification, reflection, topics"]
-    actions <-->|"Authorized reads and writes"| data
-    ai <-->|"Practice memory and topic cache"| data
-    actions -->|"Message safety checks"| classify["Shared classifier: keywords then model"]
-    ai -->|"Practice, Mo chat, and classification paths"| classify
-    classify --> bedrock["Amazon Bedrock: Claude Sonnet and Haiku"]
-    ai -->|"Converse API via IAM roles"| bedrock
-    actions -->|"Selected handlers"| limits[("DynamoDB rate counters with TTL")]
-    ai -->|"Practice, Mo chat, tone, preview"| limits
-    schedule["Amazon EventBridge: every minute"] --> reminders["Lambda: event reminders"]
-    reminders <-->|"Events, RSVPs, private notifications"| data
+    app["Bridge web app"] --> auth["Cognito: sign-in"]
+    app <-->|"Messages and app data"| api["AppSync: app API"]
+    app <-->|"Profile photos"| photos["S3: photo storage"]
+    api <--> data[("DynamoDB: saved data")]
+    api --> functions["Lambda: app actions and AI requests"]
+    functions <--> data
+    functions --> ai["Bedrock: Mo's AI responses"]
 ```
 
-AppSync authenticates app requests with Cognito. Model authorization rules and
-custom Lambda checks control data access. AI calls stay on the server, use
-validated structured output, and return scripted fallbacks on model failure.
-Rate limits and safety checks vary by handler; see
-[AI integration](docs/AI_INTEGRATION.md) for the exact controls, context, and
-practice-memory persistence. Deployment details are in
-[the deployment runbook](docs/DEPLOYMENT.md).
+EventBridge also runs scheduled event reminders. AI requests run on the server;
+[the AI guide](docs/AI_INTEGRATION.md) explains safety checks and saved context.
+
+## Run locally
+
+Use Node.js 22.12+ and npm. Backend setup requires an authorized AWS account and
+Bedrock model access; the sandbox command creates real AWS resources.
+
+```sh
+cd app
+npm ci
+npx ampx sandbox --identifier <your-name> --once
+npm run dev
+```
+
+The sandbox generates the backend configuration the app needs. From `app/`, run
+`npm test`, `npm run lint`, and `npm run build` to check your changes.
+
+See [setup and verification](app/README.md) or [deployment](docs/DEPLOYMENT.md)
+for details. The separate [Figma prototype](figma-make/FIGMA_MAKE_CONTEXT.md)
+is a design reference.
 
 ## AI disclosure
 
-We used AI tools while building Bridge, with a person reviewing every change:
+Claude helped with research, planning, prototype code, and tooling. Figma Make AI
+helped with the prototype. Codex helped with production code, tests, reviews, and
+documentation. The team reviews the work and makes the product decisions.
+See [detailed credits](docs/AI_DISCLOSURE.md) and [prompt logs](AI_PROMPTS/).
 
-- **Claude (Anthropic):** research summaries, idea write-ups, user-flow drafts, and React code for the prototype, plus the repo tooling (`scripts/hooks/`, `.claude/`). Earlier commits it helped write carry a `Co-Authored-By: Claude` line; newer commits do not, and this section is the record.
-- **Figma Make AI:** applied code changes to the Figma Make prototype.
-- **Codex (OpenAI):** reviewed the codebase and implemented the production onboarding flow from the exported Figma Make source, including typed components, validation, private contact persistence, and verification. Also implemented the daily check-in and Home from the Make export, with owner-only check-ins and weekly goals, live circle activity, real notifications, and account-isolation checks. Implemented Circles, Events, and private DMs, including server-authorized messaging and blocking, atomic RSVPs, reminders, and live verification. Reviewed and updated the production setup and AI integration documentation against the implementation.
+## Team and contributions
 
-The team chose the partner, the problem, the features and every design decision. Each teammate's prompts are in [AI_PROMPTS/](AI_PROMPTS/).
+**Ctrl Alt Elite** — graduate students at Arizona State University.
 
-## Run the prototype
-
-Open the [Figma Make file](https://www.figma.com/make/nNkx4mz0eXrSNIZtCBuxRK/Bridge-Independence-App--2-), or copy `figma-make/src/App.tsx` and `figma-make/src/index.css` into any Vite + React project and run `npm run dev`. No API keys are needed.
-
-## Test on iPhone Simulator
-
-Run `cd app && npm run dev -- --host 0.0.0.0`, open an iPhone in Xcode Simulator, then run `xcrun simctl openurl booted http://127.0.0.1:5173`. Sign in and open **Me → Comfort** to check the selected-option styling, 44px tap targets, and the auto-closing “Saved ✓” message.
-
-## For AI assistants
-
-Read `.claude/skills/bridge/SKILL.md` before doing anything. Every prompt is logged to `AI_PROMPTS/<Name>.md`, `git pull --rebase --autostash` comes before every push, and nothing is mocked.
+| Team member | Contributions |
+|---|---|
+| Dhyey Patel | Code and research. |
+| Shreeya Bohra | Figma design, research, and app questions for Josh Munoz. |
+| Rishi Kataria | Figma design, research, and field visit. |
+| Tejas Shah | Code, research, and field visit. |
