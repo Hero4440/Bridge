@@ -104,7 +104,7 @@ button:active{transform:scale(.97)}
 .journey-card{background:rgba(255,255,255,.85);border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:10px}
 .journey-bars{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:end;height:130px}
 .journey-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%}.journey-col strong{font-size:14px}.journey-col i{display:block;width:100%;max-width:44px;border-radius:10px}.journey-col small{font-size:14px;color:var(--muted);white-space:nowrap}
-.journey-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.journey-stats>div{background:var(--soft);border-radius:16px;padding:10px;display:flex;flex-direction:column;align-items:center}.journey-stats strong{font-size:17px}.journey-stats small{font-size:14px;color:var(--muted)}
+.journey-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.journey-stats>div{min-height:74px;box-sizing:border-box;background:var(--soft);border-radius:16px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.journey-stats strong{font-size:17px;line-height:1.2}.journey-stats small{font-size:14px;line-height:1.25;color:var(--muted)}
 /* Me overview + settings */
 .inner-back{position:relative;width:44px;height:44px;border:0;background:transparent;color:var(--ink);display:grid;place-items:center}.inner-back:before{content:"";position:absolute;inset:4px;border-radius:12px;background:rgba(255,255,255,.7)}.inner-back svg{position:relative}
 .me-identity-header{display:flex;align-items:center;gap:14px}

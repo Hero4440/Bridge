@@ -13,3 +13,16 @@ We used AI tools while building Bridge, with a person reviewing every change:
 
 The team chose the partner, the problem, the features and every design decision. Each teammate's prompts are in [AI_PROMPTS/](../AI_PROMPTS/).
 
+## Prompts, libraries, and external code
+
+Production system prompts are kept beside their Lambda and logged in `AI_PROMPTS/`. The
+free-chat prompt is recorded as `P-05-MO-CHAT` in `AI_PROMPTS/Tejas.md`. Practice feedback
+stores only bounded memory, strength, and tip fields; new runs do not persist the person's
+free-form practice goal or role-play turns.
+
+Direct dependencies and their licenses are recorded in `app/package-lock.json`: React,
+React DOM, and Zod use MIT; AWS Amplify and the AWS SDK packages use Apache-2.0. Vite,
+Vitest, and Oxlint use MIT; TypeScript uses Apache-2.0. The UI uses custom components
+and inline SVG; no third-party component snippets or copied application code are
+intentionally included.
+
