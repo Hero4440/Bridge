@@ -15,6 +15,15 @@ Built by **Team Ctrl Alt Elite** for the North American AI Challenge for Neurodi
 
 All team members are graduate students at Arizona State University.
 
+## Team contributions
+
+| Team member | Contributions |
+|---|---|
+| Dhyey Patel | Code development and research. |
+| Shreeya Bohra | Figma design, research, and app-related questions for Josh Munoz at First Place AZ. |
+| Rishi Kataria | Figma design, research, and participation in the field visit. |
+| Tejas Shah | Code development, research, and participation in the field visit. |
+
 ## What Bridge does
 
 Bridge is an AI social coach for autistic and neurodivergent young adults, built with First Place AZ, who told us their residents want help socializing.
